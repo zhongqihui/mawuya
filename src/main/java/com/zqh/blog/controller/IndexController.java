@@ -23,12 +23,12 @@ public class IndexController {
     @Autowired
     ArticleService articleService;
 
-    @RequestMapping({"/", "index.html", "index", "index.jsp"})
+    @RequestMapping({"index.html", "index", "index.jsp"})
     public String toHomePage() {
 
         List<ArticleInfo> articles = articleService.getArticles();
         log.info("" + articles.size());
         System.out.println(articles.size());
-        return "forward:index.jsp";
+        return "fts/index";
     }
 }
