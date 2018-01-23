@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.List;
  * description: 博客前台controller，用于展示
  **/
 @Controller
-public class IndexController {
+public class IndexController extends BaseController{
     private static final Logger log = LoggerFactory.getLogger(IndexController.class);
 
     @Autowired
@@ -29,5 +30,29 @@ public class IndexController {
         List<ArticleInfo> articles = articleService.getArticles();
         model.addAttribute("articleList", articles);
         return "fts/index";
+    }
+
+    /**
+     * 根据文章id，展示该文章
+     * @param aid
+     * @param model
+     * @return
+     */
+    @RequestMapping("{aid}")
+    public String getArticle(@PathVariable("aid") String aid,Model model) {
+        Integer sn = null;
+        try {
+            sn = Integer.parseInt(aid);
+        }catch (Exception e) {
+            return ret404Page();
+        }
+
+        ArticleInfo info = articleService.selectById(sn);
+        if(info == null) {
+            //return ret404Page();
+        }
+
+        model.addAttribute("article", info);
+        return "fts/showArticle";
     }
 }

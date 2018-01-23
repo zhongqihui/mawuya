@@ -4,34 +4,9 @@
 
 <html class="theme-next mist use-motion">
 
-<meta http-equiv="content-type" content="text/html;charset=utf-8"/><!-- /Added by HTTrack -->
+
 <head>
-    <meta charset="UTF-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
-    <meta http-equiv="Cache-Control" content="no-transform"/>
-    <meta http-equiv="Cache-Control" content="no-siteapp"/>
-    <meta name="author" content="Zqh"/>
-    <meta name="keywords" content="Java"/>
-    <meta name="description" content="这是一个疯子的世界，只有疯子才能生存下去。">
 
-    <link rel="shortcut icon" href="${pageContext.request.contextPath}/statics/images/favicon.jpg"/>
-    <link href="${pageContext.request.contextPath}/statics/plugins/vendors/fancybox/source/jquery.fancybox8cbb.css?v=2.1.5"
-          rel="stylesheet" type="text/css"/>
-    <link href="${pageContext.request.contextPath}/statics/plugins/vendors/font-awesome/css/font-awesome.min93e3.css?v=4.4.0"
-          rel="stylesheet" type="text/css"/>
-    <link href="${pageContext.request.contextPath}/statics/css/main5174.css?v=0.5.0" rel="stylesheet" type="text/css"/>
-
-    <script type="text/javascript" id="hexo.configuration">
-        var NexT = window.NexT || {};
-        var CONFIG = {
-            scheme: 'Mist',
-            sidebar: {"position": "left", "display": "post"},
-            fancybox: true,
-            motion: true
-        };
-    </script>
-    <title> Zqh's Blog </title>
 </head>
 
 <body lang="zh-Hans">
@@ -51,7 +26,7 @@
                             <article class="post post-type-normal">
                                 <header class="post-header">
                                     <h1 class="post-title">
-                                        <a class="post-title-link" href="#">${article.ATitle}</a>
+                                        <a class="post-title-link" href="${pageContext.request.contextPath}/${article.sn}">${article.ATitle}</a>
                                     </h1>
 
                                     <div class="post-meta">
@@ -81,7 +56,7 @@
                                     <p>${article.ASummary}</p>
                                         <p><img src="${pageContext.request.contextPath}/statics/images/gallery/img6.jpg" alt=""></p>
                                     <div class="post-more-link text-center">
-                                        <a class="btn" href="#" rel="contents">
+                                        <a class="btn" href="${pageContext.request.contextPath}/${article.sn}" rel="contents">
                                             阅读全文 &raquo;
                                         </a>
                                     </div>
@@ -110,27 +85,6 @@
 
     <%@ include file="footer.jsp" %>
 </div>
-
-
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/plugins/vendors/jquery/index62ba.js?v=2.1.3"></script>
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/plugins/vendors/fastclick/lib/fastclick.minc924.js?v=1.0.6"></script>
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/plugins/vendors/jquery_lazyload/jquery.lazyloada045.js?v=1.9.7"></script>
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/plugins/vendors/velocity/velocity.min.js"></script>
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/plugins/vendors/velocity/velocity.ui.min.js"></script>
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/plugins/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/js/utils5174.js?v=0.5.0"></script>
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/js/motion5174.js?v=0.5.0"></script>
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/js/bootstrap5174.js?v=0.5.0"></script>
-
 </body>
 
 </html>

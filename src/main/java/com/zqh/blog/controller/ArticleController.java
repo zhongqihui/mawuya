@@ -7,10 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 /**
 * author: zqh
@@ -20,7 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 **/
 @Controller
 @RequestMapping("bms")
-public class ArticleController {
+public class ArticleController extends BaseController {
     private static final Logger log = LoggerFactory.getLogger(ArticleController.class);
 
     @Autowired
@@ -47,5 +44,6 @@ public class ArticleController {
         int count = articleService.insert(articleInfo);
         return "success";
     }
+
 
 }
