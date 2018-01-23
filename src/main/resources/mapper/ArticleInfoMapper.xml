@@ -4,12 +4,13 @@
 
     <!-- 通用查询结果列-->
     <sql id="_columns">
-        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_content,insert_time,update_time
+        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_summary,a_content,insert_time,update_time
     </sql>
 
     <select id="selectById" parameterType="int" resultType="com.zqh.blog.entity.ArticleInfo">
         SELECT <include refid="_columns"/> FROM article_info WHERE sn = #{value}
     </select>
+
     <select id="selectList" parameterType="map" resultType="com.zqh.blog.entity.ArticleInfo">
         SELECT <include refid="_columns"/> FROM article_info
         <where>
@@ -46,8 +47,8 @@
     </select>
 
     <insert id="insert" parameterType="com.zqh.blog.entity.ArticleInfo">
-        INSERT INTO article_info (category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_content,insert_time,update_time)
-        VALUES (#{categorySn},#{readNum},#{reviewNum},#{praiseNum},#{teaseNum},#{pictureUrl},#{aTitle},#{aContent},now(),#{update_time})
+        INSERT INTO article_info (category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_summary,a_content,insert_time,update_time)
+        VALUES (#{categorySn},#{readNum},#{reviewNum},#{praiseNum},#{teaseNum},#{pictureUrl},#{aTitle},#{aSummary},#{aContent},now(),now())
     </insert>
 
     <delete id="deleteById" parameterType="int">
@@ -63,6 +64,7 @@
         ,tease_num= #{teaseNum}
         ,picture_url= #{pictureUrl}
         ,a_title= #{aTitle}
+        ,a_summary = #{aSummary}
         ,a_content= #{aContent}
         ,insert_time= #{insertTime}
         ,update_time= now()

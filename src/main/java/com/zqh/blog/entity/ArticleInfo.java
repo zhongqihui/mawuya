@@ -20,16 +20,28 @@ import java.io.Serializable;
 @Accessors(chain = true)
 @ToString
 public class ArticleInfo implements Serializable {
+    /*** 文章主键sn*/
     private Integer sn;
-    private String categorySn;
+    /*** 文章归类sn*/
+    private int categorySn;
+    /*** 阅读次数*/
     private int readNum;
+    /*** 评论次数*/
     private int reviewNum;
+    /*** 赞次数*/
     private int praiseNum;
+    /*** 踩次数*/
     private int teaseNum;
+    /*** 文章图片url，多个用英文逗号隔开*/
     private String pictureUrl;
+    /*** 文章标题*/
     private String aTitle;
+    /*** 文章概要*/
     private String aSummary;
+    /*** 文章内容*/
     private String aContent;
+    /*** 文章插入时间*/
     private String insertTime;
+    /*** 文章修改时间*/
     private String updateTime;
 }

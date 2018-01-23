@@ -2,6 +2,7 @@ package com.zqh.blog.service;
 
 import com.zqh.blog.entity.ArticleInfo;
 import com.zqh.blog.mapper.ArticleInfoMapper;
+import com.zqh.blog.mapper.BaseMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +20,15 @@ import java.util.Map;
  **/
 @Service
 public class ArticleService extends BaseService<ArticleInfo, Integer> {
-
     private static final Logger log = LoggerFactory.getLogger(ArticleService.class);
 
+    ArticleInfoMapper articleInfoMapper;
 
     @Autowired
-    ArticleInfoMapper articleInfoMapper;
+    public ArticleService(ArticleInfoMapper baseMapper) {
+        super(baseMapper);
+        this.articleInfoMapper = baseMapper;
+    }
 
     public List<ArticleInfo> getArticles() {
         Map<String, Integer> map = new HashMap<>();

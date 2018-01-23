@@ -1,6 +1,7 @@
 package com.zqh.blog.service;
 
 import com.zqh.blog.mapper.BaseMapper;
+import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.security.PublicKey;
@@ -15,6 +16,7 @@ import java.util.Map;
  * description: service 父类
  **/
 public class BaseService<T, PK extends Serializable> {
+
     private BaseMapper<T, PK> baseMapper;
 
     public BaseService() {
@@ -29,8 +31,8 @@ public class BaseService<T, PK extends Serializable> {
      *
      * @param t 插入的对象
      */
-    public void insert(T t) {
-        baseMapper.insert(t);
+    public int insert(T t) {
+        return baseMapper.insert(t);
     }
 
     /**
@@ -38,8 +40,8 @@ public class BaseService<T, PK extends Serializable> {
      *
      * @param pk 主键
      */
-    public void deleteById(PK pk) {
-        baseMapper.deleteById(pk);
+    public int deleteById(PK pk) {
+        return baseMapper.deleteById(pk);
     }
 
     /**
@@ -47,8 +49,8 @@ public class BaseService<T, PK extends Serializable> {
      *
      * @param t 对象
      */
-    public void update(T t) {
-        baseMapper.update(t);
+    public int update(T t) {
+        return baseMapper.update(t);
     }
 
     /**
@@ -80,11 +82,11 @@ public class BaseService<T, PK extends Serializable> {
      */
     public List<T> selectByPage(Integer start, Integer limit) {
 
-        if(start < 0 || limit < 1) {
+        if (start < 0 || limit < 1) {
             throw new IllegalStateException("分页数字无效，请求重新输入。");
         }
 
-        Map<String,Integer> map = new HashMap<>();
+        Map<String, Integer> map = new HashMap<>();
         map.put("start", start);
         map.put("limit", limit);
         return baseMapper.selectByPage(map);

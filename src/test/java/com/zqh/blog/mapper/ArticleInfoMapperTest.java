@@ -39,7 +39,26 @@ public class ArticleInfoMapperTest {
     }
 
     @Test
-    public void test() {
-        System.out.println("hello");
+    public void testInsert() {
+        ArticleInfo articleInfo = new ArticleInfo()
+                .setATitle("java")
+                .setASummary("我是概要")
+                .setAContent("我是内容");
+        int insert = articleInfoMapper.insert(articleInfo);
+        System.out.println(insert);
+    }
+
+    @Test
+    public void testDel() {
+        int i = articleInfoMapper.deleteById(1);
+        System.out.println(i);
+    }
+
+    @Test
+    public void testUpdate() {
+        ArticleInfo info = articleInfoMapper.selectById(2);
+        info.setAContent("我是内容2").setASummary("我是概要2");
+        int update = articleInfoMapper.update(info);
+        System.out.println(update);
     }
 }

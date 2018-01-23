@@ -15,21 +15,21 @@ public interface BaseMapper<T, PK extends Serializable> {
      *
      * @param t 插入的对象
      */
-    void insert(T t);
+    int insert(T t);
 
     /**
      * 删除操作
      *
      * @param id 根据主键来删除
      */
-    void deleteById(PK id);
+    int deleteById(PK id);
 
     /**
      * 修改操作
      *
      * @param t
      */
-    void update(T t);
+    int update(T t);
 
     /**
      * 根据PK查找对象

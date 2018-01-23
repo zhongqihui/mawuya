@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
@@ -24,11 +25,9 @@ public class IndexController {
     ArticleService articleService;
 
     @RequestMapping({"index.html", "index", "index.jsp"})
-    public String toHomePage() {
-
+    public String toHomePage(Model model) {
         List<ArticleInfo> articles = articleService.getArticles();
-        log.info("" + articles.size());
-        System.out.println(articles.size());
+        model.addAttribute("articleList", articles);
         return "fts/index";
     }
 }

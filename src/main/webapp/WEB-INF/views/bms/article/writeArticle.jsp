@@ -29,25 +29,25 @@
                     <div class="form-group">
                         <label class="col-sm-1 control-label">博客标题</label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control"/>
+                            <input type="text" class="form-control" name="aTitle" id="aTitle"/>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-1 control-label">分类于</label>
                         <div class="col-sm-3">
-                            <select class="form-control">
-                                <option>暂不分类</option>
-                                <option>2</option>
-                                <option>3</option>
-                                <option>4</option>
-                                <option>5</option>
+                            <select class="form-control" name="categorySn" id="categorySn">
+                                <option value="0">暂不分类</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-1 control-label">概要</label>
                         <div class="col-sm-6">
-                            <textarea class="form-control"></textarea>
+                            <textarea class="form-control" name="aSummary" id="aSummary"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -57,9 +57,18 @@
                                       id="editormd"></textarea>
                             <!-- 第二个隐藏文本域，用来构造生成的HTML代码，方便表单POST提交，这里的name可以任意取，后台接受时以这个name键为准 -->
                             <!-- html textarea 需要开启配置项 saveHTMLToTextarea == true -->
-                            <textarea class="editormd-html-textarea" name="aContent" id="editorhtml"></textarea>
+                            <textarea class="editormd-html-textarea" name="aContent" id="aContent"></textarea>
                         </div>
                     </div>
+
+                    <div class="form-group">
+                        <div class="col-sm-1 control-label"></div>
+                        <div class="col-sm-6">
+                            <button type="button" class="btn btn-success btn-rad" id="publish_blog">发布博客</button>
+                            <button type="button" class="btn btn-warning btn-rad" id="save_blog">存草稿</button>
+                        </div>
+                    </div>
+
                 </form>
             </div>
         </div>
@@ -89,6 +98,29 @@
             sequenceDiagram: true,       // 开启时序/序列图支持，默认关闭,
             //这个配置在simple.html中并没有，但是为了能够提交表单，使用这个配置可以让构造出来的HTML代码直接在第二个隐藏的textarea域中，方便post提交表单。
             saveHTMLToTextarea: true
+        });
+    });
+
+    $("#publish_blog").click(function () {
+        alert($("#aTitle").val());
+        $.ajax({
+            type:"post",
+            url:"${pageContext.request.contextPath}/bms/writeArticle.do",
+            data: {
+                "aTitle": $("#aTitle").val(),
+                "categorySn": $("#categorySn").val(),
+                "aSummary": $("#aSummary").val(),
+                "aContent": $("#aContent").val()
+            },
+            cache:false,
+            success:function (data) {
+                if(data == "success") {
+                    alert("success");
+                }
+                else {
+                    alert("fail");
+                }
+            }
         });
     });
 
