@@ -1,6 +1,8 @@
 package com.zqh.blog.service;
 
+import com.zqh.blog.entity.ArticleInfo;
 import com.zqh.blog.mapper.BaseMapper;
+import com.zqh.blog.vo.Page;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
@@ -76,19 +78,32 @@ public class BaseService<T, PK extends Serializable> {
     /**
      * 分页查询
      *
-     * @param start 从start开始查
+     * @param curr 第几页
      * @param limit 条数
      * @return
      */
-    public List<T> selectByPage(Integer start, Integer limit) {
-
-        if (start < 0 || limit < 1) {
+    public Page<ArticleInfo> selectByPage(Integer curr, Integer limit) {
+        if (curr < 1 || limit < 1) {
             throw new IllegalStateException("分页数字无效，请求重新输入。");
         }
 
         Map<String, Integer> map = new HashMap<>();
-        map.put("start", start);
+        map.put("start", (curr-1) * limit);
         map.put("limit", limit);
-        return baseMapper.selectByPage(map);
+        List<T> ts = baseMapper.selectByPage(map);
+
+        map.clear();
+        int total = baseMapper.selectCount(map);
+        int pageSize = (int) Math.ceil(total / (double) limit);
+
+        Page<ArticleInfo> page = new Page<>();
+        page.setLists((List<ArticleInfo>) ts)
+                .setCurr(curr)
+                .setPrev(curr -1)
+                .setNext(curr == pageSize?pageSize:curr + 1)
+                .setSize(limit)
+                .setPageSize(pageSize);
+
+        return page;
     }
 }

@@ -7,6 +7,10 @@
         sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_summary,a_content,insert_time,update_time
     </sql>
 
+    <sql id="_columns_no_content">
+        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_summary,insert_time,update_time
+    </sql>
+
     <select id="selectById" parameterType="int" resultType="com.zqh.blog.entity.ArticleInfo">
         SELECT <include refid="_columns"/> FROM article_info WHERE sn = #{value}
     </select>
@@ -20,7 +24,7 @@
         </where>
     </select>
 
-    <select id="selectCount" parameterType="map" resultType="com.zqh.blog.entity.ArticleInfo">
+    <select id="selectCount" parameterType="map" resultType="int">
         SELECT count(sn) FROM article_info
         <where>
             <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(categorySn)">
@@ -43,7 +47,15 @@
     </select>
 
     <select id="selectAllNoContent" parameterType="map" resultType="com.zqh.blog.entity.ArticleInfo" >
-        SELECT <include refid="_columns"/> FROM  article_info
+        SELECT <include refid="_columns_no_content"/> FROM  article_info ORDER BY sn DESC
+    </select>
+
+    <select id="selectNextById" parameterType="int" resultType="com.zqh.blog.entity.ArticleInfo">
+        SELECT <include refid="_columns_no_content"/> FROM article_info WHERE <![CDATA[sn > #{value}]]> ORDER BY sn ASC limit 1
+    </select>
+
+    <select id="selectPrevById" parameterType="int" resultType="com.zqh.blog.entity.ArticleInfo">
+        SELECT <include refid="_columns_no_content"/> FROM article_info WHERE <![CDATA[sn < #{value}]]> ORDER BY sn DESC limit 1
     </select>
 
     <insert id="insert" parameterType="com.zqh.blog.entity.ArticleInfo">

@@ -27,7 +27,6 @@
             motion: true
         };
     </script>
-    <title> Zqh's Blog </title>
 </head>
 <body>
 <header id="header" class="header">

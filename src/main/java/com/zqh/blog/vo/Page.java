@@ -7,6 +7,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * author: zqh
@@ -24,7 +25,7 @@ public class Page<T> implements Serializable {
     /**
      * 总页数
      */
-    private int total;
+    private int pageSize;
 
     /**
      * 当前页数
@@ -32,12 +33,27 @@ public class Page<T> implements Serializable {
     private int curr;
 
     /**
+     * 前一页数
+     */
+    private int prev;
+
+    /**
+     * 后一页数
+     */
+    private int next;
+
+    /**
      * 每页展示条数
      */
     private int size;
 
     /**
+     * 响应路径，供前台分页
+     */
+    private String url;
+
+    /**
      * 查询的记录
      */
-    private T lists;
+    private List<T> lists;
 }

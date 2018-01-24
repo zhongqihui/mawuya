@@ -15,5 +15,24 @@ import java.util.Map;
 @Repository
 public interface ArticleInfoMapper extends BaseMapper<ArticleInfo, Integer> {
 
+    /**
+     * 根据map中的key条件，查询不包含内容的 文章集合
+     * @param map
+     * @return
+     */
     List<ArticleInfo> selectAllNoContent(Map map);
+
+    /**
+     * 根据这篇文章的主键，查找下一篇文章信息
+     * @param id
+     * @return
+     */
+    ArticleInfo selectNextById(Integer id);
+
+    /**
+     * 根据这篇文章的主键，查找上一篇文章信息
+     * @param id
+     * @return
+     */
+    ArticleInfo selectPrevById(Integer id);
 }

@@ -102,7 +102,6 @@
     });
 
     $("#publish_blog").click(function () {
-        alert($("#aTitle").val());
         $.ajax({
             type:"post",
             url:"${pageContext.request.contextPath}/bms/writeArticle.do",
