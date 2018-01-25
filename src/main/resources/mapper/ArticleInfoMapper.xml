@@ -41,7 +41,7 @@
                 AND category_sn = #{categorySn}
             </if>
         </where>
-        <if test="@com.zqh.blog.utils.StrUtils@isAllNoEmpty(start,limit)">
+        <if test="@com.zqh.blog.utils.StrUtil@isAllNoEmpty(start,limit)">
             limit #{start},#{limit}
         </if>
     </select>

@@ -2,6 +2,7 @@ package com.zqh.blog.service;
 
 import com.zqh.blog.entity.ArticleInfo;
 import com.zqh.blog.mapper.BaseMapper;
+import com.zqh.blog.utils.PageUtil;
 import com.zqh.blog.vo.Page;
 import org.springframework.stereotype.Service;
 
@@ -84,11 +85,11 @@ public class BaseService<T, PK extends Serializable> {
      */
     public Page<ArticleInfo> selectByPage(Integer curr, Integer limit) {
         if (curr < 1 || limit < 1) {
-            throw new IllegalStateException("分页数字无效，请求重新输入。");
+            curr = 1;limit = 10;
         }
 
         Map<String, Integer> map = new HashMap<>();
-        map.put("start", (curr-1) * limit);
+        map.put("start", (curr - 1) * limit);
         map.put("limit", limit);
         List<T> ts = baseMapper.selectByPage(map);
 
@@ -99,8 +100,7 @@ public class BaseService<T, PK extends Serializable> {
         Page<ArticleInfo> page = new Page<>();
         page.setLists((List<ArticleInfo>) ts)
                 .setCurr(curr)
-                .setPrev(curr -1)
-                .setNext(curr == pageSize?pageSize:curr + 1)
+                .setPageLine(PageUtil.pcnDefault(curr, pageSize))
                 .setSize(limit)
                 .setPageSize(pageSize);
 

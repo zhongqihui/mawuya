@@ -6,7 +6,7 @@ package com.zqh.blog.utils;
 * date: 2018/1/22 0022 下午 8:18
 * description: String 工具类
 **/
-public class StrUtils {
+public class StrUtil {
 
     /**
      *  mybatis 校验工具

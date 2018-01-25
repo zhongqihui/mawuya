@@ -33,14 +33,9 @@ public class Page<T> implements Serializable {
     private int curr;
 
     /**
-     * 前一页数
+     * 给前台展示的页码轴
      */
-    private int prev;
-
-    /**
-     * 后一页数
-     */
-    private int next;
+    private List<String> pageLine;
 
     /**
      * 每页展示条数

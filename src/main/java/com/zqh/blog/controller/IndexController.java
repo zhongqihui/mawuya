@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 /**
  * author: zqh
@@ -27,6 +28,12 @@ public class IndexController extends BaseController {
     @Autowired
     ArticleService articleService;
 
+    /**
+     * 博客首页展示
+     * @param model
+     * @param request
+     * @return
+     */
     @RequestMapping({"index.html", "index", "index.jsp"})
     public String toHomePage(Model model, HttpServletRequest request) {
         Page<ArticleInfo> page = articleService.getPage(request);
@@ -63,4 +70,16 @@ public class IndexController extends BaseController {
                 .addAttribute("prev", prev);
         return "fts/showArticle";
     }
+
+
+    /**
+     *
+     * @return
+     */
+    public String toArchive(Model modle) {
+        Map<String,List<ArticleInfo>> map = articleService.getYearMap();
+        return null;
+    }
+
+
 }

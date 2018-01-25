@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>Title</title>
+    <title>Zqh's Blog</title>
     <meta http-equiv="Refresh" content="0;url=${pageContext.request.contextPath}/index" />
 </head>
 <body>
