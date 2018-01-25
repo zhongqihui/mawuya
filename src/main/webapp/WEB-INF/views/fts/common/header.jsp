@@ -53,19 +53,19 @@
         <nav class="site-nav">
             <ul id="menu" class="menu menu-left">
                 <li class="menu-item menu-item-home">
-                    <a href="index.html" rel="section">
+                    <a href="${pageContext.request.contextPath}/index" rel="section">
                         <i class="menu-item-icon fa fa-home fa-fw"></i> <br/>首页
                     </a>
                 </li>
 
                 <li class="menu-item menu-item-archives">
-                    <a href="archives/index.html" rel="section">
+                    <a href="${pageContext.request.contextPath}/archive" rel="section">
                         <i class="menu-item-icon fa fa-archive fa-fw"></i> <br/>归档
                     </a>
                 </li>
 
                 <li class="menu-item menu-item-categories">
-                    <a href="categories/index.html" rel="section">
+                    <a href="${pageContext.request.contextPath}/categories" rel="section">
                         <i class="menu-item-icon fa fa-th fa-fw"></i> <br/>分类
                     </a>
                 </li>

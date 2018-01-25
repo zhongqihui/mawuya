@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zqh.blog.mapper.CategoryMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="_columns">
+        sn,c_name
+    </sql>
+
+    <insert id="insert" parameterType="com.zqh.blog.entity.Category">
+        INSERT INTO category_info (c_name) VALUES (#{cName})
+    </insert>
+
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM category_info WHERE sn = #{value}
+    </delete>
+
+    <update id="update" parameterType="com.zqh.blog.entity.Category">
+        UPDATE category_info SET c_name = #{cName} WHERE sn = #{sn}
+    </update>
+
+    <select id="selectById" parameterType="int" resultType="com.zqh.blog.entity.Category">
+        SELECT <include refid="_columns"/> FROM category_info WHERE sn = #{value}
+    </select>
+
+    <select id="selectList" parameterType="map" resultType="com.zqh.blog.entity.Category">
+        SELECT <include refid="_columns"/> FROM category_info
+    </select>
+
+    <select id="selectByPage" parameterType="map" resultType="com.zqh.blog.entity.Category">
+        SELECT <include refid="_columns"/> FROM  category_info
+        <if test="@com.zqh.blog.utils.StrUtil@isAllNoEmpty(start,limit)">
+            limit #{start},#{limit}
+        </if>
+    </select>
+
+    <select id="selectCount" parameterType="map" resultType="int">
+        SELECT count(sn) FROM category_info
+    </select>
+
+
+
+</mapper>

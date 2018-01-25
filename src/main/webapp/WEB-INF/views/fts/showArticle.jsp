@@ -12,7 +12,7 @@
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-post-detail">
     <div class="headband"></div>
-    <%@ include file="header.jsp" %>
+    <%@ include file="common/header.jsp" %>
 
     <main id="main" class="main">
         <div class="main-inner">
@@ -107,7 +107,7 @@
 </div>
 
 
-<%@ include file="footer.jsp" %>
+<%@ include file="common/footer.jsp" %>
 <script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/plugins/editor.md/lib/marked.min.js"></script>
 <script type="text/javascript"

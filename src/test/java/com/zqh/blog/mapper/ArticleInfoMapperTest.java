@@ -23,7 +23,6 @@ public class ArticleInfoMapperTest {
     @Autowired
     ArticleInfoMapper articleInfoMapper;
 
-
     @Test
     public void getArticle() {
         ArticleInfo articleInfo = articleInfoMapper.selectById(1);

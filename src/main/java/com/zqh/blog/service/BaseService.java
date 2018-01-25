@@ -106,4 +106,13 @@ public class BaseService<T, PK extends Serializable> {
 
         return page;
     }
+
+    /**
+     * 根据条件，查询出记录数
+     * @param map
+     * @return
+     */
+    public int getCount(Map map) {
+        return baseMapper.selectCount(map);
+    }
 }

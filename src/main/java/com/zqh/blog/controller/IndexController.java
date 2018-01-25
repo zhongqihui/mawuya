@@ -1,17 +1,21 @@
 package com.zqh.blog.controller;
 
 import com.zqh.blog.entity.ArticleInfo;
+import com.zqh.blog.entity.Category;
 import com.zqh.blog.service.ArticleService;
+import com.zqh.blog.service.CategoryService;
 import com.zqh.blog.vo.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,10 +30,14 @@ public class IndexController extends BaseController {
     private static final Logger log = LoggerFactory.getLogger(IndexController.class);
 
     @Autowired
-    ArticleService articleService;
+    private ArticleService articleService;
+    @Autowired
+    private CategoryService categoryService;
+
 
     /**
      * 博客首页展示
+     *
      * @param model
      * @param request
      * @return
@@ -38,7 +46,10 @@ public class IndexController extends BaseController {
     public String toHomePage(Model model, HttpServletRequest request) {
         Page<ArticleInfo> page = articleService.getPage(request);
         page.setUrl("index");
-        model.addAttribute("page", page);
+
+        List<Category> categoryList = categoryService.selectList(new HashMap());
+        model.addAttribute("page", page)
+                .addAttribute("categoryList", categoryList);
         return "fts/index";
     }
 
@@ -73,12 +84,53 @@ public class IndexController extends BaseController {
 
 
     /**
+     * 归档页面的展示
      *
+     * @param model
      * @return
      */
-    public String toArchive(Model modle) {
-        Map<String,List<ArticleInfo>> map = articleService.getYearMap();
-        return null;
+    @GetMapping("archive")
+    public String toArchive(Model model) {
+        Map<String, List<ArticleInfo>> map = articleService.getYearMap();
+        int count = articleService.getCount(new HashMap());
+        model.addAttribute("map", map).addAttribute("count", count);
+        return "fts/archive";
+    }
+
+    /**
+     * 博客分类的展示
+     *
+     * @param model
+     * @return
+     */
+    @GetMapping("categories")
+    public String categoryList(Model model) {
+        List<Category> categoryList = categoryService.getCategoryList();
+        model.addAttribute("categoryList", categoryList);
+
+        return "fts/categoryList";
+    }
+
+
+    /**
+     * 某博客分类下的文章列表
+     *
+     * @param cid
+     * @param model
+     * @return
+     */
+    @RequestMapping("categories/{cid}")
+    public String getCategory(@PathVariable("cid") String cid, Model model) {
+        Integer sn = null;
+        try {
+            sn = Integer.parseInt(cid);
+        } catch (Exception e) {
+            return ret404Page();
+        }
+
+        Category category = categoryService.getCategoryBySn(sn);
+        model.addAttribute("category", category);
+        return "fts/category";
     }
 
 

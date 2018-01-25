@@ -11,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * author: zqh
@@ -64,12 +61,12 @@ public class ArticleService extends BaseService<ArticleInfo, Integer> {
      * @return key为年份，value为Article集合
      */
     public Map<String,List<ArticleInfo>> getYearMap() {
-        List<ArticleInfo> infos = articleInfoMapper.selectList(new HashMap<>());
+        List<ArticleInfo> infos = articleInfoMapper.selectAllNoContent(new HashMap<>());
         if(infos == null || infos.isEmpty()) {
             return new HashMap<>();
         }
 
-        Map<String, List<ArticleInfo>> listMap = new HashMap<>();
+        Map<String, List<ArticleInfo>> listMap = new LinkedHashMap<>();
         for (ArticleInfo a : infos) {
             String key = DateUtil.getYear(a.getInsertTime());
             if(!listMap.containsKey(key)) {

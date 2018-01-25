@@ -10,7 +10,7 @@
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-home">
     <div class="headband"></div>
-    <%@ include file="header.jsp" %>
+    <%@ include file="common/header.jsp" %>
 
     <main id="main" class="main">
         <div class="main-inner">
@@ -76,14 +76,14 @@
                         </c:forEach>
                     </section>
 
-                    <%@ include file="page.jsp" %>
+                    <%@ include file="common/page.jsp" %>
                 </div>
             </div>
 
         </div>
     </main>
 
-    <%@ include file="footer.jsp" %>
+    <%@ include file="common/footer.jsp" %>
 </div>
 </body>
 
