@@ -17,7 +17,8 @@ public class CategoryTest {
     @Test
     public void testInsert() {
 //        Category c = Category.of("java语言");
-        Category c = new Category().setCName("生活情感");
+        String a = "好\uD83D\uDE09我";
+        Category c = new Category().setCName(a);
         int i = categoryMapper.insert(c);
         System.out.println(i);
     }

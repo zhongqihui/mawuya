@@ -59,7 +59,7 @@
     </select>
 
     <insert id="insert" parameterType="com.zqh.blog.entity.ArticleInfo">
-        INSERT INTO article_info (category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_summary,a_content,insert_time,update_time)
+        INSERT ignore INTO article_info (category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_summary,a_content,insert_time,update_time)
         VALUES (#{categorySn},#{readNum},#{reviewNum},#{praiseNum},#{teaseNum},#{pictureUrl},#{aTitle},#{aSummary},#{aContent},now(),now())
     </insert>
 
