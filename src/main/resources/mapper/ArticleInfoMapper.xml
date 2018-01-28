@@ -22,6 +22,7 @@
                 AND category_sn = #{categorySn}
             </if>
         </where>
+        ORDER BY sn DESC
     </select>
 
     <select id="selectCount" parameterType="map" resultType="int">
@@ -41,6 +42,7 @@
                 AND category_sn = #{categorySn}
             </if>
         </where>
+        order by sn desc
         <if test="@com.zqh.blog.utils.StrUtil@isAllNoEmpty(start,limit)">
             limit #{start},#{limit}
         </if>

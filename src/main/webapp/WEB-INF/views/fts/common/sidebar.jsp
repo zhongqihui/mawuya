@@ -17,7 +17,7 @@
     <div class="sidebar-inner">
         <section class="site-overview sidebar-panel  sidebar-panel-active ">
             <div class="site-author motion-element">
-                <img class="site-author-image" src="#" alt="Zhongqihui"/>
+                <img class="site-author-image" src="${pageContext.request.contextPath}/statics/images/avatars/avatar2.jpg" alt="Zhongqihui"/>
                 <p class="site-author-name">Zhongqihui</p>
                 <p class="site-description motion-element">一个疯子的世界，<br/>只有疯子才能生存下去的世界。</p>
             </div>

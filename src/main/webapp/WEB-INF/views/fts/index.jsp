@@ -41,7 +41,15 @@
                                             <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i></span>
                                             <span class="post-meta-item-text">分类于</span>
                                             <span>
-                                              <a href="#"><span>职场生涯</span></a>
+                                              <a href="${pageContext.request.contextPath}/categories/${article.categorySn}">
+                                                  <span>
+                                                      <c:forEach items="${categoryList}" var="c">
+                                                          <c:if test="${article.categorySn == c.sn}">
+                                                              ${c.CName}
+                                                          </c:if>
+                                                      </c:forEach>
+                                                  </span>
+                                              </a>
                                             </span>
                                         </span>
 

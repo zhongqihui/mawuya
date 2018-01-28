@@ -76,9 +76,11 @@ public class IndexController extends BaseController {
 
         ArticleInfo next = articleService.getNext(sn);
         ArticleInfo prev = articleService.getPrev(sn);
+        Category c = categoryService.selectById(info.getCategorySn());
         model.addAttribute("article", info)
                 .addAttribute("next", next)
-                .addAttribute("prev", prev);
+                .addAttribute("prev", prev)
+                .addAttribute("category", c);
         return "fts/showArticle";
     }
 

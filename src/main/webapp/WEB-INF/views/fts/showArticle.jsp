@@ -37,7 +37,7 @@
                                     <span class="post-category">&nbsp; | &nbsp;
                                         <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i></span>
                                         <span class="post-meta-item-text">分类于</span>
-                                        <span><a href="#"><span>职场生涯</span></a></span>
+                                        <span><a href="${pageContext.request.contextPath}/categories/${category.sn}"><span>${category.CName}</span></a></span>
                                     </span>
 
                                     <span class="post-category">&nbsp; | &nbsp;
@@ -64,7 +64,7 @@
 
                             <footer class="post-footer">
                                 <div class="post-tags">
-                                    <a href="#" rel="tag">#职场生涯</a>
+                                    <a href="${pageContext.request.contextPath}/categories/${category.sn}" rel="tag">#${category.CName}</a>
                                 </div>
 
                                 <div class="post-nav">

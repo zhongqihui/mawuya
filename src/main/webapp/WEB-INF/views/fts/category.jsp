@@ -17,10 +17,9 @@
             <div class="content-wrap">
                 <div id="content" class="content">
 
-
                     <section id="posts" class="posts-collapse">
                         <div class="collection-title">
-                            <h2>${category.CName}<small>分类</small></h2>
+                            <h2>${category.CName}<small> 分类</small></h2>
                         </div>
 
                         <c:forEach items="${category.arts}" var="item">
@@ -33,11 +32,10 @@
                                     </h1>
 
                                     <div class="post-meta">
-                                        <time class="post-time" itemprop="dateCreated" datetime="2017-05-17T20:53:38+08:00" content="2017-05-17">
-                                            2017-05-17
-                                        </time>
+                                        <c:if test="${fn:length(item.insertTime) > 10}">
+                                            <c:out value="${fn:substring(item.insertTime, 5, 10)}"/>
+                                        </c:if>
                                     </div>
-
                                 </header>
                             </article>
                         </c:forEach>
