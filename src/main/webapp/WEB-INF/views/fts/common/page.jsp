@@ -15,10 +15,10 @@
         </script>
 
         <c:forEach items="${page.pageLine}" var="line">
-            <c:if test="${line != page.curr}">
+            <c:if test="${line != fn:trim(page.curr)}">
                 <a class="page-number" href="javascript:goURL('${line}')">${line}</a>
             </c:if>
-            <c:if test="${line == page.curr}">
+            <c:if test="${line == fn:trim(page.curr)}">
                 <span class="page-number current" href="javascript:goURL('${line}')">${line}</span>
             </c:if>
             <c:if test="${line == '...'}">

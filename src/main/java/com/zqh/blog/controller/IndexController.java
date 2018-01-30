@@ -5,6 +5,7 @@ import com.zqh.blog.entity.Category;
 import com.zqh.blog.service.ArticleService;
 import com.zqh.blog.service.CategoryService;
 import com.zqh.blog.vo.Page;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,7 @@ public class IndexController extends BaseController {
      */
     @RequestMapping({"index.html", "index", "index.jsp"})
     public String toHomePage(Model model, HttpServletRequest request) {
+        System.out.println("ip:" + getIpAddr(request));
         Page<ArticleInfo> page = articleService.getPage(request);
         page.setUrl("index");
 
@@ -51,6 +53,42 @@ public class IndexController extends BaseController {
         model.addAttribute("page", page)
                 .addAttribute("categoryList", categoryList);
         return "fts/index";
+    }
+
+    private String getIpAddr(HttpServletRequest request) {
+        String Xip = request.getHeader("X-Real-IP");
+        String XFor = request.getHeader("X-Forwarded-For");
+        if(StringUtils.isNotEmpty(XFor) && !"unKnown".equalsIgnoreCase(XFor)){
+            //多次反向代理后会有多个ip值，第一个ip才是真实ip
+            int index = XFor.indexOf(",");
+            if(index != -1){
+                return XFor.substring(0,index);
+            }else{
+                return XFor;
+            }
+        }
+
+        XFor = Xip;
+        if(StringUtils.isNotEmpty(XFor) && !"unKnown".equalsIgnoreCase(XFor)){
+            return XFor;
+        }
+        if (StringUtils.isBlank(XFor) || "unknown".equalsIgnoreCase(XFor)) {
+            XFor = request.getHeader("Proxy-Client-IP");
+        }
+        if (StringUtils.isBlank(XFor) || "unknown".equalsIgnoreCase(XFor)) {
+            XFor = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (StringUtils.isBlank(XFor) || "unknown".equalsIgnoreCase(XFor)) {
+            XFor = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (StringUtils.isBlank(XFor) || "unknown".equalsIgnoreCase(XFor)) {
+            XFor = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (StringUtils.isBlank(XFor) || "unknown".equalsIgnoreCase(XFor)) {
+            XFor = request.getRemoteAddr();
+        }
+
+        return "0:0:0:0:0:0:0:1".equals(XFor) ? "127.0.0.1" : XFor;
     }
 
     /**
