@@ -153,7 +153,7 @@ public class IndexController extends BaseController {
 
 
     /**
-     * 某博客分类下的文章列表
+     * 博客分类下的文章列表
      *
      * @param cid
      * @param model
