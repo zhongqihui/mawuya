@@ -11,7 +11,7 @@
     <meta name="keywords" content="Java"/>
     <meta name="description" content="这是一个疯子的世界，只有疯子才能生存下去。">
 
-    <link rel="shortcut icon" href="${pageContext.request.contextPath}/statics/images/favicon.jpg"/>
+    <link rel="shortcut icon" href="${pageContext.request.contextPath}/statics/images/favicon.ico"/>
     <link href="${pageContext.request.contextPath}/statics/plugins/vendors/fancybox/source/jquery.fancybox8cbb.css?v=2.1.5"
           rel="stylesheet" type="text/css"/>
     <link href="${pageContext.request.contextPath}/statics/plugins/vendors/font-awesome/css/font-awesome.min93e3.css?v=4.4.0"
@@ -33,7 +33,7 @@
     <div class="header-inner">
         <div class="site-meta ">
             <div class="custom-logo-site-title">
-                <a href="index.html" class="brand" rel="start">
+                <a href="${pageContext.request.contextPath}/index" class="brand" rel="start">
                     <span class="logo-line-before"><i></i></span>
                     <span class="site-title">Zqh's Blog</span>
                     <span class="logo-line-after"><i></i></span>

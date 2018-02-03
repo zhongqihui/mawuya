@@ -1,12 +1,15 @@
 package com.zqh.blog.mapper;
 
+import com.zqh.blog.controller.IndexController;
 import com.zqh.blog.entity.ArticleInfo;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.ui.Model;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,12 +19,13 @@ import java.util.Map;
 * @date 2018/1/18 11:42
 * @description
 **/
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"classpath:spring/spring-core.xml"})
 public class ArticleInfoMapperTest {
     @Autowired
     ArticleInfoMapper articleInfoMapper;
+    @Autowired
+    IndexController indexController;
 
     @Test
     public void getArticle() {
@@ -59,5 +63,45 @@ public class ArticleInfoMapperTest {
         info.setAContent("我是内容2").setASummary("我是概要2");
         int update = articleInfoMapper.update(info);
         System.out.println(update);
+    }
+
+    @Test
+    public void testAop() {
+       indexController.getArticle("1", new Model() {
+            @Override
+            public Model addAttribute(String s, Object o) {
+                return null;
+            }
+
+            @Override
+            public Model addAttribute(Object o) {
+                return null;
+            }
+
+            @Override
+            public Model addAllAttributes(Collection<?> collection) {
+                return null;
+            }
+
+            @Override
+            public Model addAllAttributes(Map<String, ?> map) {
+                return null;
+            }
+
+            @Override
+            public Model mergeAttributes(Map<String, ?> map) {
+                return null;
+            }
+
+            @Override
+            public boolean containsAttribute(String s) {
+                return false;
+            }
+
+            @Override
+            public Map<String, Object> asMap() {
+                return null;
+            }
+        });
     }
 }

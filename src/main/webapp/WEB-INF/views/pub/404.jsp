@@ -7,7 +7,7 @@
     <meta name="description" content="404页面">
     <meta name="author" content="zqh">
     <title>Zqh's blog</title>
-    <link rel="shortcut icon" href="${pageContext.request.contextPath}/statics/images/favicon.jpg">
+    <link rel="shortcut icon" href="${pageContext.request.contextPath}/statics/images/favicon.ico">
     <link href="${pageContext.request.contextPath}/statics/plugins/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/statics/css/style.css" rel="stylesheet"/>
 </head>

@@ -10,6 +10,16 @@
 
     <content:component-scan base-package="com.zqh.blog.controller"/>
 
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <mvc:exclude-mapping path="/bms/**"/>
+            <mvc:exclude-mapping path="/statics/**"/>
+            <mvc:exclude-mapping path="/favicon.ico"/>
+            <bean class="com.zqh.blog.interceptor.LogInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
     <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="order" value="10"/>
         <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>

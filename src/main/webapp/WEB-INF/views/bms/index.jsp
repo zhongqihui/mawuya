@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="${pageContext.request.contextPath}/statics/images/favicon.jpg">
+    <link rel="shortcut icon" href="${pageContext.request.contextPath}/statics/images/favicon.ico">
     <title>Zqh's Blog</title>
     <link href="${pageContext.request.contextPath}/statics/plugins/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/statics/css/style.css" rel="stylesheet"/>
