@@ -29,6 +29,7 @@ public class LogInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response,
                              Object o) throws Exception {
+
         LogInfo logInfo = new LogInfo()
                 .setIpAddr(getIpAddr(request))
                 .setBrowser(getOsAndBrowserInfo(request))

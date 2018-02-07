@@ -21,9 +21,11 @@ public class InitializingServer implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         Thread log2API = new Thread(logToAPIThread);
+        log2API.setName("LogToAPIThread");
         log2API.start();
 
         Thread log2DB = new Thread(logToDBThread);
+        log2DB.setName("LogToDBThread");
         log2DB.start();
     }
 }

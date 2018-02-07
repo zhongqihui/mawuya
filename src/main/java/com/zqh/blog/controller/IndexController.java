@@ -1,12 +1,11 @@
 package com.zqh.blog.controller;
 
-import com.zqh.blog.cache.DataCenter;
 import com.zqh.blog.entity.ArticleInfo;
 import com.zqh.blog.entity.Category;
+import com.zqh.blog.listener.MySessionContext;
 import com.zqh.blog.service.ArticleService;
 import com.zqh.blog.service.CategoryService;
 import com.zqh.blog.vo.Page;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +54,11 @@ public class IndexController extends BaseController {
         return "fts/index";
     }
 
+    @RequestMapping("favicon")
+    public String favicon() {
+        return null;
+    }
+
     /**
      * 根据文章id，展示该文章
      *
@@ -63,7 +67,7 @@ public class IndexController extends BaseController {
      * @return
      */
     @RequestMapping("{aid}")
-    public String getArticle(@PathVariable("aid") String aid, Model model) {
+    public String getArticle(@PathVariable("aid") String aid, Model model, HttpServletRequest request) {
         Integer sn = null;
         try {
             sn = Integer.parseInt(aid);
@@ -71,12 +75,8 @@ public class IndexController extends BaseController {
             return ret404Page();
         }
 
-        Map<String, Integer> map = DataCenter.getArticleReadNum();
-        if(map.containsKey(aid)) {
-            map.put(aid, map.get(aid) + 1);
-        }else {
-            map.put(aid, 1);
-        }
+        MySessionContext.getInstance().addArticleSn2Session(request.getSession(), aid);
+
         ArticleInfo info = articleService.selectById(sn);
         if (info == null) {
             return ret404Page();

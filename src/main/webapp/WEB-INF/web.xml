@@ -35,6 +35,11 @@
         <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
     </listener>
 
+    <!--自定义session监听器-->
+    <listener>
+        <listener-class>com.zqh.blog.listener.MySessionListener</listener-class>
+    </listener>
+
     <!-- Spring MVC servlet -->
     <servlet>
         <servlet-name>SpringMVC</servlet-name>
