@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zqh.blog.mapper.LogInfoMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="_columns">
+        sn,ip_addr,country,province,city,area,detail_position,isp,try_times,req_time,resp_time,consume_time,req_url,req_method,params,browser,resp_status,except_message
+    </sql>
+
+    <insert id="insert" parameterType="com.zqh.blog.entity.LogInfo">
+        INSERT INTO log_info (<include refid="_columns" />)
+        VALUES (null,
+                #{ipAddr},
+                #{country},
+                #{province},
+                #{city},
+                #{area},
+                #{detailPosition},
+                #{isp},
+                #{tryTimes},
+                #{reqTime},
+                #{respTime},
+                #{consumeTime},
+                #{reqUrl},
+                #{reqMethod},
+                #{params},
+                #{browser},
+                #{respStatus},
+                #{exceptMessage})
+    </insert>
+
+    <insert id="insertBatch" parameterType="list">
+        INSERT INTO log_info(ip_addr,country,province,city,area,detail_position,isp,try_times,req_time,resp_time,consume_time,req_url,req_method,params,browser,resp_status,except_message)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.ipAddr},
+            #{item.country},
+            #{item.province},
+            #{item.city},
+            #{item.area},
+            #{item.detailPosition},
+            #{item.isp},
+            #{item.tryTimes},
+            #{item.reqTime},
+            #{item.respTime},
+            #{item.consumeTime},
+            #{item.reqUrl},
+            #{item.reqMethod},
+            #{item.params},
+            #{item.browser},
+            #{item.respStatus},
+            #{item.exceptMessage})
+        </foreach>
+    </insert>
+
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM log_info WHERE sn = #{value}
+    </delete>
+
+    <update id="update" parameterType="com.zqh.blog.entity.LogInfo">
+        UPDATE log_info SET 1 = 1 WHERE sn = #{sn}
+    </update>
+
+    <select id="selectById" parameterType="int" resultType="com.zqh.blog.entity.LogInfo">
+        SELECT <include refid="_columns"/> FROM log_info WHERE sn = #{value}
+    </select>
+
+    <select id="selectList" parameterType="map" resultType="com.zqh.blog.entity.LogInfo">
+        SELECT <include refid="_columns"/> FROM log_info
+    </select>
+
+    <select id="selectByPage" parameterType="map" resultType="com.zqh.blog.entity.LogInfo">
+        SELECT <include refid="_columns"/> FROM  log_info
+        <if test="@com.zqh.blog.utils.StrUtil@isAllNoEmpty(start,limit)">
+            limit #{start},#{limit}
+        </if>
+    </select>
+
+    <select id="selectCount" parameterType="map" resultType="int">
+        SELECT count(sn) FROM log_info
+    </select>
+
+
+
+</mapper>

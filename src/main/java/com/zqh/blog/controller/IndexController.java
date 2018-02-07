@@ -1,5 +1,6 @@
 package com.zqh.blog.controller;
 
+import com.zqh.blog.cache.DataCenter;
 import com.zqh.blog.entity.ArticleInfo;
 import com.zqh.blog.entity.Category;
 import com.zqh.blog.service.ArticleService;
@@ -68,6 +69,13 @@ public class IndexController extends BaseController {
             sn = Integer.parseInt(aid);
         } catch (Exception e) {
             return ret404Page();
+        }
+
+        Map<String, Integer> map = DataCenter.getArticleReadNum();
+        if(map.containsKey(aid)) {
+            map.put(aid, map.get(aid) + 1);
+        }else {
+            map.put(aid, 1);
         }
 
         ArticleInfo info = articleService.selectById(sn);

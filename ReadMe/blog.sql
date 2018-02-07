@@ -37,3 +37,23 @@ create table blog_info (
 	blogger_name varchar(30)
 )default charset=utf8 comment='博客信息表';
 
+create table log_info(
+	sn int(11) auto_increment primary key comment '主键sn',
+	ip_addr VARCHAR(50) comment '访客ip地址',
+	country VARCHAR(50) comment '访客国家',
+	province VARCHAR(50) comment '访客省份',
+	city VARCHAR(50) comment '访客城市',
+	area VARCHAR(50) comment '区/县',
+	detail_position varchar(100) comment '详细地理位置',
+	isp varchar(50) comment '访客ip运营商',
+	try_times int(1) not null DEFAULT '0' comment '推送次数',
+	req_time varchar(50) COMMENT  '访客访问时间',
+	resp_time VARCHAR(50) COMMENT '响应访客时间',
+	consume_time VARCHAR(30) COMMENT '该次请求消耗时间',
+	req_url VARCHAR(200) comment '请求路径',
+	req_method VARCHAR(10) COMMENT '请求方式，post，get...',
+	params VARCHAR(500) COMMENT '请求参数',
+	browser VARCHAR(100) COMMENT '访客浏览器信息',
+	resp_status VARCHAR(1) COMMENT '响应状态，0表示成功；1表示失败，如抛异常响应500等',
+	except_message VARCHAR(1000) comment '报异常错误信息'
+) default charset=utf8 comment='访客记录表';

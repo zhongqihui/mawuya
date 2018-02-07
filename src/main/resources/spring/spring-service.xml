@@ -6,7 +6,7 @@
 
     <import resource="classpath:spring/spring-dao.xml"/>
 
-    <content:component-scan base-package="com.zqh.blog.service"/>
+    <content:component-scan base-package="com.zqh.blog.service,com.zqh.blog.thread"/>
 
     <!-- 使用注解的方法进行事务的控制 -->
     <tx:annotation-driven transaction-manager="transactionManager"/>

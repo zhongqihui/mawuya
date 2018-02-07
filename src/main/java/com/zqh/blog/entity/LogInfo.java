@@ -12,7 +12,7 @@ import java.io.Serializable;
  * author: zqh
  * email：zqhfsf@gmail.com
  * date: 2018/2/1 10:44
- * description:
+ * description: 用户访问信息
  **/
 @Getter
 @Setter
@@ -26,7 +26,7 @@ public class LogInfo implements Serializable {
     private String ipAddr;
 
     /*** 国家*/
-    private String state;
+    private String country;
 
     /*** 省份*/
     private String province;
@@ -40,6 +40,12 @@ public class LogInfo implements Serializable {
     /*** 详细地理位置 */
     private String detailPosition;
 
+    /*** 运营商 */
+    private String isp;
+
+    /*** 根据ip接口查询失败次数，3次之后不再请求 */
+    private int tryTimes;
+
     /*** 请求时间*/
     private String reqTime;
 
@@ -47,7 +53,7 @@ public class LogInfo implements Serializable {
     private String respTime;
 
     /*** 请求耗时*/
-    private Long consumeTime;
+    private String consumeTime;
 
     /*** 用户请求的url路径*/
     private String reqUrl;

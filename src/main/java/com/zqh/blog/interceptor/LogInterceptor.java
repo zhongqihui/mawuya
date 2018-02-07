@@ -3,6 +3,7 @@ package com.zqh.blog.interceptor;
 
 import com.zqh.blog.cache.DataCenter;
 import com.zqh.blog.entity.LogInfo;
+import com.zqh.blog.utils.DateUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,14 +56,19 @@ public class LogInterceptor implements HandlerInterceptor {
         LogInfo logInfo = (LogInfo) request.getAttribute("logInfo");
         logInfo.setRespStatus("0")
                 .setExceptMessage("success")
-                .setRespTime(String.valueOf(System.currentTimeMillis()));
+                .setConsumeTime(System.currentTimeMillis() - Long.parseLong(logInfo.getReqTime()) + "ms")
+                .setReqTime(DateUtil.long2Str(Long.parseLong(logInfo.getReqTime())))
+                .setRespTime(DateUtil.long2Str(System.currentTimeMillis()));
 
         if(e != null) {
             logInfo.setRespStatus("1").setExceptMessage(e.getMessage());
         }
 
-        DataCenter.getLogInfoQueue().put(logInfo);
-        System.out.println(logInfo);
+        if(DataCenter.getLogInfoToAPIQueue().remainingCapacity() > 0) {
+            DataCenter.getLogInfoToAPIQueue().put(logInfo);
+        }else {
+            //todo 写入文件
+        }
     }
 
     /**
