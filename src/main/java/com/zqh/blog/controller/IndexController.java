@@ -77,7 +77,6 @@ public class IndexController extends BaseController {
         }else {
             map.put(aid, 1);
         }
-
         ArticleInfo info = articleService.selectById(sn);
         if (info == null) {
             return ret404Page();
