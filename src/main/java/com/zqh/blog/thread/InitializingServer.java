@@ -17,6 +17,8 @@ public class InitializingServer implements InitializingBean {
     private LogToAPIThread logToAPIThread;
     @Autowired
     private LogToDBThread logToDBThread;
+    @Autowired
+    private ReadNumToDBThread readNumToDBThread;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -27,5 +29,9 @@ public class InitializingServer implements InitializingBean {
         Thread log2DB = new Thread(logToDBThread);
         log2DB.setName("LogToDBThread");
         log2DB.start();
+
+        Thread readNum2DB = new Thread(readNumToDBThread);
+        readNum2DB.setName("ReadNumToDBThread");
+        readNum2DB.start();
     }
 }

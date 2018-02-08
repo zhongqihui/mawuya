@@ -21,6 +21,8 @@ public class DataCenter {
     /*** 访客信息入库队列*/
     private static BlockingQueue<LogInfo> logInfoToDBQueue = new ArrayBlockingQueue<LogInfo>(50000);
 
+    private static BlockingQueue<String> readNumToDBQueue = new ArrayBlockingQueue<>(50000);
+
 
     public static BlockingQueue<LogInfo> getLogInfoToAPIQueue() {
         return logInfoToAPIQueue;
@@ -30,4 +32,7 @@ public class DataCenter {
         return logInfoToDBQueue;
     }
 
+    public static BlockingQueue<String> getReadNumToDBQueue() {
+        return readNumToDBQueue;
+    }
 }

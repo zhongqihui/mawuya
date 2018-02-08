@@ -35,4 +35,11 @@ public interface ArticleInfoMapper extends BaseMapper<ArticleInfo, Integer> {
      * @return
      */
     ArticleInfo selectPrevById(Integer id);
+
+    /**
+     * 批量修改sns的readNum + 1
+     * @param sns
+     * @return
+     */
+    int updateBatchReadNum(String sns);
 }

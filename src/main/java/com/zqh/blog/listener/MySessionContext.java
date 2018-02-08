@@ -1,5 +1,7 @@
 package com.zqh.blog.listener;
 
+import com.zqh.blog.utils.CommonUtil;
+
 import javax.servlet.http.HttpSession;
 import java.util.HashSet;
 import java.util.Map;
@@ -57,10 +59,10 @@ public class MySessionContext {
             addSession(s);
         }
 
-        Set<String> aSnSet = (Set<String>) s.getAttribute("aSnSet");
+        Set<String> aSnSet = (Set<String>) s.getAttribute(CommonUtil.ASNSET);
         if(aSnSet == null) {
             aSnSet = new HashSet<>();
-            session.setAttribute("aSnSet", aSnSet);
+            session.setAttribute(CommonUtil.ASNSET, aSnSet);
         }
 
         aSnSet.add(sn);

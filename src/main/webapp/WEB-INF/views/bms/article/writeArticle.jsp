@@ -37,10 +37,9 @@
                         <div class="col-sm-3">
                             <select class="form-control" name="categorySn" id="categorySn">
                                 <option value="0">暂不分类</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
+                                <c:forEach items="${categoryList}" var="list" >
+                                    <option value="${list.sn}">${list.CName}</option>
+                                </c:forEach>
                             </select>
                         </div>
                     </div>
@@ -104,7 +103,7 @@
     $("#publish_blog").click(function () {
         $.ajax({
             type:"post",
-            url:"${pageContext.request.contextPath}/bms/writeArticle.do",
+            url:"${pageContext.request.contextPath}/bms/article/addSubmit.do",
             data: {
                 "aTitle": $("#aTitle").val(),
                 "categorySn": $("#categorySn").val(),

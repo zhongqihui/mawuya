@@ -85,6 +85,10 @@
         WHERE sn = #{sn}
     </update>
 
+    <update id="updateBatchReadNum" parameterType="string">
+        update article_info a set a.read_num = a.read_num + 1 WHERE sn in (${value})
+    </update>
+
 
 
 </mapper>

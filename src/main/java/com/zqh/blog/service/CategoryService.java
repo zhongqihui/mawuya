@@ -31,6 +31,10 @@ public class CategoryService extends BaseService<Category,Integer> {
         this.categoryMapper = baseMapper;
     }
 
+    /**
+     * 获取所有的分类和分类下文章的篇数
+     * @return
+     */
     public List<Category> getCategoryList() {
         Map map = new HashMap();
         List<Category> categories = categoryMapper.selectList(map);
@@ -46,6 +50,11 @@ public class CategoryService extends BaseService<Category,Integer> {
         return categories;
     }
 
+    /**
+     * 获取某分类和该分类下的所有文章
+     * @param sn
+     * @return
+     */
     public Category getCategoryBySn(Integer sn) {
         Category category = categoryMapper.selectById(sn);
         if(category != null) {

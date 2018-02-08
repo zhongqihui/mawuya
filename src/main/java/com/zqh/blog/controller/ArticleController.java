@@ -1,13 +1,19 @@
 package com.zqh.blog.controller;
 
+import com.sun.org.apache.xpath.internal.operations.Mod;
 import com.zqh.blog.entity.ArticleInfo;
+import com.zqh.blog.entity.Category;
 import com.zqh.blog.service.ArticleService;
+import com.zqh.blog.service.CategoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
 
 /**
 * author: zqh
@@ -16,12 +22,14 @@ import org.springframework.web.bind.annotation.*;
 * description: 博客文章管理后台controller
 **/
 @Controller
-@RequestMapping("bms")
+@RequestMapping("bms/article")
 public class ArticleController extends BaseController {
     private static final Logger log = LoggerFactory.getLogger(ArticleController.class);
 
     @Autowired
     ArticleService articleService;
+    @Autowired
+    CategoryService categoryService;
 
     @PostMapping("login.do")
     public String login() {
@@ -33,12 +41,14 @@ public class ArticleController extends BaseController {
         return "bms/index";
     }
 
-    @GetMapping("writeArticle.do")
-    public String toWriteArticle() {
+    @GetMapping("toAdd.do")
+    public String toWriteArticle(Model model) {
+        List<Category> categories = categoryService.selectList(new HashMap());
+        model.addAttribute("categoryList", categories);
         return "bms/article/writeArticle";
     }
 
-    @PostMapping("writeArticle.do")
+    @PostMapping("addSubmit.do")
     @ResponseBody
     public String publishArticle(ArticleInfo articleInfo) {
         int count = articleService.insert(articleInfo);

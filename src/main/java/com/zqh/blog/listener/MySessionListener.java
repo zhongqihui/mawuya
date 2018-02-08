@@ -1,7 +1,12 @@
 package com.zqh.blog.listener;
 
+import com.zqh.blog.cache.DataCenter;
+import com.zqh.blog.utils.CommonUtil;
+
+import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
+import java.util.Set;
 
 /**
 * author: zqh
@@ -12,15 +17,28 @@ import javax.servlet.http.HttpSessionListener;
 public class MySessionListener implements HttpSessionListener {
     @Override
     public void sessionCreated(HttpSessionEvent event) {
-        //MySessionContext.getInstance().addSession(event.getSession());
-        //单位s
+        //设置session的失效时间，单位s
         event.getSession().setMaxInactiveInterval(60);
-        System.out.println("添加session");
+        System.out.println("设置session的失效时间为60，单位s");
     }
 
+    /**
+     * Session 失效时，将该session访问过的文章readNum + 1，放入集合中，等待线程将其入库
+     * @param event
+     */
     @Override
     public void sessionDestroyed(HttpSessionEvent event) {
-        //todo session 一销毁，则将该session中的读的文章次数 + 1
-        System.out.println(event.getSession().getId() + ": session 一销毁，则将该session中的读的文章次数 + 1");
+        String id = event.getSession().getId();
+        HttpSession session = MySessionContext.getInstance().getSession(id);
+        if(session != null) {
+            Set<String> aSnSet = (Set<String>) session.getAttribute(CommonUtil.ASNSET);
+            if(aSnSet.size() > 0) {
+                DataCenter.getReadNumToDBQueue().addAll(aSnSet);
+            }
+
+            MySessionContext.getInstance().delSession(session);
+        }
+
+        System.out.println("session:" + id + "销毁！！！！！！！！！！！！阅读次数 + 1");
     }
 }

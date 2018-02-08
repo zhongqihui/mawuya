@@ -11,6 +11,11 @@
     <link href="${pageContext.request.contextPath}/statics/plugins/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/statics/css/style.css" rel="stylesheet"/>
     <link rel="stylesheet" type="text/css" href="http://cdn.bootcss.com/font-awesome/4.6.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/statics/plugins/bootstrap.switch/bootstrap-switch.css"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/statics/plugins/bootstrap.datetimepicker/css/bootstrap-datetimepicker.min.css"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/statics/plugins/jquery.select2/select2.css"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/statics/plugins/bootstrap.slider/css/slider.css"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/statics/plugins/jquery.datatables/bootstrap-adapter/css/datatables.css"/>
 </head>
 
 <body>
@@ -41,8 +46,9 @@
             </ul>
             <ul class="nav navbar-nav navbar-right not-nav">
                 <li class="button dropdown">
-                    <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown"><i
-                            class=" fa fa-comments"></i></a>
+                    <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class=" fa fa-comments"></i>
+                    </a>
                     <ul class="dropdown-menu messages">
                         <li>
                             <div class="nano nscroller">
@@ -86,8 +92,9 @@
                     </ul>
                 </li>
                 <li class="button dropdown">
-                    <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown"><i
-                            class="fa fa-globe"></i><span class="bubble">2</span></a>
+                    <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-globe"></i><span class="bubble">2</span>
+                    </a>
                     <ul class="dropdown-menu">
                         <li>
                             <div class="nano nscroller">
@@ -142,10 +149,9 @@
                         </li>
                         <li><a href="#"><i class="fa fa-smile-o"></i><span>博客管理</span></a>
                             <ul class="sub-menu">
-                                <li><a href="javascript:linkTo('${pageContext.request.contextPath}/bms/writeArticle.do')">写博客</a></li>
-                                <li><a href="ui-buttons.html">Buttons</a></li>
-                                <li><a href="ui-modals.html"><span class="label label-primary pull-right">New</span>
-                                    Modals</a></li>
+                                <li><a href="javascript:linkTo('${pageContext.request.contextPath}/bms/article/toAdd.do')">写博客</a></li>
+                                <li><a href="javascript:linkTo('${pageContext.request.contextPath}/bms/category/categoryList.do')">博客分类管理</a></li>
+                                <li><a href="ui-modals.html"><span class="label label-primary pull-right">New</span>Modals</a></li>
                                 <li><a href="ui-notifications.html"><span
                                         class="label label-primary pull-right">New</span> Notifications</a></li>
                                 <li><a href="ui-icons.html">Icons</a></li>
@@ -236,11 +242,25 @@
 <script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/plugins/jquery.js"></script>
 <script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/plugins/behaviour/general.js"></script>
+        src="${pageContext.request.contextPath}/statics/plugins/jquery.nestable/jquery.nestable.js"></script>
 <script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/plugins/bootstrap/dist/js/bootstrap.min.js"></script>
 <script type="text/javascript"
+        src="${pageContext.request.contextPath}/statics/plugins/bootstrap.switch/bootstrap-switch.min.js"></script>
+<script type="text/javascript"
+        src="${pageContext.request.contextPath}/statics/plugins/bootstrap.datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript"
+        src="${pageContext.request.contextPath}/statics/plugins/bootstrap.slider/js/bootstrap-slider.js"></script>
+<script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/plugins/jquery.nanoscroller/jquery.nanoscroller.js"></script>
+<script type="text/javascript"
+        src="${pageContext.request.contextPath}/statics/plugins/jquery.ui/jquery-ui.js"></script>
+<script type="text/javascript"
+        src="${pageContext.request.contextPath}/statics/plugins/jquery.datatables/jquery.datatables.min.js"></script>
+<script type="text/javascript"
+        src="${pageContext.request.contextPath}/statics/plugins/jquery.select2/select2.min.js"></script>
+<script type="text/javascript"
+        src="${pageContext.request.contextPath}/statics/plugins/behaviour/general.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
         App.init();
