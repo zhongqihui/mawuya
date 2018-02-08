@@ -1,5 +1,6 @@
-package com.zqh.blog.controller;
+package com.zqh.blog.controller.bms;
 
+import com.zqh.blog.controller.BaseController;
 import com.zqh.blog.entity.Category;
 import com.zqh.blog.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;

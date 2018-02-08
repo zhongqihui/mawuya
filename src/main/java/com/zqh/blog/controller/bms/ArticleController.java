@@ -1,6 +1,6 @@
-package com.zqh.blog.controller;
+package com.zqh.blog.controller.bms;
 
-import com.sun.org.apache.xpath.internal.operations.Mod;
+import com.zqh.blog.controller.BaseController;
 import com.zqh.blog.entity.ArticleInfo;
 import com.zqh.blog.entity.Category;
 import com.zqh.blog.service.ArticleService;
@@ -31,15 +31,6 @@ public class ArticleController extends BaseController {
     @Autowired
     CategoryService categoryService;
 
-    @PostMapping("login.do")
-    public String login() {
-        return "bms/index";
-    }
-
-    @GetMapping({"test","login"})
-    public String index() {
-        return "bms/index";
-    }
 
     @GetMapping("toAdd.do")
     public String toWriteArticle(Model model) {
