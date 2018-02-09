@@ -26,11 +26,6 @@
     $(document).ready(function () {
         App.init();
     });
-
-    /*链接到后台url*/
-    function linkTo(url) {
-        $("#pcont").load(url);
-    }
 </script>
 
 <script src="${pageContext.request.contextPath}/statics/plugins/layui/layui.js"></script>

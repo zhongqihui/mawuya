@@ -8,9 +8,10 @@
             <a class="navbar-brand" href="#"><span>Zqh's Blog</span></a>
         </div>
         <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
+           <%-- //加个通知滚动 TODO --%>
+            <%--<ul class="nav navbar-nav">
                 <li class="active"><a href="#">Home</a></li>
-            </ul>
+            </ul>--%>
             <ul class="nav navbar-nav navbar-right user-nav">
                 <li class="dropdown profile_menu">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">

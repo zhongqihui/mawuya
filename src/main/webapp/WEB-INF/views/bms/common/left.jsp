@@ -31,33 +31,16 @@
                             <ul class="sub-menu" kit-navbar>
                                 <li>
                                     <a data-url="form.html" kit-target
-                                       data-options="{url:'${pageContext.request.contextPath}/bms/article/toAdd.do',icon:'&#xe658;',title:'发布博客',id:'1'}">
-                                        <i class="layui-icon">&#xe658;</i>
-                                        <span>发布博客</span>
+                                       data-options="{url:'${pageContext.request.contextPath}/bms/article/toAdd.do',title:'发布博客',id:'1'}">
+                                        &nbsp;&nbsp;<span>发布博客</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a data-url="form.html" kit-target
-                                       data-options="{url:'${pageContext.request.contextPath}/bms/category/categoryList.do',icon:'&#xe658;',title:'分类列表',id:'2'}">分类列表</a>
+                                       data-options="{url:'${pageContext.request.contextPath}/bms/category/categoryList.do',title:'分类列表',id:'2'}">
+                                        &nbsp;&nbsp;<span>分类列表</span>
+                                    </a>
                                 </li>
-                            </ul>
-
-                            <ul class="sub-menu">
-                                <li>
-                                    <a href="javascript:linkTo('${pageContext.request.contextPath}/bms/article/toAdd.do')">写博客</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:linkTo('${pageContext.request.contextPath}/bms/category/categoryList.do')">博客分类管理</a>
-                                </li>
-                                <li><a href="ui-modals.html"><span class="label label-primary pull-right">New</span>Modals</a>
-                                </li>
-                                <li><a href="ui-notifications.html"><span
-                                        class="label label-primary pull-right">New</span> Notifications</a></li>
-                                <li><a href="ui-icons.html">Icons</a></li>
-                                <li><a href="ui-grid.html">Grid</a></li>
-                                <li><a href="ui-tabs-accordions.html">Tabs & Acordions</a></li>
-                                <li><a href="ui-nestable-lists.html">Nestable Lists</a></li>
-                                <li><a href="ui-treeview.html">Tree View</a></li>
                             </ul>
                         </li>
                         <li><a href="#"><i class="fa fa-list-alt"></i><span>留言管理</span></a>

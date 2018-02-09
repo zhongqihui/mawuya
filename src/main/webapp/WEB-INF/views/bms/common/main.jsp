@@ -3,6 +3,6 @@
 <html>
 <body>
 
-    <h2>我是首页，我没想好写什么</h2>
+    <div>我是首页</div>
 </body>
 </html>

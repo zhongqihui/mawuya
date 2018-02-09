@@ -8,9 +8,9 @@
     <%@include file="common/css-head.jsp" %>
 </head>
 
-<body>
+<body style="overflow: hidden">
 
-<div style="overflow: hidden">
+<div>
     <%--导入头文件--%>
     <%@include file="common/head.jsp" %>
 

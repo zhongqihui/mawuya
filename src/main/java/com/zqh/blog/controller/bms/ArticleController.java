@@ -46,5 +46,10 @@ public class ArticleController extends BaseController {
         return "success";
     }
 
+    @GetMapping("list.do")
+    public String articleList(Model model) {
+        return null;
+    }
+
 
 }

@@ -18,8 +18,8 @@ public class MySessionListener implements HttpSessionListener {
     @Override
     public void sessionCreated(HttpSessionEvent event) {
         //设置session的失效时间，单位s
-        event.getSession().setMaxInactiveInterval(60);
-        System.out.println("设置session的失效时间为60，单位s");
+        event.getSession().setMaxInactiveInterval(60 * 5);
+        System.out.println("设置session的失效时间为300，单位s;" + event.getSession().getId());
     }
 
     /**

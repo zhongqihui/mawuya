@@ -25,7 +25,7 @@
         createTabDom: function () {
             var i = this, e = i._config;
             if (i._parentElem = e.elem, !i.tabDomExists()) {
-                var a = ['<div class="layui-tab layui-tab-card kit-tab" lay-filter="' + i._filter + '">', '<ul class="layui-tab-title">', '<li class="layui-this" lay-id="-1"><i class="layui-icon">&#xe68e;</i> 首页</li>', "</ul>", '<div class="kit-tab-tool">操作&nbsp;<i class="fa fa-caret-down"></i></div>', '<div class="kit-tab-tool-body layui-anim layui-anim-upbit">', "<ul>", '<li class="kit-item" data-target="refresh">刷新当前选项卡</li>', '<li class="kit-line"></li>', '<li class="kit-item" data-target="closeCurrent">关闭当前选项卡</li>', '<li class="kit-item" data-target="closeOther">关闭其他选项卡</li>', '<li class="kit-line"></li>', '<li class="kit-item" data-target="closeAll">关闭所有选项卡</li>', "</ul>", "</div>", '<div class="layui-tab-content">', '<div class="layui-tab-item layui-show" lay-item-id="-1"><iframe scrolling="no" frameborder="0" src="' + e.mainUrl + '"></iframe></div>', "</div>", "</div>"];
+                var a = ['<div class="layui-tab layui-tab-card kit-tab" lay-filter="' + i._filter + '">', '<ul class="layui-tab-title">', '<li class="layui-this" lay-id="-1"><i class="fa fa-home"></i> 首页</li>', "</ul>", '<div class="kit-tab-tool">操作&nbsp;<i class="fa fa-caret-down"></i></div>', '<div class="kit-tab-tool-body layui-anim layui-anim-upbit">', "<ul>", '<li class="kit-item" data-target="refresh">刷新当前选项卡</li>', '<li class="kit-line"></li>', '<li class="kit-item" data-target="closeCurrent">关闭当前选项卡</li>', '<li class="kit-item" data-target="closeOther">关闭其他选项卡</li>', '<li class="kit-line"></li>', '<li class="kit-item" data-target="closeAll">关闭所有选项卡</li>', "</ul>", "</div>", '<div class="layui-tab-content">', '<div class="layui-tab-item layui-show" lay-item-id="-1"><iframe scrolling="no" frameborder="0" src="' + e.mainUrl + '"></iframe></div>', "</div>", "</div>"];
                 t(e.elem).html(a.join("")), i._title = t(".kit-tab ul.layui-tab-title"), i._content = t(".kit-tab div.layui-tab-content");
                 var l = t(".kit-tab-tool"), n = t(".kit-tab-tool-body");
                 l.on("click", function () {
@@ -88,7 +88,7 @@
             if (t.tabExists(s)) t.tabChange(s); else {
                 NProgress.start();
                 var r = ['<li class="layui-this" lay-id="' + s + '" >'];
-                -1 !== n.indexOf("fa-") ? r.push('<i class="fa ' + n + '" aria-hidden="true"></i>') : r.push('<i class="layui-icon">' + n + "</i>"), r.push("&nbsp;" + l), r.push('<i class="layui-icon layui-unselect layui-tab-close">&#x1006;</i>'), r.push("</li>");
+                /*-1 !== n.indexOf("fa-") ? r.push('<i class="fa ' + n + '" aria-hidden="true"></i>') : r.push('<i class="layui-icon">' + n + "</i>"),*/ r.push("&nbsp;" + l), r.push('<i class="layui-icon layui-unselect layui-tab-close">&#x1006;</i>'), r.push("</li>");
                 var o = '<div class="layui-tab-item layui-show" lay-item-id="' + s + '"><iframe src="' + c + '"></iframe></div>';
                 t._title.append(r.join("")), t._content.append(o), t.getTab(s).find("i.layui-tab-close").off("click").on("click", function () {
                     a.closeBefore ? a.closeBefore(i) && t.tabDelete(s) : t.tabDelete(s)
