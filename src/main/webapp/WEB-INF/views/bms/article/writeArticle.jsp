@@ -17,65 +17,61 @@
 </head>
 
 <body>
-<div style="margin:20px 20px 10% 20px">
-    <form class="layui-form" id="article-form">
 
-        <div class="layui-form-item">
-            <div class="layui-col-md12 layui-col-xs12">
-                <label class="layui-form-label">博客标题</label>
-                <div class="layui-col-md6 layui-col-xs8">
-                    <input type="text" name="aTitle" id="aTitle" class="layui-input validate[required]">
+<div class="row">
+    <div class="col-md-12">
+        <div class="block-flat">
+            <div class="header">
+                <h3>Basic Elements</h3>
+            </div>
+            <div class="content">
+                <form class="form-horizontal group-border-dashed" id="article-form" style="border-radius: 0px;">
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">博客标题</label>
+                        <div class="col-sm-6">
+                            <input type="text" class="form-control validate[required]" name="aTitle" id="aTitle" >
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">分类于</label>
+                        <div class="col-sm-6">
+                            <select class="select2" name="categorySn" id="categorySn">
+                                <option value="0">暂不分类</option>
+                                <c:forEach items="${categoryList}" var="list">
+                                    <option value="${list.sn}">${list.CName}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">概要</label>
+                        <div class="col-sm-8">
+                            <textarea class="form-control validate[required]" id="aSummary" name="aSummary"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">博客内容</label>
+                        <div class="col-sm-11" id="test-editormd">
+                            <textarea class="editormd-markdown-textarea" name="test-editormd-markdown-doc"
+                                      id="editormd"></textarea>
+                            <!-- 第二个隐藏文本域，用来构造生成的HTML代码，方便表单POST提交，这里的name可以任意取，后台接受时以这个name键为准 -->
+                            <!-- html textarea 需要开启配置项 saveHTMLToTextarea == true -->
+                            <textarea class="editormd-html-textarea" name="aContent" id="aContent"></textarea>
+                        </div>
+                    </div>
+
+                </form>
+
+                <div class="form-group">
+                    <label class="col-sm-1 control-label"></label>
+                    <button type="button" class="btn btn-primary" id="publish_blog">立即发布</button>
+                    <button type="reset" class="btn btn-default" onclick="resetBlog()">重置</button>
                 </div>
             </div>
-        </div>
-
-        <div class="layui-form-item">
-            <div class="layui-col-md12 layui-col-xs12">
-                <label class="layui-form-label">分类于</label>
-                <div class="layui-col-md3 layui-col-xs6">
-                    <select name="categorySn" id="categorySn" lay-search="" class="validate[required]">
-                        <option value="0">暂不分类</option>
-                        <c:forEach items="${categoryList}" var="list">
-                            <option value="${list.sn}">${list.CName}</option>
-                        </c:forEach>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="layui-form-item layui-form-text">
-            <label class="layui-form-label">概要</label>
-            <div class="layui-col-md8 layui-col-xs8">
-                <textarea placeholder="请输入概要" name="aSummary" id="aSummary"
-                          class="layui-textarea validate[required]"></textarea>
-            </div>
-        </div>
-
-        <div class="layui-form-item layui-form-text">
-            <label class="layui-form-label">博客内容</label>
-
-            <div class="layui-col-md10 layui-col-xs10" id="test-editormd">
-               <textarea class="editormd-markdown-textarea" name="test-editormd-markdown-doc"
-                         id="editormd"></textarea>
-                <!-- 第二个隐藏文本域，用来构造生成的HTML代码，方便表单POST提交，这里的name可以任意取，后台接受时以这个name键为准 -->
-                <!-- html textarea 需要开启配置项 saveHTMLToTextarea == true -->
-                <textarea class="editormd-html-textarea" name="aContent" id="aContent"></textarea>
-            </div>
-
-        </div>
-
-    </form>
-
-    <div class="layui-form-item">
-        <div class="layui-input-block">
-            <button class="layui-btn layui-btn-xs" id="publish_blog">立即发布</button>
-            <button class="layui-btn layui-btn-warm layui-btn-xs">重置</button>
         </div>
     </div>
-
-
 </div>
-
 
 <script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/plugins/editor.md/editormd.min.js"></script>
@@ -89,7 +85,58 @@
     //jquery.validate框架初始化
     $(function () {
         $("#article-form").validationEngine("attach", {scroll: false});
+        App.init();
+
+        //发布博客
+        $("#publish_blog").click(function () {
+            var flag = $("#article-form").validationEngine("validate");
+            if (flag == false) {
+                return;
+            } else {
+                $.ajax({
+                    type: "post",
+                    url: "${pageContext.request.contextPath}/bms/article/addSubmit.do",
+                    data: {
+                        "aTitle": $("#aTitle").val(),
+                        "categorySn": $("#categorySn").val(),
+                        "aSummary": $("#aSummary").val(),
+                        "aContent": $("#aContent").val()
+                    },
+                    cache: false,
+                    success: function (data) {
+                        if (data == "success") {
+                            layer.confirm('发布成功！赶快去看看吧', {
+                                btn: ['去看看', '懒，不去'],
+                                skin: 'layui-layer-lan',
+                                anim: 4,
+                                icon: 1
+                            }, function (index) {
+                                resetBlog();
+                                layer.close(index);
+                                window.open('${pageContext.request.contextPath}/index');
+                            }, function (index) {
+                                resetBlog();
+                                layer.close(index);
+                            });
+                        } else {
+                            layer.alert('发布失败', {
+                                skin: 'layui-layer-lan',
+                                closeBtn: 0,
+                                nim: 4,
+                                icon: 2
+                            });
+                        }
+                    }
+                });
+            }
+        });
+
     });
+
+    function resetBlog() {
+        $('#article-form')[0].reset();
+        $('.fa-eraser').trigger('click');
+    }
 
 </script>
 
@@ -118,48 +165,6 @@
             saveHTMLToTextarea: true
         });
     });
-
-    $("#publish_blog").click(function () {
-        var flag = $("#article-form").validationEngine("validate");
-        if (flag == false) {
-            return;
-        } else {
-            $.ajax({
-                type: "post",
-                url: "${pageContext.request.contextPath}/bms/article/addSubmit.do",
-                data: {
-                    "aTitle": $("#aTitle").val(),
-                    "categorySn": $("#categorySn").val(),
-                    "aSummary": $("#aSummary").val(),
-                    "aContent": $("#aContent").val()
-                },
-                cache: false,
-                success: function (data) {
-                    if (data == "success") {
-                        layer.confirm('发布成功！赶快去看看吧', {
-                            btn: ['去看看', '懒，不去'],
-                            skin: 'layui-layer-lan',
-                            anim: 4,
-                            icon: 1
-                        }, function () {
-                            layer.close();
-                            window.open('${pageContext.request.contextPath}/index');
-                        }, function () {});
-                    } else {
-                        layer.alert('发布失败', {
-                            skin: 'layui-layer-lan',
-                            closeBtn: 0,
-                            nim: 4,
-                            icon: 2
-                        });
-                    }
-                }
-            });
-        }
-
-    });
-
-
 </script>
 
 </body>

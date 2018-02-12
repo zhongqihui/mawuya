@@ -4,6 +4,7 @@ import com.zqh.blog.entity.ArticleInfo;
 import com.zqh.blog.entity.Category;
 import com.zqh.blog.mapper.ArticleInfoMapper;
 import com.zqh.blog.mapper.CategoryMapper;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -65,5 +66,40 @@ public class CategoryService extends BaseService<Category,Integer> {
         }
 
         return category;
+    }
+
+
+    /**
+     * 删除博客分类的同时，将文章的CategorySn修改成0，暂无分类
+     * @return
+     */
+    public String delCategory(String sn) {
+        int id;
+        try{
+            id = Integer.parseInt(sn);
+        }catch (Exception e){
+            return "fail";
+        }
+
+        int delCount = categoryMapper.deleteById(id);
+        if(delCount <= 0) {
+            return "fail";
+        }
+
+        Map<String, String> map = new HashMap<>();
+        map.put("category", sn);
+        List<ArticleInfo> list = articleInfoMapper.selectAllNoContent(map);
+        StringBuffer sb = new StringBuffer();
+        for(ArticleInfo a:list) {
+            sb.append(a.getSn()).append(",");
+        }
+
+        String aSns = sb.toString();
+        if(StringUtils.isNotEmpty(aSns) && aSns.endsWith(",")) {
+            aSns = aSns.substring(0, aSns.length() - 1);
+            articleInfoMapper.updateBatchCategorySn(aSns);
+        }
+
+        return "success";
     }
 }

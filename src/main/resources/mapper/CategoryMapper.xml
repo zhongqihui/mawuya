@@ -24,7 +24,7 @@
     </select>
 
     <select id="selectList" parameterType="map" resultType="com.zqh.blog.entity.Category">
-        SELECT <include refid="_columns"/> FROM category_info
+        SELECT <include refid="_columns"/> FROM category_info order by sn desc
     </select>
 
     <select id="selectByPage" parameterType="map" resultType="com.zqh.blog.entity.Category">

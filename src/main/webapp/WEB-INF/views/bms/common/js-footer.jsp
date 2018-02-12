@@ -34,6 +34,8 @@
         src="${pageContext.request.contextPath}/statics/plugins/behaviour/voice-commands.js"></script>
 <script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/plugins/jquery.select2/select2.min.js"></script>
+<script type="text/javascript"
+        src="${pageContext.request.contextPath}/statics/plugins/layer/layer.js"></script>
 <%--<script type="text/javascript" src="${pageContext.request.contextPath}/statics/plugins/jquery.flot/jquery.flot.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/statics/plugins/jquery.flot/jquery.flot.pie.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/statics/plugins/jquery.flot/jquery.flot.resize.js"></script>

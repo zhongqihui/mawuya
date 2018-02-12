@@ -42,4 +42,12 @@ public interface ArticleInfoMapper extends BaseMapper<ArticleInfo, Integer> {
      * @return
      */
     int updateBatchReadNum(String sns);
+
+
+    /**
+     * 批量修改category_sn的值为0
+     * @param sns
+     * @return
+     */
+    int updateBatchCategorySn(String sns);
 }

@@ -75,5 +75,51 @@ public class ArticleController extends BaseController {
         return "bms/article/article_list";
     }
 
+    /**
+     * 删除博客
+     *
+     * @param sn
+     * @return
+     */
+    @RequestMapping("delSubmit.do")
+    @ResponseBody
+    public String delSubmit(String sn) {
+        return articleService.delArtcleAndReview(sn);
+    }
+
+    /**
+     * 进入博客文章修改页面
+     *
+     * @param sn
+     * @param model
+     * @return
+     */
+    @RequestMapping("toUpdate.do")
+    public String toUpdate(String sn, Model model) {
+        int id;
+        try {
+            id = Integer.parseInt(sn);
+        } catch (Exception e) {
+            return ret404Page();
+        }
+
+        ArticleInfo articleInfo = articleService.selectById(id);
+        model.addAttribute("article", articleInfo);
+        return "bms/article/modArticle";
+    }
+
+
+    /**
+     * 修改文章提交
+     * @param a
+     * @return
+     */
+    @PostMapping("updateSubmit.do")
+    @ResponseBody
+    public String updateSubmit(ArticleInfo a) {
+        return articleService.update(a) <= 0 ? "fail" : "success";
+    }
+
+
 
 }

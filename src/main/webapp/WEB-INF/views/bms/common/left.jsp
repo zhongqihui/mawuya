@@ -26,16 +26,16 @@
                             </ul>
                         </li>
 
-                        <li><a href="#"><i class="fa fa-smile-o"></i>&nbsp;<span>博客管理</span></a>
+                        <li><a href="#"><i class="fa fa-smile-o"></i><span>博客管理</span></a>
                             <ul class="sub-menu" >
                                 <li>
-                                    <a link-url="${pageContext.request.contextPath}/bms/article/toAdd.do" class="link-li" id="1">发布博客</a>
+                                    <a link-url="${pageContext.request.contextPath}/bms/article/toAdd.do" class="link-li" id="1">&nbsp;&nbsp;发布博客</a>
                                 </li>
                                 <li>
-                                    <a link-url="${pageContext.request.contextPath}/bms/category/categoryList.do" class="link-li" id="2">分类列表</a>
+                                    <a link-url="${pageContext.request.contextPath}/bms/category/categoryList.do" class="link-li" id="2">&nbsp;&nbsp;分类列表</a>
                                 </li>
                                 <li>
-                                    <a link-url="${pageContext.request.contextPath}/bms/article/list.do" class="link-li" id="3">博客列表</a>
+                                    <a link-url="${pageContext.request.contextPath}/bms/article/list.do" class="link-li" id="3">&nbsp;&nbsp;博客列表</a>
                                 </li>
                             </ul>
                         </li>

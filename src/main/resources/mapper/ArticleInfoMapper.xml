@@ -49,7 +49,13 @@
     </select>
 
     <select id="selectAllNoContent" parameterType="map" resultType="com.zqh.blog.entity.ArticleInfo" >
-        SELECT <include refid="_columns_no_content"/> FROM  article_info ORDER BY sn DESC
+        SELECT <include refid="_columns_no_content"/> FROM  article_info
+        <where>
+            <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(categorySn)">
+                AND category_sn = #{categorySn}
+            </if>
+        </where>
+        ORDER BY sn DESC
     </select>
 
     <select id="selectNextById" parameterType="int" resultType="com.zqh.blog.entity.ArticleInfo">
@@ -89,6 +95,9 @@
         update article_info a set a.read_num = a.read_num + 1 WHERE sn in (${value})
     </update>
 
+    <update id="updateBatchCategorySn" parameterType="string">
+        update article_info a set a.category_sn = 0 WHERE sn in (${value})
+    </update>
 
 
 </mapper>

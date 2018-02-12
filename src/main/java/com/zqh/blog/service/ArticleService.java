@@ -2,7 +2,6 @@ package com.zqh.blog.service;
 
 import com.zqh.blog.entity.ArticleInfo;
 import com.zqh.blog.mapper.ArticleInfoMapper;
-import com.zqh.blog.mapper.BaseMapper;
 import com.zqh.blog.utils.DateUtil;
 import com.zqh.blog.vo.Page;
 import org.slf4j.Logger;
@@ -95,5 +94,25 @@ public class ArticleService extends BaseService<ArticleInfo, Integer> {
      */
     public List<ArticleInfo> getAllNoContent(Map map) {
         return articleInfoMapper.selectAllNoContent(map);
+    }
+
+    /**
+     * 删除文章和该文章下的评论
+     * @return
+     */
+    public String delArtcleAndReview(String sn) {
+        int id;
+        try{
+            id = Integer.parseInt(sn);
+        }catch (Exception e){
+            return "fail";
+        }
+
+        if(articleInfoMapper.deleteById(id) <= 0) {
+            return "fail";
+        }
+
+        //todo 根据id删除评论
+        return "success";
     }
 }

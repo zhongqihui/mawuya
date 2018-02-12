@@ -27,6 +27,11 @@ public class CategoryController extends BaseController {
     @Autowired
     private CategoryService categoryService;
 
+    /**
+     * 进入博客分类列表页面
+     * @param model
+     * @return
+     */
     @GetMapping("categoryList.do")
     public String categoryList(Model model) {
         long l = System.currentTimeMillis();
@@ -36,36 +41,66 @@ public class CategoryController extends BaseController {
         return "bms/category/category_list";
     }
 
+    /**
+     * 进入添加博客分类页面
+     * @return
+     */
     @GetMapping("toAdd.do")
     public String toAdd() {
-        return "bms/category/add_category";
+        return "bms/category/mod_category";
     }
 
+    /**
+     * 添加博客分类
+     * @param category
+     * @return
+     */
     @PostMapping("addSubmit.do")
     @ResponseBody
     public String addSubmit(Category category) {
-        categoryService.insert(category);
-        return "success";
+        return categoryService.insert(category) <= 0? "fail" :"success";
     }
 
+    /**
+     * 进入博客分类修改页面
+     * @param sn
+     * @param model
+     * @return
+     */
     @RequestMapping("toUpdate.do")
-    public String toUpdate(Category category, Model model) {
+    public String toUpdate(String sn, Model model) {
+        int id;
+        try{
+            id = Integer.parseInt(sn);
+        }catch (Exception e) {
+            return ret404Page();
+        }
+
+        Category category = categoryService.selectById(id);
         model.addAttribute("category", category);
-        return "bms/category/update_category";
+        return "bms/category/mod_category";
     }
 
+    /**
+     * 博客分类修改提交
+     * @param category
+     * @return
+     */
     @PostMapping("updateSubmit.do")
     @ResponseBody
     public String updateSubmit(Category category) {
-        categoryService.update(category);
-        return "success";
+        return categoryService.update(category) <= 0 ? "fail" : "success";
     }
 
+    /**
+     * 删除博客分类
+     * @param sn
+     * @return
+     */
     @RequestMapping("delSubmit.do")
     @ResponseBody
     public String delSubmit(String sn) {
-        categoryService.deleteById(Integer.parseInt(sn));
-        return "success";
+        return categoryService.delCategory(sn);
     }
 
 }
