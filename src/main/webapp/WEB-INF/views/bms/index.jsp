@@ -2,13 +2,13 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="overflow-x: hidden">
 <head>
     <%--导入css头文件--%>
     <%@include file="common/css-head.jsp" %>
 </head>
 
-<body style="overflow: hidden">
+<body>
 
 <div>
     <%--导入头文件--%>

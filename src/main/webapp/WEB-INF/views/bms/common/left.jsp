@@ -19,27 +19,23 @@
                     <ul class="cl-vnavigation">
 
                         <li><a href="#"><i class="fa fa-home"></i><span>我的博客</span></a>
-                            <ul class="sub-menu" kit-navbar>
+                            <ul class="sub-menu">
                                 <li>
                                     <a href="${pageContext.request.contextPath}/index" target="_blank">博客首页</a>
                                 </li>
                             </ul>
                         </li>
 
-                        <li><a href="#"><i class="fa fa-smile-o"></i><span>博客管理</span></a>
-
-                            <ul class="sub-menu" kit-navbar>
+                        <li><a href="#"><i class="fa fa-smile-o"></i>&nbsp;<span>博客管理</span></a>
+                            <ul class="sub-menu" >
                                 <li>
-                                    <a data-url="form.html" kit-target
-                                       data-options="{url:'${pageContext.request.contextPath}/bms/article/toAdd.do',title:'发布博客',id:'1'}">
-                                        &nbsp;&nbsp;<span>发布博客</span>
-                                    </a>
+                                    <a link-url="${pageContext.request.contextPath}/bms/article/toAdd.do" class="link-li" id="1">发布博客</a>
                                 </li>
                                 <li>
-                                    <a data-url="form.html" kit-target
-                                       data-options="{url:'${pageContext.request.contextPath}/bms/category/categoryList.do',title:'分类列表',id:'2'}">
-                                        &nbsp;&nbsp;<span>分类列表</span>
-                                    </a>
+                                    <a link-url="${pageContext.request.contextPath}/bms/category/categoryList.do" class="link-li" id="2">分类列表</a>
+                                </li>
+                                <li>
+                                    <a link-url="${pageContext.request.contextPath}/bms/article/list.do" class="link-li" id="3">博客列表</a>
                                 </li>
                             </ul>
                         </li>
@@ -96,8 +92,19 @@
 
     <!-- 内容主体区域 -->
     <div class="container-fluid" id="pcont">
-        <div class="" id="container" style="height: 100%">
-            <div style="padding: 15px;">内容加载中,请稍等...</div>
+        <div class="row">
+            <div class="tab-container">
+                <ul class="nav nav-tabs" id="tab-title">
+                    <li class="title-li active" id="title0"  style="margin-left: 50px;">
+                        <i class="fa fa-home"></i>首页
+                    </li>
+                </ul>
+                <div class="tab-content" id="tab-content">
+                    <div class="tab-pane active cont" id="content0">
+                        <p>首页</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

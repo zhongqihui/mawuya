@@ -12,8 +12,6 @@
     <link rel="stylesheet"
           href="${pageContext.request.contextPath}/statics/plugins/editor.md/css/editormd.css"/>
     <link rel="stylesheet"
-          href="${pageContext.request.contextPath}/statics/plugins/layui/css/layui.css" media="all">
-    <link rel="stylesheet"
           href="${pageContext.request.contextPath}/statics/plugins/jquery.validationEngine/validationEngine.jquery.css"/>
 
 </head>
@@ -78,12 +76,9 @@
 
 </div>
 
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/plugins/jquery.js"></script>
+
 <script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/plugins/editor.md/editormd.min.js"></script>
-<script type="text/javascript"
-        src="${pageContext.request.contextPath}/statics/plugins/layui/layui.js"></script>
 <%--校验框架--%>
 <script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/plugins/jquery.validationEngine/jquery.validationEngine.min.js"></script>
@@ -94,7 +89,6 @@
     //jquery.validate框架初始化
     $(function () {
         $("#article-form").validationEngine("attach", {scroll: false});
-        layui.use(['form']);
     });
 
 </script>

@@ -41,35 +41,39 @@ public class ArticleService extends BaseService<ArticleInfo, Integer> {
 
     /**
      * 封装分页信息
+     *
      * @param request
      * @return
      */
     public Page<ArticleInfo> getPage(HttpServletRequest request) {
         String currNum = request.getParameter("currNum");
         String showNum = request.getParameter("showNum");
-        Integer curr = 1;Integer limit = 2;
-        try{
+        Integer curr = 1;
+        Integer limit = 2;
+        try {
             curr = Integer.parseInt(currNum);
             limit = Integer.parseInt(showNum);
-        }catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return selectByPage(curr, limit);
     }
 
     /**
      * 封装归档信息
+     *
      * @return key为年份，value为Article集合
      */
-    public Map<String,List<ArticleInfo>> getYearMap() {
+    public Map<String, List<ArticleInfo>> getYearMap() {
         List<ArticleInfo> infos = articleInfoMapper.selectAllNoContent(new HashMap<>());
-        if(infos == null || infos.isEmpty()) {
+        if (infos == null || infos.isEmpty()) {
             return new HashMap<>();
         }
 
         Map<String, List<ArticleInfo>> listMap = new LinkedHashMap<>();
         for (ArticleInfo a : infos) {
             String key = DateUtil.getYear(a.getInsertTime());
-            if(!listMap.containsKey(key)) {
+            if (!listMap.containsKey(key)) {
                 List<ArticleInfo> list = new ArrayList<>();
                 list.add(a);
                 listMap.put(key, list);
@@ -81,5 +85,15 @@ public class ArticleService extends BaseService<ArticleInfo, Integer> {
         }
 
         return listMap;
+    }
+
+    /**
+     * 获取所有无内容的文章
+     *
+     * @param map
+     * @return
+     */
+    public List<ArticleInfo> getAllNoContent(Map map) {
+        return articleInfoMapper.selectAllNoContent(map);
     }
 }
