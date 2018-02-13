@@ -8,7 +8,6 @@
         </button>
     </ol>
 </div>
-
     <div class="row">
         <div class="col-md-12">
             <div class="block-flat">
@@ -71,47 +70,7 @@
         //修改博客
         $('.fa-pencil').click(function () {
             var sn = $(this).attr('update-id');
-            var url = '${pageContext.request.contextPath}/bms/article/toUpdate.do?sn=' + sn;
-            $.get(url, function (data) {//get请求跳转修改博客分类页面
-                layer.open({
-                    type: 1,
-                    skin: 'layui-layer-lan',
-                    title: '修改博客分类',
-                    content: data,
-                    area: ['350px', '160px'],
-                    btn: ['确定', '取消'],
-                    yes: function (index, layero) {//确认修改操作
-                        layer.close(index);//手动关闭layer层
-                        var load = layer.load(0, {shade: [0.1, '#fff']});//加载load特效
-                        $.ajax({
-                            type: "post",
-                            url: '${pageContext.request.contextPath}/bms/article/updateSubmit.do',
-                            data: {
-                                'sn': sn,
-                                'CName': layero.find('input[name="CName"]').val()
-                            },
-                            success: function (result) {
-                                layer.close(load); //关闭load特效
-                                if (result == 'success') {
-                                    layer.alert("修改成功", {
-                                        skin: 'layui-layer-lan',
-                                        icon: 1,
-                                        end: function () {//修改成功则div重新加载
-                                            $('#content3').load('${pageContext.request.contextPath}/bms/article/list.do');
-                                        }
-                                    });
-                                } else {
-                                    layer.alert('修改失败', {
-                                        skin: 'layui-layer-lan',
-                                        closeBtn: 0,
-                                        icon: 2
-                                    });
-                                }
-                            }
-                        });
-                    }
-                });
-            });
+            $('#content3').load('${pageContext.request.contextPath}/bms/article/toUpdate.do?sn=' + sn);
         });
 
         //删除博客

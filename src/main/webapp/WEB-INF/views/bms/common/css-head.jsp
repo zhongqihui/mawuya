@@ -62,4 +62,8 @@
         filter: alpha(opacity=50);
         opacity: .5;
     }
+
+    a {
+        cursor:pointer;
+    }
 </style>

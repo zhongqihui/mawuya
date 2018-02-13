@@ -18,18 +18,30 @@
 
 <body>
 
+<div class="page-head">
+    <ol class="breadcrumb">
+        <li>博客管理</li>
+        <li>博客列表</li>
+        <c:if test="${article != null}">
+            <li class="active">博客修改</li>
+        </c:if>
+        <c:if test="${article == null}">
+            <li class="active">发布博客</li>
+        </c:if>
+        <span style="float: right;"><a onclick="retArticleList()">&lt;返回</a></span>
+    </ol>
+</div>
+
 <div class="row">
     <div class="col-md-12">
         <div class="block-flat">
-            <div class="header">
-                <h3>Basic Elements</h3>
-            </div>
             <div class="content">
                 <form class="form-horizontal group-border-dashed" id="article-form" style="border-radius: 0px;">
+                    <input type="hidden" id="sn" name="sn" value="${article.sn}"/>
                     <div class="form-group">
                         <label class="col-sm-1 control-label">博客标题</label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control validate[required]" name="aTitle" id="aTitle" >
+                            <input type="text" class="form-control validate[required]" name="aTitle" id="aTitle" value="${article.ATitle}" >
                         </div>
                     </div>
                     <div class="form-group">
@@ -38,7 +50,7 @@
                             <select class="select2" name="categorySn" id="categorySn">
                                 <option value="0">暂不分类</option>
                                 <c:forEach items="${categoryList}" var="list">
-                                    <option value="${list.sn}">${list.CName}</option>
+                                    <option value="${list.sn}" <c:if test="${list.sn eq article.categorySn}">selected="selected"</c:if> >${list.CName}</option>
                                 </c:forEach>
                             </select>
                         </div>
@@ -46,7 +58,7 @@
                     <div class="form-group">
                         <label class="col-sm-1 control-label">概要</label>
                         <div class="col-sm-8">
-                            <textarea class="form-control validate[required]" id="aSummary" name="aSummary"></textarea>
+                            <textarea class="form-control validate[required]" id="aSummary" name="aSummary">${article.ASummary}</textarea>
                         </div>
                     </div>
 
@@ -54,7 +66,7 @@
                         <label class="col-sm-1 control-label">博客内容</label>
                         <div class="col-sm-11" id="test-editormd">
                             <textarea class="editormd-markdown-textarea" name="test-editormd-markdown-doc"
-                                      id="editormd"></textarea>
+                                      id="editormd">${article.AContent}</textarea>
                             <!-- 第二个隐藏文本域，用来构造生成的HTML代码，方便表单POST提交，这里的name可以任意取，后台接受时以这个name键为准 -->
                             <!-- html textarea 需要开启配置项 saveHTMLToTextarea == true -->
                             <textarea class="editormd-html-textarea" name="aContent" id="aContent"></textarea>
@@ -87,12 +99,37 @@
         $("#article-form").validationEngine("attach", {scroll: false});
         App.init();
 
+        var contentEditor = editormd("test-editormd", {
+            width: false,
+            height: 640,
+            //markdown : md,
+            codeFold: true,
+            syncScrolling: "single",
+            //你的lib目录的路径
+            path: "${pageContext.request.contextPath}/statics/plugins/editor.md/lib/",
+            imageUpload: false,//关闭图片上传功能
+            //theme: "dark",//工具栏主题
+            //previewTheme: "dark",//预览主题
+            //editorTheme: "pastel-on-dark",//编辑主题
+            emoji: true,
+            taskList: true,
+            tocm: true,         // Using [TOCM]
+            tex: true,                   // 开启科学公式TeX语言支持，默认关闭
+            flowChart: true,             // 开启流程图支持，默认关闭
+            sequenceDiagram: true,       // 开启时序/序列图支持，默认关闭,
+            //这个配置在simple.html中并没有，但是为了能够提交表单，使用这个配置可以让构造出来的HTML代码直接在第二个隐藏的textarea域中，方便post提交表单。
+            saveHTMLToTextarea: true
+        });
+
+
         //发布博客
         $("#publish_blog").click(function () {
             var flag = $("#article-form").validationEngine("validate");
             if (flag == false) {
                 return;
             } else {
+                var content = contentEditor.getMarkdown();//editor.md的源代码
+
                 $.ajax({
                     type: "post",
                     url: "${pageContext.request.contextPath}/bms/article/addSubmit.do",
@@ -133,38 +170,21 @@
 
     });
 
+    // 重置博客内容信息
     function resetBlog() {
         $('#article-form')[0].reset();
-        $('.fa-eraser').trigger('click');
+        $('.fa-eraser').trigger('click');//触发editor.md的内置清除
+    }
+
+    // 返回上一页
+    function retArticleList() {
+        $('#content3').load('${pageContext.request.contextPath}/bms/article/list.do');
     }
 
 </script>
 
 <script type="text/javascript">
-    var testEditor;
-    testEditor = $(function () {
-        editormd("test-editormd", {
-            width: false,
-            height: 640,
-            //markdown : md,
-            codeFold: true,
-            syncScrolling: "single",
-            //你的lib目录的路径
-            path: "${pageContext.request.contextPath}/statics/plugins/editor.md/lib/",
-            imageUpload: false,//关闭图片上传功能
-            //theme: "dark",//工具栏主题
-            //previewTheme: "dark",//预览主题
-            //editorTheme: "pastel-on-dark",//编辑主题
-            emoji: true,
-            taskList: true,
-            tocm: true,         // Using [TOCM]
-            tex: true,                   // 开启科学公式TeX语言支持，默认关闭
-            flowChart: true,             // 开启流程图支持，默认关闭
-            sequenceDiagram: true,       // 开启时序/序列图支持，默认关闭,
-            //这个配置在simple.html中并没有，但是为了能够提交表单，使用这个配置可以让构造出来的HTML代码直接在第二个隐藏的textarea域中，方便post提交表单。
-            saveHTMLToTextarea: true
-        });
-    });
+
 </script>
 
 </body>
