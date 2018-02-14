@@ -4,7 +4,7 @@
 <div class="page-head">
     <ol class="breadcrumb">
         这是一个疯子的世界，只有疯子才能生存下去
-        <button type="button" title="添加博客" id="article-add" class="btn btn-default btn-xs"><i class="fa fa-file"></i>
+        <button type="button" title="发布博客" onclick="toAddBlogPage()" class="btn btn-default btn-xs"><i class="fa fa-file"></i>
         </button>
     </ol>
 </div>
@@ -31,7 +31,7 @@
                             <c:forEach items="${articleList}" var="item" varStatus="status">
                                 <tr class="odd gradeX">
                                     <td>${status.count}</td>
-                                    <td>${item.ATitle}</td>
+                                    <td>${item.articleTitle}</td>
                                     <td>
                                         <c:if test="${item.categorySn == 0}">
                                             暂无分类
@@ -39,7 +39,7 @@
                                         <c:if test="${item.categorySn != 0}">
                                             <c:forEach items="${categoryList}" var="c">
                                                 <c:if test="${c.sn eq item.categorySn}">
-                                                    ${c.CName}
+                                                    ${c.categoryName}
                                                 </c:if>
                                             </c:forEach>
                                         </c:if>
@@ -50,8 +50,8 @@
                                     <td>${item.insertTime}</td>
                                     <td>${item.updateTime}</td>
                                     <td class="center">
-                                        <i class="fa fa-pencil" title="修改" update-id="${item.sn}"></i>&nbsp;&nbsp;
-                                        <i class="fa fa-trash-o" title="删除" del-id="${item.sn}"></i>
+                                        <i class="fa fa-pencil" title="修改" onclick="toModBlogPage('${item.sn}')"></i>&nbsp;&nbsp;
+                                        <i class="fa fa-trash-o" title="删除" onclick="delBlog('${item.sn}')"></i>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -65,48 +65,52 @@
 
 <script>
     $(function () {
+        //表格框架初始化
         $('#datatable-article').dataTable();
-
-        //修改博客
-        $('.fa-pencil').click(function () {
-            var sn = $(this).attr('update-id');
-            $('#content3').load('${pageContext.request.contextPath}/bms/article/toUpdate.do?sn=' + sn);
-        });
-
-        //删除博客
-        $('.fa-trash-o').click(function () {
-            var delId = $(this).attr('del-id');
-            layer.confirm('确认删除？', {
-                btn: ['是', '我后悔了'],
-                skin: 'layui-layer-lan'
-            }, function () {
-                var load = layer.load(0, {shade: [0.1, '#fff']});
-                $.ajax({
-                    type: "get",
-                    url: "${pageContext.request.contextPath}/bms/article/delSubmit.do?sn=" + delId,
-                    cache: false,
-                    success: function (data) {
-                        layer.close(load);
-                        if (data == 'success') {
-                            layer.alert("删除成功", {
-                                skin: 'layui-layer-lan',
-                                icon: 1,
-                                end: function () {
-                                    $('#content3').load('${pageContext.request.contextPath}/bms/article/list.do');
-                                }
-                            });
-                        } else {
-                            layer.alert('删除失败', {
-                                skin: 'layui-layer-lan',
-                                closeBtn: 0,
-                                icon: 2
-                            });
-                        }
-                    }
-                });
-            }, function () {
-            });
-        });
     });
+
+    //加载修改博客页面
+    function toModBlogPage(sn) {
+        $('#content3').load('${pageContext.request.contextPath}/bms/article/toUpdate.do?sn=' + sn);
+    }
+
+    //跳转到添加博客页面
+    function toAddBlogPage() {
+        $('#content3').load('${pageContext.request.contextPath}/bms/article/toAdd.do?');
+    }
+
+    //删除博客
+    function delBlog(sn) {
+        layer.confirm('确认删除？', {
+            btn: ['是', '我后悔了'],
+            skin: 'layui-layer-lan'
+        }, function () {
+            var load = layer.load(0, {shade: [0.1, '#fff']});
+            $.ajax({
+                type: "get",
+                url: "${pageContext.request.contextPath}/bms/article/delSubmit.do?sn=" + sn,
+                cache: false,
+                success: function (data) {
+                    layer.close(load);
+                    if (data == 'success') {
+                        layer.alert("删除成功", {
+                            skin: 'layui-layer-lan',
+                            icon: 1,
+                            end: function () {
+                                $('#content3').load('${pageContext.request.contextPath}/bms/article/list.do');
+                            }
+                        });
+                    } else {
+                        layer.alert('删除失败', {
+                            skin: 'layui-layer-lan',
+                            closeBtn: 0,
+                            icon: 2
+                        });
+                    }
+                }
+            });
+        }, function () {});
+    }
+
 </script>
 

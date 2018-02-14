@@ -110,7 +110,7 @@ public class ArticleController extends BaseController {
         List<Category> categories = categoryService.selectList(new HashMap());
         model.addAttribute("categoryList", categories)
             .addAttribute("article", articleInfo);
-        return "bms/article/write_article";
+        return "bms/article/mod_article";
     }
 
 
@@ -122,7 +122,16 @@ public class ArticleController extends BaseController {
     @PostMapping("updateSubmit.do")
     @ResponseBody
     public String updateSubmit(ArticleInfo a) {
-        return articleService.update(a) <= 0 ? "fail" : "success";
+        ArticleInfo dbArticle = articleService.selectById(a.getSn());
+        if(dbArticle == null) {
+            return "fail";
+        }
+
+        dbArticle.setArticleContent(a.getArticleContent())
+                .setArticleSummary(a.getArticleSummary())
+                .setArticleTitle(a.getArticleTitle())
+                .setCategorySn(a.getCategorySn());
+        return articleService.update(dbArticle) <= 0 ? "fail" : "success";
     }
 
 

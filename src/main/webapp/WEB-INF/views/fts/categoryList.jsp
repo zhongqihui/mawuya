@@ -26,7 +26,7 @@
                                 <ul class="category-list">
                                     <c:forEach items="${categoryList}" var="item">
                                         <li class="category-list-item">
-                                            <a class="category-list-link" href="${pageContext.request.contextPath}/categories/${item.sn}">${item.CName}</a>
+                                            <a class="category-list-link" href="${pageContext.request.contextPath}/categories/${item.sn}">${item.categoryName}</a>
                                             <span class="category-list-count">${item.artSize}</span>
                                         </li>
                                     </c:forEach>

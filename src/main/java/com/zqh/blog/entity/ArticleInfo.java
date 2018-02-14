@@ -35,11 +35,11 @@ public class ArticleInfo implements Serializable {
     /*** 文章图片url，多个用英文逗号隔开*/
     private String pictureUrl;
     /*** 文章标题*/
-    private String aTitle;
+    private String articleTitle;
     /*** 文章概要*/
-    private String aSummary;
+    private String articleSummary;
     /*** 文章内容*/
-    private String aContent;
+    private String articleContent;
     /*** 文章插入时间*/
     private String insertTime;
     /*** 文章修改时间*/

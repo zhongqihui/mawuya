@@ -22,12 +22,7 @@
     <ol class="breadcrumb">
         <li>博客管理</li>
         <li>博客列表</li>
-        <c:if test="${article != null}">
-            <li class="active">博客修改</li>
-        </c:if>
-        <c:if test="${article == null}">
-            <li class="active">发布博客</li>
-        </c:if>
+        <li class="active">博客修改</li>
         <span style="float: right;"><a onclick="retArticleList()">&lt;返回</a></span>
     </ol>
 </div>
@@ -36,21 +31,21 @@
     <div class="col-md-12">
         <div class="block-flat">
             <div class="content">
-                <form class="form-horizontal group-border-dashed" id="article-form" style="border-radius: 0px;">
-                    <input type="hidden" id="sn" name="sn" value="${article.sn}"/>
+                <form class="form-horizontal group-border-dashed" id="mod-article-form" style="border-radius: 0px;">
+                    <input type="hidden"  name="sn" value="${article.sn}"/>
                     <div class="form-group">
                         <label class="col-sm-1 control-label">博客标题</label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control validate[required]" name="aTitle" id="aTitle" value="${article.ATitle}" >
+                            <input type="text" class="form-control validate[required]" name="articleTitle" value="${article.articleTitle}" >
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-1 control-label">分类于</label>
                         <div class="col-sm-6">
-                            <select class="select2" name="categorySn" id="categorySn">
+                            <select class="select2" name="categorySn">
                                 <option value="0">暂不分类</option>
                                 <c:forEach items="${categoryList}" var="list">
-                                    <option value="${list.sn}" <c:if test="${list.sn eq article.categorySn}">selected="selected"</c:if> >${list.CName}</option>
+                                    <option value="${list.sn}" <c:if test="${list.sn eq article.categorySn}">selected="selected"</c:if> >${list.categoryName}</option>
                                 </c:forEach>
                             </select>
                         </div>
@@ -58,18 +53,18 @@
                     <div class="form-group">
                         <label class="col-sm-1 control-label">概要</label>
                         <div class="col-sm-8">
-                            <textarea class="form-control validate[required]" id="aSummary" name="aSummary">${article.ASummary}</textarea>
+                            <textarea class="form-control validate[required]" name="articleSummary">${article.articleSummary}</textarea>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="col-sm-1 control-label">博客内容</label>
-                        <div class="col-sm-11" id="test-editormd">
+                        <div class="col-sm-11" id="mod-article-editormd">
                             <textarea class="editormd-markdown-textarea" name="test-editormd-markdown-doc"
-                                      id="editormd">${article.AContent}</textarea>
-                            <!-- 第二个隐藏文本域，用来构造生成的HTML代码，方便表单POST提交，这里的name可以任意取，后台接受时以这个name键为准 -->
+                                      id="editormd">${article.articleContent}</textarea>
+                           <%-- <!-- 第二个隐藏文本域，用来构造生成的HTML代码，方便表单POST提交，这里的name可以任意取，后台接受时以这个name键为准 -->
                             <!-- html textarea 需要开启配置项 saveHTMLToTextarea == true -->
-                            <textarea class="editormd-html-textarea" name="aContent" id="aContent"></textarea>
+                            <textarea class="editormd-html-textarea" name="aContent"></textarea>--%>
                         </div>
                     </div>
 
@@ -77,7 +72,7 @@
 
                 <div class="form-group">
                     <label class="col-sm-1 control-label"></label>
-                    <button type="button" class="btn btn-primary" id="publish_blog">立即发布</button>
+                    <button type="button" class="btn btn-primary" id="mod_blog_btn">立即修改</button>
                     <button type="reset" class="btn btn-default" onclick="resetBlog()">重置</button>
                 </div>
             </div>
@@ -96,10 +91,10 @@
 <script>
     //jquery.validate框架初始化
     $(function () {
-        $("#article-form").validationEngine("attach", {scroll: false});
+        $("#mod-article-form").validationEngine("attach", {scroll: false});
         App.init();
 
-        var contentEditor = editormd("test-editormd", {
+        var contentEditor = editormd("mod-article-editormd", {
             width: false,
             height: 640,
             //markdown : md,
@@ -118,45 +113,51 @@
             flowChart: true,             // 开启流程图支持，默认关闭
             sequenceDiagram: true,       // 开启时序/序列图支持，默认关闭,
             //这个配置在simple.html中并没有，但是为了能够提交表单，使用这个配置可以让构造出来的HTML代码直接在第二个隐藏的textarea域中，方便post提交表单。
-            saveHTMLToTextarea: true
+            //saveHTMLToTextarea: true
         });
 
 
         //发布博客
-        $("#publish_blog").click(function () {
-            var flag = $("#article-form").validationEngine("validate");
+        $("#mod_blog_btn").click(function () {
+            var flag = $("#mod-article-form").validationEngine("validate");
             if (flag == false) {
                 return;
             } else {
                 var content = contentEditor.getMarkdown();//editor.md的源代码
+                var sn = $('#mod-article-form').find('input[name="sn"]').val();
+                var title = $('#mod-article-form').find('input[name="articleTitle"]').val();
+                var categorySn = $('#mod-article-form').find('select[name="categorySn"]').val();
+                var summary = $('#mod-article-form').find('textarea[name="articleSummary"]').val();
+
 
                 $.ajax({
                     type: "post",
-                    url: "${pageContext.request.contextPath}/bms/article/addSubmit.do",
+                    url: "${pageContext.request.contextPath}/bms/article/updateSubmit.do",
                     data: {
-                        "aTitle": $("#aTitle").val(),
-                        "categorySn": $("#categorySn").val(),
-                        "aSummary": $("#aSummary").val(),
-                        "aContent": $("#aContent").val()
+                        "sn":sn,
+                        "articleTitle":title,
+                        "categorySn":categorySn,
+                        "articleSummary": summary,
+                        "articleContent": content
                     },
                     cache: false,
                     success: function (data) {
                         if (data == "success") {
-                            layer.confirm('发布成功！赶快去看看吧', {
+                            layer.confirm('修改成功！赶快去看看吧', {
                                 btn: ['去看看', '懒，不去'],
                                 skin: 'layui-layer-lan',
                                 anim: 4,
                                 icon: 1
                             }, function (index) {
-                                resetBlog();
                                 layer.close(index);
-                                window.open('${pageContext.request.contextPath}/index');
+                                retArticleList();
+                                window.open('${pageContext.request.contextPath}/'+ sn);
                             }, function (index) {
-                                resetBlog();
                                 layer.close(index);
+                                retArticleList();
                             });
                         } else {
-                            layer.alert('发布失败', {
+                            layer.alert('修改失败', {
                                 skin: 'layui-layer-lan',
                                 closeBtn: 0,
                                 nim: 4,
@@ -172,8 +173,8 @@
 
     // 重置博客内容信息
     function resetBlog() {
-        $('#article-form')[0].reset();
-        $('.fa-eraser').trigger('click');//触发editor.md的内置清除
+        /*$('#article-form')[0].reset();
+        $('.fa-eraser').trigger('click');//触发editor.md的内置清除*/
     }
 
     // 返回上一页

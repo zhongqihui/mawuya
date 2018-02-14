@@ -7,7 +7,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">分类名称:</label>
                 <div class="col-sm-8">
-                    <input class="form-control" name="CName" type="text" value="${category.CName}"/>
+                    <input class="form-control" name="categoryName" type="text" value="${category.categoryName}"/>
                 </div>
             </div>
         </div>

@@ -19,7 +19,7 @@
 
                     <section id="posts" class="posts-collapse">
                         <div class="collection-title">
-                            <h2>${category.CName}<small> 分类</small></h2>
+                            <h2>${category.categoryName}<small> 分类</small></h2>
                         </div>
 
                         <c:forEach items="${category.arts}" var="item">
@@ -27,7 +27,7 @@
                                 <header class="post-header">
                                     <h1 class="post-title">
                                         <a class="post-title-link" href="">
-                                            <span>${item.ATitle}</span>
+                                            <span>${item.articleTitle}</span>
                                         </a>
                                     </h1>
 

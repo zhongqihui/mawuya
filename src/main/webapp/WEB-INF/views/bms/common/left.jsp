@@ -28,9 +28,9 @@
 
                         <li><a href="#"><i class="fa fa-smile-o"></i><span>博客管理</span></a>
                             <ul class="sub-menu" >
-                                <li>
+                                <%--<li>
                                     <a link-url="${pageContext.request.contextPath}/bms/article/toAdd.do" class="link-li" id="1">&nbsp;&nbsp;发布博客</a>
-                                </li>
+                                </li>--%>
                                 <li>
                                     <a link-url="${pageContext.request.contextPath}/bms/category/categoryList.do" class="link-li" id="2">&nbsp;&nbsp;分类列表</a>
                                 </li>
