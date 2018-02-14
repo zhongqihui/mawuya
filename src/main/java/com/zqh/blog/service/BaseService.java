@@ -103,7 +103,6 @@ public class BaseService<T, PK extends Serializable> {
                 .setPageLine(PageUtil.pcnDefault(curr, pageSize))
                 .setSize(limit)
                 .setPageSize(pageSize);
-
         return page;
     }
 
