@@ -497,7 +497,8 @@ html, body {
 }
 
 .main {
-    padding-bottom: 150px
+    padding-bottom: 150px;
+    min-height: 280px;
 }
 
 .main-inner {

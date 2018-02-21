@@ -56,7 +56,6 @@
                             <textarea class="form-control validate[required]" name="articleSummary">${article.articleSummary}</textarea>
                         </div>
                     </div>
-
                     <div class="form-group">
                         <label class="col-sm-1 control-label">博客内容</label>
                         <div class="col-sm-11" id="mod-article-editormd">
@@ -102,7 +101,9 @@
             syncScrolling: "single",
             //你的lib目录的路径
             path: "${pageContext.request.contextPath}/statics/plugins/editor.md/lib/",
-            imageUpload: false,//关闭图片上传功能
+            imageUpload: true,//关闭图片上传功能
+            imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+            imageUploadURL : "${pageContext.request.contextPath}/bms/article/imgUpload.do",//后端的上传图片服务地址
             //theme: "dark",//工具栏主题
             //previewTheme: "dark",//预览主题
             //editorTheme: "pastel-on-dark",//编辑主题

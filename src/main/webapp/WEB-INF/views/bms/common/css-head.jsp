@@ -50,12 +50,12 @@
         background: #ffffff;
     }
 
-    .fa-pencil,.fa-trash-o{
+    .fa-pencil,.fa-trash-o,.fa-cloud-upload{
         width: 13px;
         height:13px;
     }
 
-    .fa-pencil:hover,.fa-trash-o:hover {
+    .fa-pencil:hover,.fa-trash-o:hover,.fa-cloud-upload:hover {
         background: #000;
         text-decoration: none;
         cursor: pointer;

@@ -35,7 +35,7 @@
 
     </select>
 
-    <select id="selectByPage" parameterType="map" resultType="com.zqh.blog.entity.ArticleInfo">
+    <select id="selectByPage" parameterType="java.util.Map" resultType="com.zqh.blog.entity.ArticleInfo">
         SELECT <include refid="_columns"/> FROM  article_info
         <where>
             <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(categorySn)">
@@ -99,5 +99,8 @@
         update article_info a set a.category_sn = 0 WHERE sn in (${value})
     </update>
 
+    <update id="updatePictureUrl" parameterMap="com.zqh.blog.entity.ArticleInfo">
+        UPDATE article_info a set a.picture_url = #{pictureUrl} WHERE a.sn = #{sn}
+    </update>
 
 </mapper>

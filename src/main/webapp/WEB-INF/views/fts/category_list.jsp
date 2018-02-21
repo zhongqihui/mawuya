@@ -5,7 +5,7 @@
 
 <html class="theme-next mist use-motion">
 <head>
-    <title> Zqh's Blog </title>
+    <%@include file="common/css-head.jsp"%>
 </head>
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-home">
@@ -32,13 +32,14 @@
                                     </c:forEach>
                                 </ul>
                             </div>
+
                         </div>
 
                     </div>
-
                 </div>
 
             </div>
+
             <%@ include file="common/sidebar.jsp" %>
 
         </div>

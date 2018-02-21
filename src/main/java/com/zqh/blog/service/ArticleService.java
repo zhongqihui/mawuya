@@ -115,4 +115,13 @@ public class ArticleService extends BaseService<ArticleInfo, Integer> {
         //todo 根据id删除评论
         return "success";
     }
+
+    /**
+     * 修改某篇博客的背景图片
+     * @param articleInfo
+     * @return
+     */
+    public int updatePictureUrl(ArticleInfo articleInfo) {
+        return articleInfoMapper.updatePictureUrl(articleInfo);
+    }
 }

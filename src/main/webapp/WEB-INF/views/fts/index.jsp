@@ -5,7 +5,7 @@
 
 <html class="theme-next mist use-motion">
 <head>
-    <title> Zqh's Blog </title>
+    <%@include file="common/css-head.jsp" %>
 </head>
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-home">
@@ -67,8 +67,11 @@
 
                                 <div class="post-body">
                                     <p>${article.articleSummary}</p>
-                                    <p><img src="${pageContext.request.contextPath}/statics/images/gallery/img6.jpg"
-                                            alt=""></p>
+                                    <c:if test="${article.pictureUrl != null}">
+                                        <p>
+                                            <img src="${article.pictureUrl}" alt=""/>
+                                        </p>
+                                    </c:if>
                                     <div class="post-more-link text-center">
                                         <a class="btn" href="${pageContext.request.contextPath}/${article.sn}"
                                            rel="contents">

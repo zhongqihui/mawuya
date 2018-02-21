@@ -4,10 +4,8 @@
 <html class="theme-next mist use-motion">
 <head>
     <title>${article.articleTitle} | Zqh's Blog </title>
-    <link rel="stylesheet"
-          href="${pageContext.request.contextPath}/statics/plugins/editor.md/css/editormd.css"/>
-    <link rel="stylesheet"
-          href="${pageContext.request.contextPath}/statics/plugins/editor.md/css/editormd.preview.min.css"/>
+    <%@include file="common/css-head.jsp"%>
+
 </head>
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-post-detail">
@@ -51,7 +49,7 @@
                             </header>
 
                             <div class="post-body">
-                                <div id="articleContentDiv" class="mdl-cell mdl-card mdl-cell--12-col mdl-shadow--2dp content">
+                                <div id="articleContentDiv">
                                     <textarea style="display: none">${article.articleContent}</textarea>
                                 </div>
                             </div>
@@ -122,8 +120,8 @@
             emoji: true,
             taskList: true,
             tex: true, // 默认不解析
-            flowChart: true, // 默认不解析
-            sequenceDiagram: true, // 默认不解析
+            //flowChart: true, // 默认不解析
+            //sequenceDiagram: true, // 默认不解析
             codeFold: true
         });
     });

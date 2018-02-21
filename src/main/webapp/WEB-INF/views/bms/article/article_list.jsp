@@ -21,7 +21,7 @@
                                 <th>博客分类</th>
                                 <th>阅读次数</th>
                                 <th>评论次数</th>
-                                <th>图片路径</th>
+                                <th>背景图片</th>
                                 <th>发布时间</th>
                                 <th>修改时间</th>
                                 <th>操作</th>
@@ -50,6 +50,7 @@
                                     <td>${item.insertTime}</td>
                                     <td>${item.updateTime}</td>
                                     <td class="center">
+                                        <i class="fa fa-cloud-upload" title="上传背景图" onclick="uploadPicture('${item.sn}')"></i>&nbsp;&nbsp;
                                         <i class="fa fa-pencil" title="修改" onclick="toModBlogPage('${item.sn}')"></i>&nbsp;&nbsp;
                                         <i class="fa fa-trash-o" title="删除" onclick="delBlog('${item.sn}')"></i>
                                     </td>
@@ -77,6 +78,48 @@
     //跳转到添加博客页面
     function toAddBlogPage() {
         $('#content3').load('${pageContext.request.contextPath}/bms/article/toAdd.do?');
+    }
+
+    //上传背景图
+    function uploadPicture(sn) {
+        layer.open({
+            type: 1,
+            skin: 'layui-layer-lan',
+            title: '上传背景图片',
+            content: '<form enctype="multipart/form-data" method="post" style="margin-top: 25px;" id="backgroundImgUploadForm"><div class="col-md-12"><input name="sn" type="hidden" value="'+ sn + '" /><input type="file" name="backgroundImg" /></div></form>',
+            area: ['350px', '160px'],
+            btn: ['确定', '取消'],
+            yes:function (index, layero) {
+                layer.close(index);//手动关闭layer层
+                var load = layer.load(0, {shade: [0.1, '#fff']});
+                $.ajax({
+                    type:"post",
+                    url:"${pageContext.request.contextPath}/bms/article/backgroundImgUpload.do",
+                    cache:false,
+                    data:new FormData($('#backgroundImgUploadForm')[0]),
+                    processData: false,
+                    contentType: false,
+                    success:function (result) {
+                        layer.close(load);
+                        if (result == 'success') {
+                            layer.alert("上传背景图片成功！", {
+                                skin: 'layui-layer-lan',
+                                icon: 1,
+                                end: function () {
+                                    $('#content3').load('${pageContext.request.contextPath}/bms/article/list.do');
+                                }
+                            });
+                        } else {
+                            layer.alert('上传背景图片失败！', {
+                                skin: 'layui-layer-lan',
+                                closeBtn: 0,
+                                icon: 2
+                            });
+                        }
+                    }
+                });
+            }
+        });
     }
 
     //删除博客
