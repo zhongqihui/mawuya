@@ -19,7 +19,7 @@ import java.util.List;
 @ToString
 public class Category {
     private Integer sn;
-    @NonNull private String cName;
+    @NonNull private String categoryName;
     private List<ArticleInfo> arts;
     private int artSize;
 }

@@ -89,7 +89,7 @@ public class IndexController extends BaseController {
                 .addAttribute("next", next)
                 .addAttribute("prev", prev)
                 .addAttribute("category", c);
-        return "fts/showArticle";
+        return "fts/show_article";
     }
 
 
@@ -118,7 +118,7 @@ public class IndexController extends BaseController {
         List<Category> categoryList = categoryService.getCategoryList();
         model.addAttribute("categoryList", categoryList);
 
-        return "fts/categoryList";
+        return "fts/category_list";
     }
 
 

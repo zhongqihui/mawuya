@@ -32,14 +32,14 @@ public class ArticleInfo implements Serializable {
     private int praiseNum;
     /*** 踩次数*/
     private int teaseNum;
-    /*** 文章图片url，多个用英文逗号隔开*/
+    /*** 背景图片url*/
     private String pictureUrl;
     /*** 文章标题*/
-    private String aTitle;
+    private String articleTitle;
     /*** 文章概要*/
-    private String aSummary;
+    private String articleSummary;
     /*** 文章内容*/
-    private String aContent;
+    private String articleContent;
     /*** 文章插入时间*/
     private String insertTime;
     /*** 文章修改时间*/

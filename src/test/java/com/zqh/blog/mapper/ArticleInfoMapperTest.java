@@ -44,9 +44,9 @@ public class ArticleInfoMapperTest {
     @Test
     public void testInsert() {
         ArticleInfo articleInfo = new ArticleInfo()
-                .setATitle("java")
-                .setASummary("我是概要")
-                .setAContent("我是内容");
+                .setArticleTitle("java")
+                .setArticleSummary("我是概要")
+                .setArticleContent("我是内容");
         int insert = articleInfoMapper.insert(articleInfo);
         System.out.println(insert);
     }
@@ -60,48 +60,13 @@ public class ArticleInfoMapperTest {
     @Test
     public void testUpdate() {
         ArticleInfo info = articleInfoMapper.selectById(2);
-        info.setAContent("我是内容2").setASummary("我是概要2");
+        info.setArticleContent("我是内容2").setArticleSummary("我是概要2");
         int update = articleInfoMapper.update(info);
         System.out.println(update);
     }
 
     @Test
     public void testAop() {
-       indexController.getArticle("1", new Model() {
-            @Override
-            public Model addAttribute(String s, Object o) {
-                return null;
-            }
 
-            @Override
-            public Model addAttribute(Object o) {
-                return null;
-            }
-
-            @Override
-            public Model addAllAttributes(Collection<?> collection) {
-                return null;
-            }
-
-            @Override
-            public Model addAllAttributes(Map<String, ?> map) {
-                return null;
-            }
-
-            @Override
-            public Model mergeAttributes(Map<String, ?> map) {
-                return null;
-            }
-
-            @Override
-            public boolean containsAttribute(String s) {
-                return false;
-            }
-
-            @Override
-            public Map<String, Object> asMap() {
-                return null;
-            }
-        });
     }
 }

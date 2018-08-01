@@ -5,7 +5,7 @@
 
 <html class="theme-next mist use-motion">
 <head>
-    <title> Zqh's Blog </title>
+    <%@include file="common/css-head.jsp" %>
 </head>
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-home">
@@ -23,7 +23,7 @@
                                 <header class="post-header">
                                     <h1 class="post-title">
                                         <a class="post-title-link"
-                                           href="${pageContext.request.contextPath}/${article.sn}">${article.ATitle}</a>
+                                           href="${pageContext.request.contextPath}/${article.sn}">${article.articleTitle}</a>
                                     </h1>
 
                                     <div class="post-meta">
@@ -45,7 +45,7 @@
                                                   <span>
                                                       <c:forEach items="${categoryList}" var="c">
                                                           <c:if test="${article.categorySn == c.sn}">
-                                                              ${c.CName}
+                                                              ${c.categoryName}
                                                           </c:if>
                                                       </c:forEach>
                                                   </span>
@@ -66,9 +66,12 @@
                                 </header>
 
                                 <div class="post-body">
-                                    <p>${article.ASummary}</p>
-                                    <p><img src="${pageContext.request.contextPath}/statics/images/gallery/img6.jpg"
-                                            alt=""></p>
+                                    <p>${article.articleSummary}</p>
+                                    <c:if test="${article.pictureUrl != null}">
+                                        <p>
+                                            <img src="${article.pictureUrl}" alt=""/>
+                                        </p>
+                                    </c:if>
                                     <div class="post-more-link text-center">
                                         <a class="btn" href="${pageContext.request.contextPath}/${article.sn}"
                                            rel="contents">

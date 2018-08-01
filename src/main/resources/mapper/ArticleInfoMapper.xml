@@ -4,11 +4,11 @@
 
     <!-- 通用查询结果列-->
     <sql id="_columns">
-        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_summary,a_content,insert_time,update_time
+        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,article_content,insert_time,update_time
     </sql>
 
     <sql id="_columns_no_content">
-        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_summary,insert_time,update_time
+        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,insert_time,update_time
     </sql>
 
     <select id="selectById" parameterType="int" resultType="com.zqh.blog.entity.ArticleInfo">
@@ -35,7 +35,7 @@
 
     </select>
 
-    <select id="selectByPage" parameterType="map" resultType="com.zqh.blog.entity.ArticleInfo">
+    <select id="selectByPage" parameterType="java.util.Map" resultType="com.zqh.blog.entity.ArticleInfo">
         SELECT <include refid="_columns"/> FROM  article_info
         <where>
             <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(categorySn)">
@@ -67,8 +67,8 @@
     </select>
 
     <insert id="insert" parameterType="com.zqh.blog.entity.ArticleInfo">
-        INSERT ignore INTO article_info (category_sn,read_num,review_num,praise_num,tease_num,picture_url,a_title,a_summary,a_content,insert_time,update_time)
-        VALUES (#{categorySn},#{readNum},#{reviewNum},#{praiseNum},#{teaseNum},#{pictureUrl},#{aTitle},#{aSummary},#{aContent},now(),now())
+        INSERT ignore INTO article_info (category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,article_content,insert_time,update_time)
+        VALUES (#{categorySn},#{readNum},#{reviewNum},#{praiseNum},#{teaseNum},#{pictureUrl},#{articleTitle},#{articleSummary},#{articleContent},now(),now())
     </insert>
 
     <delete id="deleteById" parameterType="int">
@@ -83,9 +83,9 @@
         ,praise_num= #{praiseNum}
         ,tease_num= #{teaseNum}
         ,picture_url= #{pictureUrl}
-        ,a_title= #{aTitle}
-        ,a_summary = #{aSummary}
-        ,a_content= #{aContent}
+        ,article_title= #{articleTitle}
+        ,article_summary = #{articleSummary}
+        ,article_content= #{articleContent}
         ,insert_time= #{insertTime}
         ,update_time= now()
         WHERE sn = #{sn}
@@ -99,5 +99,8 @@
         update article_info a set a.category_sn = 0 WHERE sn in (${value})
     </update>
 
+    <update id="updatePictureUrl" parameterMap="com.zqh.blog.entity.ArticleInfo">
+        UPDATE article_info a set a.picture_url = #{pictureUrl} WHERE a.sn = #{sn}
+    </update>
 
 </mapper>

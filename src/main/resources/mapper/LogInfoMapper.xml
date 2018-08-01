@@ -29,7 +29,7 @@
                 #{exceptMessage})
     </insert>
 
-    <insert id="insertBatch" parameterType="list">
+    <insert id="insertBatch"  parameterType="list" >
         INSERT INTO log_info(ip_addr,country,province,city,area,detail_position,isp,try_times,req_time,resp_time,consume_time,req_url,req_method,params,browser,resp_status,except_message)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">

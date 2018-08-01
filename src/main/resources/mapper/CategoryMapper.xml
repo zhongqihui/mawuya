@@ -4,11 +4,11 @@
 
     <!-- 通用查询结果列-->
     <sql id="_columns">
-        sn,c_name
+        sn,category_name
     </sql>
 
     <insert id="insert" parameterType="com.zqh.blog.entity.Category">
-        INSERT INTO category_info (c_name) VALUES (#{cName})
+        INSERT INTO category_info (category_name) VALUES (#{categoryName})
     </insert>
 
     <delete id="deleteById" parameterType="int">
@@ -16,7 +16,7 @@
     </delete>
 
     <update id="update" parameterType="com.zqh.blog.entity.Category">
-        UPDATE category_info SET c_name = #{cName} WHERE sn = #{sn}
+        UPDATE category_info SET category_name = #{categoryName} WHERE sn = #{sn}
     </update>
 
     <select id="selectById" parameterType="int" resultType="com.zqh.blog.entity.Category">

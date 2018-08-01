@@ -3,11 +3,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html class="theme-next mist use-motion">
 <head>
-    <title>${article.ATitle} | Zqh's Blog </title>
-    <link rel="stylesheet"
-          href="${pageContext.request.contextPath}/statics/plugins/editor.md/css/editormd.css"/>
-    <link rel="stylesheet"
-          href="${pageContext.request.contextPath}/statics/plugins/editor.md/css/editormd.preview.min.css"/>
+    <title>${article.articleTitle} | Zqh's Blog </title>
+    <%@include file="common/css-head.jsp"%>
+
 </head>
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-post-detail">
@@ -22,7 +20,7 @@
                         <article class="post post-type-normal">
                             <%--该文章信息--%>
                             <header class="post-header">
-                                <h1 class="post-title">${article.ATitle}</h1>
+                                <h1 class="post-title">${article.articleTitle}</h1>
                                 <div class="post-meta">
                                     <span class="post-time">
                                         <span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span>
@@ -37,7 +35,7 @@
                                     <span class="post-category">&nbsp; | &nbsp;
                                         <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i></span>
                                         <span class="post-meta-item-text">分类于</span>
-                                        <span><a href="${pageContext.request.contextPath}/categories/${category.sn}"><span>${category.CName}</span></a></span>
+                                        <span><a href="${pageContext.request.contextPath}/categories/${category.sn}"><span>${category.categoryName}</span></a></span>
                                     </span>
 
                                     <span class="post-category">&nbsp; | &nbsp;
@@ -51,8 +49,8 @@
                             </header>
 
                             <div class="post-body">
-                                <div id="AContent" class="mdl-cell mdl-card mdl-cell--12-col mdl-shadow--2dp content">
-                                    ${article.AContent}
+                                <div id="articleContentDiv">
+                                    <textarea style="display: none">${article.articleContent}</textarea>
                                 </div>
                             </div>
 
@@ -64,19 +62,19 @@
 
                             <footer class="post-footer">
                                 <div class="post-tags">
-                                    <a href="${pageContext.request.contextPath}/categories/${category.sn}" rel="tag">#${category.CName}</a>
+                                    <a href="${pageContext.request.contextPath}/categories/${category.sn}" rel="tag">#${category.categoryName}</a>
                                 </div>
 
                                 <div class="post-nav">
                                     <div class="post-nav-next post-nav-item">
                                         <c:if test="${prev != null}">
-                                        <a href="${pageContext.request.contextPath}/${prev.sn}"><i class="fa fa-chevron-left"></i> ${prev.ATitle}</a>
+                                        <a href="${pageContext.request.contextPath}/${prev.sn}"><i class="fa fa-chevron-left"></i> ${prev.articleTitle}</a>
                                         </c:if>
                                     </div>
 
                                     <div class="post-nav-prev post-nav-item">
                                         <c:if test="${next != null}">
-                                            <a href="${pageContext.request.contextPath}/${next.sn}"><i class="fa fa-chevron-right"></i> ${next.ATitle}</a>
+                                            <a href="${pageContext.request.contextPath}/${next.sn}"><i class="fa fa-chevron-right"></i> ${next.articleTitle}</a>
                                         </c:if>
                                     </div>
                                 </div>
@@ -117,7 +115,15 @@
 
 <script type="text/javascript">
     $(function () {
-        editormd.markdownToHTML("AContent")
+        editormd.markdownToHTML("articleContentDiv",{
+            htmlDecode: "style,script,iframe",
+            emoji: true,
+            taskList: true,
+            tex: true, // 默认不解析
+            //flowChart: true, // 默认不解析
+            //sequenceDiagram: true, // 默认不解析
+            codeFold: true
+        });
     });
 </script>
 

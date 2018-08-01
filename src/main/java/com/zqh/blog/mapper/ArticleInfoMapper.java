@@ -50,4 +50,10 @@ public interface ArticleInfoMapper extends BaseMapper<ArticleInfo, Integer> {
      * @return
      */
     int updateBatchCategorySn(String sns);
+
+    /**啊
+     * 修改背景图片的路径
+     * @return
+     */
+    int updatePictureUrl(ArticleInfo a);
 }

@@ -1,8 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
-<head>
-</head>
-<body>
+
 <footer id="footer" class="footer">
     <div class="footer-inner">
 
@@ -25,8 +22,6 @@
 
 <div class="back-to-top"></div>
 
-</body>
-
 <script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/plugins/vendors/jquery/index62ba.js?v=2.1.3"></script>
 <script type="text/javascript"
@@ -45,4 +40,3 @@
         src="${pageContext.request.contextPath}/statics/js/motion5174.js?v=0.5.0"></script>
 <script type="text/javascript"
         src="${pageContext.request.contextPath}/statics/js/bootstrap5174.js?v=0.5.0"></script>
-</html>

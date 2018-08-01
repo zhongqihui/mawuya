@@ -5,7 +5,7 @@
 
 <html class="theme-next mist use-motion">
 <head>
-    <title> Zqh's Blog </title>
+    <%@include file="common/css-head.jsp"%>
 </head>
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-home">
@@ -19,15 +19,15 @@
 
                     <section id="posts" class="posts-collapse">
                         <div class="collection-title">
-                            <h2>${category.CName}<small> 分类</small></h2>
+                            <h2>${category.categoryName}<small> 分类</small></h2>
                         </div>
 
                         <c:forEach items="${category.arts}" var="item">
                             <article class="post post-type-normal">
                                 <header class="post-header">
                                     <h1 class="post-title">
-                                        <a class="post-title-link" href="">
-                                            <span>${item.ATitle}</span>
+                                        <a class="post-title-link" href="${pageContext.request.contextPath}/${item.sn}">
+                                            <span>${item.articleTitle}</span>
                                         </a>
                                     </h1>
 
@@ -50,9 +50,8 @@
         </div>
     </main>
 
-
-    <%@ include file="common/footer.jsp" %>
 </div>
+<%@ include file="common/footer.jsp" %>
 </body>
 
 </html>

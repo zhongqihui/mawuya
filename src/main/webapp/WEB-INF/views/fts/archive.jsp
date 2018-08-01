@@ -5,7 +5,7 @@
 
 <html class="theme-next mist use-motion">
 <head>
-    <title> Zqh's Blog </title>
+    <%@include file="common/css-head.jsp"%>
 </head>
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-home">
@@ -31,7 +31,7 @@
                                     <header class="post-header">
                                         <h1 class="post-title">
                                             <a class="post-title-link"
-                                               href="${pageContext.request.contextPath}/${v.sn}"><span>${v.ATitle}</span></a>
+                                               href="${pageContext.request.contextPath}/${v.sn}"><span>${v.articleTitle}</span></a>
                                         </h1>
 
                                         <div class="post-meta">
