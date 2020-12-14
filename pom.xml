@@ -3,11 +3,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.qihuizhong</groupId>
-    <artifactId>mawuya</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <groupId>com.qihuizhong.mawuya</groupId>
+    <artifactId>mawuya-all</artifactId>
+    <version>1.0.0</version>
 
-    <name>mawuya</name>
+    <name>mawuya ${project.version}</name>
+    <description>Top Mawuya project pom.xml file</description>
 
     <!--子模块-->
     <modules>
@@ -17,9 +18,50 @@
         <module>mawuya-bms</module>
     </modules>
 
+    <!--统一定义属性及版本号-->
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring-boot-dependencies.version>2.2.5.RELEASE</spring-boot-dependencies.version>
     </properties>
+
+    <!--dependencyManagement 只是声明依赖，子项目并不会默认依赖-->
+    <dependencyManagement>
+        <dependencies>
+
+            <!--springBoot-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Internal libs -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mawuya-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mawuya-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mawuya-bms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mawuya-ams</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+        </dependencies>
+    </dependencyManagement>
+
 
     <build>
         <resources>
