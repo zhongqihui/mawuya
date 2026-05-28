@@ -1,0 +1,205 @@
+/* ============================================================
+ *  gradient-vivid —— 活泼渐变风
+ * ------------------------------------------------------------
+ *  紫粉橙渐变背景 + 圆角大卡片 + 鲜色按钮 + 标题渐变文字
+ *  作用域：html[data-theme="gradient-vivid"]
+ * ============================================================ */
+
+html[data-theme="gradient-vivid"] {
+    --th-fg:         #1f2937;
+    --th-fg-muted:   #6b7280;
+    --th-pink:       #ec4899;
+    --th-pink-dark:  #db2777;
+    --th-purple:     #8b5cf6;
+    --th-orange:     #fb923c;
+    --th-card-bg:    #ffffff;
+    --th-card-shadow: 0 8px 24px rgba(167, 119, 227, 0.18);
+    --th-card-radius: 16px;
+    --th-grad-text:  linear-gradient(90deg, #ec4899 0%, #8b5cf6 100%);
+    --th-grad-btn:   linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+}
+
+/* ---------- 全站底色 ---------- */
+html[data-theme="gradient-vivid"] body {
+    background: linear-gradient(135deg, #fef3ff 0%, #fff5e1 50%, #e0f2ff 100%) fixed !important;
+    color: var(--th-fg) !important;
+}
+
+/* ---------- 站点标题：渐变文字 ---------- */
+html[data-theme="gradient-vivid"] .site-title,
+html[data-theme="gradient-vivid"] .site-subtitle {
+    background: var(--th-grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent !important;
+    font-weight: 700;
+}
+
+/* ---------- 文章卡片 ---------- */
+html[data-theme="gradient-vivid"] .post-block,
+html[data-theme="gradient-vivid"] .posts-expand .post {
+    background: var(--th-card-bg) !important;
+    border-radius: var(--th-card-radius);
+    box-shadow: var(--th-card-shadow);
+    border: none !important;
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+html[data-theme="gradient-vivid"] .post-block:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(167, 119, 227, 0.25);
+}
+
+/* ---------- 文章标题：渐变 ---------- */
+html[data-theme="gradient-vivid"] .posts-expand .post-title-link {
+    background: var(--th-grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent !important;
+    font-weight: 700;
+}
+html[data-theme="gradient-vivid"] .posts-expand .post-title-link::before {
+    background-color: var(--th-pink) !important;
+}
+
+/* ---------- 链接 ---------- */
+html[data-theme="gradient-vivid"] a {
+    color: var(--th-pink) !important;
+}
+html[data-theme="gradient-vivid"] a:hover {
+    color: var(--th-pink-dark) !important;
+}
+
+/* ---------- 正文 ---------- */
+html[data-theme="gradient-vivid"] .posts-expand .post-body {
+    color: #374151 !important;
+}
+html[data-theme="gradient-vivid"] .posts-expand .post-body h1,
+html[data-theme="gradient-vivid"] .posts-expand .post-body h2,
+html[data-theme="gradient-vivid"] .posts-expand .post-body h3 {
+    color: var(--th-purple) !important;
+    border-bottom: 2px solid #fce7f3 !important;
+    padding-bottom: 6px;
+}
+html[data-theme="gradient-vivid"] .posts-expand .post-body code {
+    background: linear-gradient(135deg, #fce7f3, #ede9fe) !important;
+    color: var(--th-pink-dark) !important;
+    border-radius: 4px;
+    padding: 1px 6px;
+}
+
+/* ---------- post-meta ---------- */
+html[data-theme="gradient-vivid"] .posts-expand .post-meta {
+    color: var(--th-fg-muted) !important;
+    border-bottom-color: #fce7f3 !important;
+}
+html[data-theme="gradient-vivid"] .post-meta .post-meta-item-icon {
+    color: var(--th-pink) !important;
+}
+html[data-theme="gradient-vivid"] .post-meta .post-meta-num {
+    color: var(--th-purple) !important;
+    font-weight: 600;
+}
+
+/* ---------- 标签 ---------- */
+html[data-theme="gradient-vivid"] .posts-expand .post-tags a {
+    background: linear-gradient(135deg, #fce7f3 0%, #ede9fe 100%) !important;
+    color: var(--th-purple) !important;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-right: 6px;
+}
+
+/* ---------- 侧边栏 ---------- */
+html[data-theme="gradient-vivid"] .sidebar {
+    background: var(--th-card-bg) !important;
+    border-radius: var(--th-card-radius);
+    box-shadow: var(--th-card-shadow);
+    position: relative;
+}
+html[data-theme="gradient-vivid"] .sidebar::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ec4899, #8b5cf6, #fb923c);
+    border-radius: var(--th-card-radius) var(--th-card-radius) 0 0;
+}
+html[data-theme="gradient-vivid"] .sidebar a {
+    color: var(--th-purple) !important;
+}
+html[data-theme="gradient-vivid"] .sidebar a:hover {
+    color: var(--th-pink) !important;
+}
+html[data-theme="gradient-vivid"] .site-author-name {
+    color: var(--th-fg) !important;
+    font-weight: 600;
+}
+
+/* ---------- 标签云 ---------- */
+html[data-theme="gradient-vivid"] .tagcloud a {
+    background: linear-gradient(135deg, #fce7f3 0%, #ede9fe 100%) !important;
+    color: var(--th-purple) !important;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin: 3px;
+    transition: all .2s;
+    display: inline-block;
+}
+html[data-theme="gradient-vivid"] .tagcloud a:hover {
+    background: var(--th-grad-btn) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+}
+
+/* ---------- 按钮 ---------- */
+html[data-theme="gradient-vivid"] .btn {
+    background: var(--th-grad-btn) !important;
+    border: none !important;
+    color: #ffffff !important;
+    border-radius: 999px !important;
+    padding: 8px 22px !important;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
+    transition: all .25s;
+}
+html[data-theme="gradient-vivid"] .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.45);
+}
+
+/* ---------- 菜单 ---------- */
+html[data-theme="gradient-vivid"] .menu-item a {
+    color: var(--th-fg) !important;
+    transition: color .2s;
+}
+html[data-theme="gradient-vivid"] .menu-item a:hover {
+    color: var(--th-pink) !important;
+}
+
+/* ---------- 分隔线 ---------- */
+html[data-theme="gradient-vivid"] .posts-expand .post-eof {
+    background: linear-gradient(90deg, transparent, #ec4899, #8b5cf6, transparent) !important;
+    opacity: 0.5;
+}
+
+/* ---------- 评论区 / 表单 ---------- */
+html[data-theme="gradient-vivid"] input[type="text"],
+html[data-theme="gradient-vivid"] textarea {
+    background: #ffffff !important;
+    border: 1px solid #fce7f3 !important;
+    border-radius: 8px !important;
+}
+html[data-theme="gradient-vivid"] input[type="text"]:focus,
+html[data-theme="gradient-vivid"] textarea:focus {
+    border-color: var(--th-pink) !important;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+}
+
+/* ---------- footer ---------- */
+html[data-theme="gradient-vivid"] .footer,
+html[data-theme="gradient-vivid"] .footer-inner {
+    color: var(--th-fg-muted) !important;
+}

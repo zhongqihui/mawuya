@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qihuizhong.mawuya.core.mapper.ReviewInfoMapper">
+
+    <!--
+      字段顺序保持稳定；review_status 自 v3 起新增，0=待审核 / 1=已通过 / 2=已拒绝。
+      AMS 前台所有查询都强制 review_status=1；BMS 后台 selectByStatus / selectPendingByPage 用于审批。
+    -->
+    <sql id="_columns">
+        sn,article_sn,psn,csn,praise_num,tease_num,review_name,review_content,review_date,review_status
+    </sql>
+
+    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.entity.ReviewInfo"
+            useGeneratedKeys="true" keyProperty="sn">
+        INSERT INTO review_info
+            (article_sn, psn, csn, praise_num, tease_num, review_name, review_content, review_date, review_status)
+        VALUES
+            (#{articleSn}, #{psn}, #{csn}, #{praiseNum}, #{teaseNum},
+             #{reviewName}, #{reviewContent}, NOW(),
+             <choose>
+                 <when test="reviewStatus != null">#{reviewStatus}</when>
+                 <otherwise>0</otherwise>
+             </choose>)
+    </insert>
+
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM review_info WHERE sn = #{value}
+    </delete>
+
+    <update id="update" parameterType="com.qihuizhong.mawuya.core.entity.ReviewInfo">
+        UPDATE review_info SET review_content = #{reviewContent} WHERE sn = #{sn}
+    </update>
+
+    <!-- 仅更新审核状态（BMS 通过/拒绝按钮使用） -->
+    <update id="updateStatus">
+        UPDATE review_info SET review_status = #{status} WHERE sn = #{sn}
+    </update>
+
+    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.entity.ReviewInfo">
+        SELECT <include refid="_columns"/> FROM review_info WHERE sn = #{value}
+    </select>
+
+    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.ReviewInfo">
+        SELECT <include refid="_columns"/> FROM review_info ORDER BY sn DESC
+    </select>
+
+    <select id="selectByPage" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.ReviewInfo">
+        SELECT <include refid="_columns"/> FROM review_info ORDER BY sn DESC
+        <if test="@com.qihuizhong.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
+            LIMIT #{start},#{limit}
+        </if>
+    </select>
+
+    <select id="selectCount" parameterType="map" resultType="int">
+        SELECT count(sn) FROM review_info
+    </select>
+
+    <!-- AMS 前台：文章详情页评论列表，仅显示已审核通过的 -->
+    <select id="selectByArticleSn" resultType="com.qihuizhong.mawuya.core.entity.ReviewInfo">
+        SELECT <include refid="_columns"/> FROM review_info
+        WHERE article_sn = #{articleSn} AND review_status = 1
+        ORDER BY review_date DESC, sn DESC
+    </select>
+
+    <!-- AMS 前台：侧边栏「最新评论」，仅显示已审核通过的 -->
+    <select id="selectLatestWithTitle" resultType="com.qihuizhong.mawuya.core.entity.ReviewInfo">
+        SELECT r.sn, r.article_sn, r.review_name, r.review_content, r.review_date, r.review_status,
+               a.article_title
+        FROM review_info r
+        INNER JOIN article_info a ON a.sn = r.article_sn
+        WHERE r.review_status = 1
+        ORDER BY r.review_date DESC, r.sn DESC
+        LIMIT #{limit}
+    </select>
+
+    <!--
+      BMS 后台审批：按状态筛选评论（status 为 null 表示不过滤，全部返回）
+      关联 article_title 让审批列表能直观看到属于哪篇文章。
+    -->
+    <select id="selectByStatusWithTitle" resultType="com.qihuizhong.mawuya.core.entity.ReviewInfo">
+        SELECT r.sn, r.article_sn, r.psn, r.csn, r.praise_num, r.tease_num,
+               r.review_name, r.review_content, r.review_date, r.review_status,
+               a.article_title
+        FROM review_info r
+        LEFT JOIN article_info a ON a.sn = r.article_sn
+        <where>
+            <if test="status != null">
+                r.review_status = #{status}
+            </if>
+        </where>
+        ORDER BY
+          <choose>
+              <when test="status == null">r.review_status ASC,</when>
+              <otherwise></otherwise>
+          </choose>
+          r.review_date DESC, r.sn DESC
+        <if test="limit != null">
+            LIMIT
+            <if test="offset != null">#{offset},</if>
+            #{limit}
+        </if>
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*) FROM review_info
+        <where>
+            <if test="status != null">review_status = #{status}</if>
+        </where>
+    </select>
+
+    <!--
+      同步 article_info.review_num —— 仅统计已通过的评论。
+      在 AMS 提交（status=0）时调用一次没影响（提交时 review_num 不变），
+      在 BMS approve / reject / 删除评论时也调用，保证 review_num 与"展示数量"一致。
+    -->
+    <update id="refreshArticleReviewNum">
+        UPDATE article_info a
+        SET a.review_num = (
+            SELECT COUNT(*) FROM review_info r
+            WHERE r.article_sn = a.sn AND r.review_status = 1
+        )
+        WHERE a.sn = #{articleSn}
+    </update>
+
+</mapper>

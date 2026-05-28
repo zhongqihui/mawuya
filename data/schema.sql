@@ -48,8 +48,10 @@ CREATE TABLE `review_info` (
     `review_name`    VARCHAR(40)  DEFAULT NULL            COMMENT '评论人的名字',
     `review_content` VARCHAR(140) DEFAULT NULL            COMMENT '评论的内容',
     `review_date`    DATETIME     DEFAULT NULL            COMMENT '评论的时间',
+    `review_status`  TINYINT(4)   NOT NULL DEFAULT 0      COMMENT '审核状态：0=待审核,1=已通过,2=已拒绝',
     PRIMARY KEY (`sn`),
-    KEY `idx_review_article_sn` (`article_sn`)
+    KEY `idx_review_article_sn` (`article_sn`),
+    KEY `idx_review_status` (`review_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评论信息表';
 
 -- 4. 分类信息表

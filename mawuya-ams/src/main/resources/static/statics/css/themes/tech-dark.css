@@ -1,0 +1,193 @@
+/* ============================================================
+ *  tech-dark —— 深色科技风
+ * ------------------------------------------------------------
+ *  深空蓝底 + 青色霓虹强调 + 磨砂玻璃卡片 + 细发光边
+ *  作用域：html[data-theme="tech-dark"]
+ *  说明：仅覆盖颜色 / 边框 / 阴影 / 圆角 / 字重等"皮肤层"属性，
+ *       不动 display/margin/padding/响应式断点（避免破坏既有移动端修复）。
+ * ============================================================ */
+
+html[data-theme="tech-dark"] {
+    --th-bg:           #0a0e1a;        /* 主背景 */
+    --th-bg-card:      rgba(15, 20, 34, 0.72);  /* 卡片半透明底 */
+    --th-bg-sidebar:   #0d1426;
+    --th-fg:           #e2e8f0;        /* 主文字 */
+    --th-fg-muted:     #94a3b8;        /* 次要文字 */
+    --th-accent:       #06b6d4;        /* 主强调（青） */
+    --th-accent-2:     #7dd3fc;        /* 副强调（浅冰蓝） */
+    --th-link:         #22d3ee;
+    --th-link-hover:   #67e8f9;
+    --th-border:       #1e293b;
+}
+
+/* ---------- 全站底色 ---------- */
+html[data-theme="tech-dark"] body {
+    background: radial-gradient(ellipse at top, #111a2e 0%, #0a0e1a 60%) fixed !important;
+    color: var(--th-fg) !important;
+}
+
+/* ---------- 站点标题 ---------- */
+html[data-theme="tech-dark"] .site-title,
+html[data-theme="tech-dark"] .site-subtitle {
+    color: var(--th-accent-2) !important;
+    text-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+}
+
+/* ---------- 主容器 / 卡片 ---------- */
+html[data-theme="tech-dark"] .main-inner,
+html[data-theme="tech-dark"] .header-inner {
+    background: transparent !important;
+}
+html[data-theme="tech-dark"] .post-block,
+html[data-theme="tech-dark"] .posts-expand .post {
+    background: var(--th-bg-card) !important;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--th-border);
+    border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(34, 211, 238, 0.08);
+}
+
+/* ---------- 文章标题 ---------- */
+html[data-theme="tech-dark"] .posts-expand .post-title,
+html[data-theme="tech-dark"] .posts-expand .post-title-link {
+    color: var(--th-fg) !important;
+}
+html[data-theme="tech-dark"] .posts-expand .post-title-link:hover,
+html[data-theme="tech-dark"] .posts-expand .post-title-link:hover::before {
+    color: var(--th-accent) !important;
+    background-color: var(--th-accent) !important;
+}
+
+/* ---------- 链接 ---------- */
+html[data-theme="tech-dark"] a {
+    color: var(--th-link) !important;
+}
+html[data-theme="tech-dark"] a:hover {
+    color: var(--th-link-hover) !important;
+    text-shadow: 0 0 8px rgba(103, 232, 249, 0.6);
+}
+
+/* ---------- 正文 ---------- */
+html[data-theme="tech-dark"] .posts-expand .post-body,
+html[data-theme="tech-dark"] .posts-expand .post-body p {
+    color: #cbd5e1 !important;
+}
+html[data-theme="tech-dark"] .posts-expand .post-body h1,
+html[data-theme="tech-dark"] .posts-expand .post-body h2,
+html[data-theme="tech-dark"] .posts-expand .post-body h3,
+html[data-theme="tech-dark"] .posts-expand .post-body h4 {
+    color: var(--th-accent-2) !important;
+    border-bottom-color: var(--th-border) !important;
+}
+html[data-theme="tech-dark"] .posts-expand .post-body code,
+html[data-theme="tech-dark"] .posts-expand .post-body pre {
+    background: #0f172a !important;
+    color: #e0f2fe !important;
+    border: 1px solid var(--th-border);
+}
+
+/* ---------- post-meta ---------- */
+html[data-theme="tech-dark"] .posts-expand .post-meta {
+    color: var(--th-fg-muted) !important;
+    border-bottom-color: var(--th-border) !important;
+}
+html[data-theme="tech-dark"] .post-meta .post-meta-item-icon,
+html[data-theme="tech-dark"] .post-meta .post-meta-num {
+    color: var(--th-accent) !important;
+}
+
+/* ---------- 标签 ---------- */
+html[data-theme="tech-dark"] .posts-expand .post-tags a {
+    color: var(--th-accent-2) !important;
+}
+html[data-theme="tech-dark"] .posts-expand .post-tags a:hover {
+    color: var(--th-accent) !important;
+}
+
+/* ---------- 侧边栏 ---------- */
+html[data-theme="tech-dark"] .sidebar {
+    background: var(--th-bg-sidebar) !important;
+}
+html[data-theme="tech-dark"] .sidebar,
+html[data-theme="tech-dark"] .sidebar p,
+html[data-theme="tech-dark"] .site-overview {
+    color: var(--th-fg) !important;
+}
+html[data-theme="tech-dark"] .sidebar a {
+    color: var(--th-accent-2) !important;
+}
+html[data-theme="tech-dark"] .sidebar a:hover {
+    color: var(--th-accent) !important;
+}
+html[data-theme="tech-dark"] .site-author-name,
+html[data-theme="tech-dark"] .site-description {
+    color: var(--th-fg) !important;
+}
+
+/* ---------- 标签云 ---------- */
+html[data-theme="tech-dark"] .tagcloud a,
+html[data-theme="tech-dark"] .links-of-blogroll-item a {
+    color: var(--th-accent-2) !important;
+    background: rgba(30, 41, 59, 0.6);
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin: 2px;
+    transition: all .2s;
+}
+html[data-theme="tech-dark"] .tagcloud a:hover {
+    background: var(--th-accent) !important;
+    color: #0a0e1a !important;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+}
+
+/* ---------- 按钮 ---------- */
+html[data-theme="tech-dark"] .btn {
+    background: var(--th-accent) !important;
+    border-color: var(--th-accent) !important;
+    color: #0a0e1a !important;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: all .2s;
+}
+html[data-theme="tech-dark"] .btn:hover {
+    background: var(--th-link-hover) !important;
+    box-shadow: 0 0 16px rgba(34, 211, 238, 0.5);
+}
+
+/* ---------- 菜单 / nav ---------- */
+html[data-theme="tech-dark"] .menu-item a,
+html[data-theme="tech-dark"] .post-nav-item a {
+    color: var(--th-fg) !important;
+}
+html[data-theme="tech-dark"] .menu-item a:hover {
+    color: var(--th-accent) !important;
+}
+
+/* ---------- 分隔线 / 边框 ---------- */
+html[data-theme="tech-dark"] .posts-expand .post-eof {
+    background: linear-gradient(90deg, transparent, var(--th-accent), transparent) !important;
+    opacity: 0.4;
+}
+html[data-theme="tech-dark"] hr {
+    border-color: var(--th-border) !important;
+}
+
+/* ---------- 评论区 ---------- */
+html[data-theme="tech-dark"] #comments,
+html[data-theme="tech-dark"] .comment-list,
+html[data-theme="tech-dark"] .review-form {
+    color: var(--th-fg) !important;
+}
+html[data-theme="tech-dark"] input[type="text"],
+html[data-theme="tech-dark"] textarea {
+    background: #0f172a !important;
+    border: 1px solid var(--th-border) !important;
+    color: var(--th-fg) !important;
+}
+
+/* ---------- footer ---------- */
+html[data-theme="tech-dark"] .footer,
+html[data-theme="tech-dark"] .footer-inner {
+    color: var(--th-fg-muted) !important;
+}

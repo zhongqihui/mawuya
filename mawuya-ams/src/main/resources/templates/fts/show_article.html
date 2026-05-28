@@ -118,6 +118,16 @@
 
                         <div class="comment-form-box">
                             <h4>留下你的足迹 ✍️</h4>
+                            <!-- 评论审核提示：成功 / 错误两种态；成功提示一段时间后可手动关闭 -->
+                            <div th:if="${commentTip != null}"
+                                 class="comment-tip"
+                                 th:classappend="${commentTipType == 'error' ? 'comment-tip-error' : 'comment-tip-success'}"
+                                 th:text="${commentTip}">提示</div>
+                            <!-- 给所有访客的常驻说明：评论审核机制 -->
+                            <div class="comment-review-note">
+                                <i class="fa fa-info-circle"></i>
+                                所有评论需经管理员审核通过后才会在此展示，请耐心等待。
+                            </div>
                             <form th:action="@{/comments/submit}" method="post">
                                 <input type="hidden" name="articleSn" th:value="${article.sn}"/>
                                 <div class="form-row">

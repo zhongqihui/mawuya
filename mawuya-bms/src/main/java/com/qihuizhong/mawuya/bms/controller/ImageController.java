@@ -58,6 +58,15 @@ public class ImageController extends BaseController {
     }
 
     /**
+     * 图片选择器弹窗页（独立页面，被 layer iframe 加载）。
+     * 与图片库主页解耦：仅做"挑选"，不含上传/删除等管理操作。
+     */
+    @GetMapping("picker.do")
+    public String picker() {
+        return "bms/image/picker";
+    }
+
+    /**
      * 通用上传：将图片字节落库到 image_blob 表，返回访问 URL。
      * <p>返回 JSON：{success, url, name, size, message}</p>
      */
@@ -95,12 +104,32 @@ public class ImageController extends BaseController {
         return res;
     }
 
-    /** 列出最近 200 张图片（DB 中 image_blob 的 metadata） */
+    /**
+     * 列出图片 metadata，支持关键词搜索 + 分页。
+     *
+     * <p>参数（全部可选，向后兼容）：</p>
+     * <ul>
+     *   <li>{@code keyword}：按 file_name 模糊匹配，空字符串/缺省视为不过滤</li>
+     *   <li>{@code page}：页码（从 1 起），缺省为 1；非法（≤0）按 1 处理</li>
+     *   <li>{@code size}：每页条数，缺省 24，强制收敛到 [1, 200]</li>
+     * </ul>
+     * <p>返回字段：success / list / total / page / size / pages（总页数）</p>
+     */
     @GetMapping("list.do")
     @ResponseBody
-    public Map<String, Object> list() {
-        Map<String, Object> res = new LinkedHashMap<>();
-        List<ImageBlob> metas = imageBlobService.listMeta(200, 0);
+    public Map<String, Object> list(@RequestParam(value = "keyword", required = false) String keyword,
+                                    @RequestParam(value = "page", required = false) Integer page,
+                                    @RequestParam(value = "size", required = false) Integer size) {
+        // 入参收敛（防止恶意构造超大 size 把整库拖到内存）
+        int safePage = (page == null || page < 1) ? 1 : page;
+        int safeSize = (size == null) ? 24 : size;
+        if (safeSize < 1) safeSize = 1;
+        if (safeSize > 200) safeSize = 200;
+        int offset = (safePage - 1) * safeSize;
+
+        int total = imageBlobService.countByKeyword(keyword);
+        List<ImageBlob> metas = imageBlobService.listMetaByKeyword(keyword, safeSize, offset);
+
         List<Map<String, Object>> list = metas.stream().map(b -> {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("sn", b.getSn());
@@ -110,9 +139,16 @@ public class ImageController extends BaseController {
             item.put("mtime", b.getCreatedTime());
             return item;
         }).collect(Collectors.toList());
+
+        int pages = (total + safeSize - 1) / safeSize;
+
+        Map<String, Object> res = new LinkedHashMap<>();
         res.put("success", 1);
         res.put("list", list);
-        res.put("total", imageBlobService.countAll());
+        res.put("total", total);
+        res.put("page", safePage);
+        res.put("size", safeSize);
+        res.put("pages", pages);
         return res;
     }
 

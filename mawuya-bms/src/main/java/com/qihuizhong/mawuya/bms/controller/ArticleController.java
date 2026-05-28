@@ -152,6 +152,41 @@ public class ArticleController extends BaseController {
     }
 
     /**
+     * 从图片库挑选已有图片作为博客背景图（不再新上传）。
+     *
+     * <p>入参：</p>
+     * <ul>
+     *   <li>{@code sn}        —— 文章 sn</li>
+     *   <li>{@code imageSn}   —— 图片库中已有图片的 sn（image_blob.sn）</li>
+     * </ul>
+     * <p>处理：校验 sn / imageSn 合法 + 校验 imageSn 真实存在 → 把 picture_url 设为 /image/db/{imageSn}。</p>
+     * <p>安全要点：picture_url 由服务端按白名单格式 "/image/db/" + imageSn 拼装，
+     * imageSn 类型为 Long 由 Spring 强制转换，无 SQL 注入与 URL 注入空间。</p>
+     */
+    @PostMapping("setBackgroundFromLibrary.do")
+    @ResponseBody
+    public String setBackgroundFromLibrary(@RequestParam(value = "sn") String sn,
+                                           @RequestParam(value = "imageSn") Long imageSn) {
+        if (StringUtils.isEmpty(sn) || imageSn == null || imageSn <= 0) {
+            return "fail";
+        }
+        int id;
+        try {
+            id = Integer.parseInt(sn);
+        } catch (NumberFormatException e) {
+            return "fail";
+        }
+        // 校验图片真实存在于库中（loadMeta 不取二进制，开销极小）
+        if (imageBlobService.loadMeta(imageSn) == null) {
+            return "fail";
+        }
+        ArticleInfo articleInfo = new ArticleInfo()
+                .setSn(id)
+                .setPictureUrl("/image/db/" + imageSn);
+        return articleService.updatePictureUrl(articleInfo) > 0 ? "success" : "fail";
+    }
+
+    /**
      * 编辑器中插入图片：同样落库，返回 /image/db/{sn} 给 editor.md
      */
     @PostMapping("imgUpload.do")

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>从图片库选择</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+    <!-- 复用后台一套基础样式（按钮 / 输入框） -->
+    <link rel="stylesheet" th:href="@{/statics/plugins/bootstrap/dist/css/bootstrap.css}"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.bootcss.com/font-awesome/4.6.0/css/font-awesome.min.css"/>
+
+    <style>
+        /* ===== 图片选择器：自包含、响应式 ===== */
+        html, body { margin: 0; padding: 0; background: #fff; }
+        body { font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; color: #333; }
+
+        .picker-wrap { padding: 14px 16px 80px 16px; }
+
+        /* 顶部工具栏：搜索 + 计数 */
+        .picker-toolbar {
+            display: flex; align-items: center; gap: 10px;
+            flex-wrap: wrap;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 14px;
+        }
+        .picker-toolbar .search-wrap {
+            position: relative; flex: 1 1 240px; min-width: 200px;
+        }
+        .picker-toolbar input.picker-search {
+            width: 100%; height: 36px; line-height: 36px;
+            padding: 0 36px 0 12px;
+            border: 1px solid #d6d6d6; border-radius: 4px;
+            font-size: 14px; outline: none;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        .picker-toolbar input.picker-search:focus {
+            border-color: #5b9bd5; box-shadow: 0 0 0 3px rgba(91,155,213,.15);
+        }
+        .picker-toolbar .search-wrap .fa-search {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            color: #aaa; pointer-events: none;
+        }
+        .picker-toolbar .picker-count {
+            font-size: 12px; color: #888; white-space: nowrap;
+        }
+
+        /* 缩略图栅格：CSS Grid 自适应列数（桌面 ≥6 列、平板 4 列、手机 2-3 列） */
+        .picker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .picker-card {
+            position: relative;
+            border: 2px solid #eee; border-radius: 6px;
+            background: #fafafa;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+        }
+        .picker-card:hover {
+            border-color: #5b9bd5;
+            box-shadow: 0 4px 12px rgba(91,155,213,.18);
+            transform: translateY(-1px);
+        }
+        .picker-card.selected {
+            border-color: #4caf50;
+            box-shadow: 0 0 0 2px rgba(76,175,80,.25);
+        }
+        .picker-card .thumb {
+            display: block; width: 100%;
+            padding-top: 75%; /* 4:3 占位 */
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            background-color: #efefef;
+        }
+        .picker-card .meta {
+            padding: 6px 8px;
+            font-size: 12px; line-height: 1.3;
+            background: #fff; border-top: 1px solid #f0f0f0;
+        }
+        .picker-card .meta .name {
+            display: block;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            color: #333;
+        }
+        .picker-card .meta .size { color: #999; font-size: 11px; }
+        .picker-card .check {
+            position: absolute; top: 6px; right: 6px;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: rgba(76,175,80,.95);
+            color: #fff; text-align: center; line-height: 22px;
+            font-size: 12px;
+            display: none;
+        }
+        .picker-card.selected .check { display: block; }
+
+        /* 分页条 */
+        .picker-pagination {
+            display: flex; justify-content: center; align-items: center; gap: 6px;
+            padding: 18px 0 6px;
+            flex-wrap: wrap;
+        }
+        .picker-pagination .pg-btn {
+            min-width: 32px; height: 32px; padding: 0 10px;
+            line-height: 30px; text-align: center;
+            border: 1px solid #ddd; border-radius: 4px;
+            background: #fff; color: #555;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .picker-pagination .pg-btn:hover { border-color: #5b9bd5; color: #5b9bd5; }
+        .picker-pagination .pg-btn.active {
+            background: #5b9bd5; border-color: #5b9bd5; color: #fff; cursor: default;
+        }
+        .picker-pagination .pg-btn[disabled] {
+            opacity: .45; cursor: not-allowed;
+        }
+        .picker-pagination .pg-info { font-size: 12px; color: #888; margin: 0 8px; }
+
+        /* 空状态 */
+        .picker-empty {
+            text-align: center; padding: 60px 20px;
+            color: #999;
+        }
+        .picker-empty .icon {
+            font-size: 56px; color: #d0d0d0; margin-bottom: 16px;
+        }
+        .picker-empty .title {
+            font-size: 16px; color: #555; margin-bottom: 6px;
+        }
+        .picker-empty .desc {
+            font-size: 13px; color: #999; margin-bottom: 18px;
+        }
+        .picker-empty .btn-upload {
+            display: inline-block;
+            padding: 8px 18px;
+            background: #5b9bd5; color: #fff; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 13px;
+            text-decoration: none;
+        }
+        .picker-empty .btn-upload:hover { background: #4a87bf; color: #fff; }
+
+        /* 加载态 */
+        .picker-loading {
+            text-align: center; padding: 40px 20px; color: #999;
+        }
+
+        /* 底部固定操作栏 */
+        .picker-footer {
+            position: fixed; left: 0; right: 0; bottom: 0;
+            display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+            padding: 10px 16px;
+            background: #fff; border-top: 1px solid #eee;
+            box-shadow: 0 -2px 8px rgba(0,0,0,.04);
+            z-index: 10;
+        }
+        .picker-footer .selected-tip {
+            margin-right: auto;
+            font-size: 12px; color: #888;
+        }
+        .picker-footer .selected-tip .name { color: #333; max-width: 280px; display: inline-block; vertical-align: bottom; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* 响应式：移动端 */
+        @media (max-width: 600px) {
+            .picker-wrap { padding: 10px 10px 76px 10px; }
+            .picker-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+            .picker-toolbar { gap: 6px; padding-bottom: 10px; margin-bottom: 10px; }
+            .picker-toolbar .picker-count { width: 100%; }
+            .picker-footer { padding: 8px 10px; }
+            .picker-footer .selected-tip .name { max-width: 130px; }
+            .picker-pagination .pg-btn { min-width: 28px; height: 28px; line-height: 26px; padding: 0 6px; font-size: 12px; }
+        }
+        @media (max-width: 380px) {
+            .picker-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="picker-wrap">
+    <!-- 工具栏 -->
+    <div class="picker-toolbar">
+        <div class="search-wrap">
+            <input id="picker-search" type="text" class="picker-search"
+                   placeholder="按文件名搜索…（回车确认）" autocomplete="off"/>
+            <i class="fa fa-search"></i>
+        </div>
+        <span class="picker-count" id="picker-count">共 0 张</span>
+    </div>
+
+    <!-- 网格 -->
+    <div id="picker-grid" class="picker-grid"></div>
+
+    <!-- 加载态 -->
+    <div id="picker-loading" class="picker-loading" style="display:none;">
+        <i class="fa fa-spinner fa-spin"></i> 加载中…
+    </div>
+
+    <!-- 空状态（含上传引导） -->
+    <div id="picker-empty" class="picker-empty" style="display:none;">
+        <div class="icon"><i class="fa fa-picture-o"></i></div>
+        <div class="title" id="picker-empty-title">图片库暂无图片</div>
+        <div class="desc" id="picker-empty-desc">还没有上传任何图片，先去图片库上传几张吧～</div>
+        <a class="btn-upload" id="picker-goto-upload">
+            <i class="fa fa-cloud-upload"></i> 去图片库上传
+        </a>
+    </div>
+
+    <!-- 分页 -->
+    <div id="picker-pagination" class="picker-pagination" style="display:none;"></div>
+</div>
+
+<!-- 底部确定/取消 -->
+<div class="picker-footer">
+    <div class="selected-tip">
+        <span id="picker-selected-empty">未选中</span>
+        <span id="picker-selected-info" style="display:none;">
+            已选：<span class="name" id="picker-selected-name"></span>
+        </span>
+    </div>
+    <button type="button" class="btn btn-default" id="picker-cancel-btn">取消</button>
+    <button type="button" class="btn btn-primary" id="picker-confirm-btn" disabled="disabled">
+        <i class="fa fa-check"></i> 选择此图片
+    </button>
+</div>
+
+<script type="text/javascript" th:src="@{/statics/plugins/jquery.js}"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    /*]]>*/
+
+    /**
+     * 图片选择器（独立 iframe 页）
+     * - 搜索：keyword（按 file_name 模糊）
+     * - 分页：page/size
+     * - 选中后通过 parent.window.__onImagePicked(payload) 回调父窗口
+     *   payload = { sn, name, url, size }
+     */
+    (function () {
+        var state = {
+            keyword: '',
+            page: 1,
+            size: 24,
+            total: 0,
+            pages: 0,
+            selected: null,   // {sn, name, url, size}
+            loading: false
+        };
+
+        var $grid     = $('#picker-grid');
+        var $count    = $('#picker-count');
+        var $empty    = $('#picker-empty');
+        var $loading  = $('#picker-loading');
+        var $pagi     = $('#picker-pagination');
+        var $confirm  = $('#picker-confirm-btn');
+        var $cancel   = $('#picker-cancel-btn');
+        var $search   = $('#picker-search');
+
+        function escHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function fmtSize(b) {
+            if (!b && b !== 0) return '';
+            if (b < 1024) return b + ' B';
+            if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1024 / 1024).toFixed(2) + ' MB';
+        }
+
+        function load() {
+            if (state.loading) return;
+            state.loading = true;
+            $loading.show();
+            $.ajax({
+                type: 'get',
+                url: _u('/bms/image/list.do'),
+                data: { keyword: state.keyword, page: state.page, size: state.size },
+                cache: false,
+                dataType: 'json',
+                success: function (res) {
+                    state.loading = false;
+                    $loading.hide();
+                    if (!res || res.success !== 1) {
+                        renderEmpty(true);
+                        return;
+                    }
+                    state.total = res.total || 0;
+                    state.pages = res.pages || 0;
+                    state.page  = res.page  || 1;
+
+                    if (state.total === 0) {
+                        renderEmpty(false);
+                        return;
+                    }
+
+                    $empty.hide();
+                    $grid.show();
+                    $pagi.show();
+                    renderGrid(res.list || []);
+                    renderPagination();
+                    $count.text('共 ' + state.total + ' 张'
+                        + (state.keyword ? '（关键词：' + escHtml(state.keyword) + '）' : ''));
+                },
+                error: function () {
+                    state.loading = false;
+                    $loading.hide();
+                    renderEmpty(true);
+                }
+            });
+        }
+
+        function renderEmpty(isError) {
+            $grid.hide().empty();
+            $pagi.hide().empty();
+            $empty.show();
+            $count.text(isError ? '加载失败' : (state.keyword ? '未匹配到图片' : '共 0 张'));
+
+            var $title = $('#picker-empty-title');
+            var $desc  = $('#picker-empty-desc');
+            if (isError) {
+                $title.text('加载失败');
+                $desc.text('网络异常或服务异常，请稍后重试');
+            } else if (state.keyword) {
+                $title.text('未找到匹配图片');
+                $desc.text('当前关键词：' + state.keyword + '，可清空搜索查看全部图片');
+            } else {
+                $title.text('图片库暂无图片');
+                $desc.text('还没有上传任何图片，先去图片库上传几张吧～');
+            }
+            // 选中态清掉
+            setSelected(null);
+        }
+
+        function renderGrid(list) {
+            var html = '';
+            list.forEach(function (it) {
+                html += '<div class="picker-card" '
+                     +  'data-sn="' + escHtml(it.sn) + '" '
+                     +  'data-url="' + escHtml(it.url) + '" '
+                     +  'data-name="' + escHtml(it.name) + '" '
+                     +  'data-size="' + escHtml(it.size || 0) + '">'
+                     +  '<span class="thumb" style="background-image:url(\'' + escHtml(it.url) + '\');"></span>'
+                     +  '<div class="meta">'
+                     +    '<span class="name" title="' + escHtml(it.name) + '">' + escHtml(it.name) + '</span>'
+                     +    '<span class="size">' + escHtml(fmtSize(it.size)) + '</span>'
+                     +  '</div>'
+                     +  '<span class="check"><i class="fa fa-check"></i></span>'
+                     +  '</div>';
+            });
+            $grid.html(html);
+        }
+
+        function renderPagination() {
+            if (state.pages <= 1) { $pagi.hide(); return; }
+
+            var html = '';
+            html += '<button type="button" class="pg-btn" data-page="' + (state.page - 1) + '" '
+                 +  (state.page <= 1 ? 'disabled' : '') + '>'
+                 +  '<i class="fa fa-chevron-left"></i></button>';
+
+            // 简化页码：仅显示当前页前后 2 页 + 首尾
+            var start = Math.max(1, state.page - 2);
+            var end   = Math.min(state.pages, state.page + 2);
+            if (start > 1) {
+                html += '<button type="button" class="pg-btn" data-page="1">1</button>';
+                if (start > 2) html += '<span class="pg-info">…</span>';
+            }
+            for (var i = start; i <= end; i++) {
+                html += '<button type="button" class="pg-btn ' + (i === state.page ? 'active' : '') + '" '
+                     +  'data-page="' + i + '">' + i + '</button>';
+            }
+            if (end < state.pages) {
+                if (end < state.pages - 1) html += '<span class="pg-info">…</span>';
+                html += '<button type="button" class="pg-btn" data-page="' + state.pages + '">' + state.pages + '</button>';
+            }
+
+            html += '<button type="button" class="pg-btn" data-page="' + (state.page + 1) + '" '
+                 +  (state.page >= state.pages ? 'disabled' : '') + '>'
+                 +  '<i class="fa fa-chevron-right"></i></button>';
+            html += '<span class="pg-info">第 ' + state.page + ' / ' + state.pages + ' 页</span>';
+
+            $pagi.html(html).show();
+        }
+
+        function setSelected(item) {
+            state.selected = item;
+            $grid.find('.picker-card').removeClass('selected');
+            if (item) {
+                $grid.find('.picker-card[data-sn="' + item.sn + '"]').addClass('selected');
+                $('#picker-selected-empty').hide();
+                $('#picker-selected-info').show();
+                $('#picker-selected-name').text(item.name).attr('title', item.name);
+                $confirm.prop('disabled', false);
+            } else {
+                $('#picker-selected-empty').show();
+                $('#picker-selected-info').hide();
+                $confirm.prop('disabled', true);
+            }
+        }
+
+        // -------- 事件绑定 --------
+        // 点击缩略图选中
+        $grid.on('click', '.picker-card', function () {
+            var $c = $(this);
+            setSelected({
+                sn: $c.data('sn'),
+                url: $c.data('url'),
+                name: $c.data('name'),
+                size: $c.data('size')
+            });
+        });
+        // 双击直接确认
+        $grid.on('dblclick', '.picker-card', function () {
+            var $c = $(this);
+            setSelected({
+                sn: $c.data('sn'),
+                url: $c.data('url'),
+                name: $c.data('name'),
+                size: $c.data('size')
+            });
+            confirmPick();
+        });
+
+        // 分页点击
+        $pagi.on('click', '.pg-btn', function () {
+            var p = parseInt($(this).data('page'), 10);
+            if (isNaN(p) || p < 1 || p > state.pages || p === state.page) return;
+            state.page = p;
+            load();
+        });
+
+        // 搜索：回车 + 输入防抖
+        var searchTimer = null;
+        $search.on('keydown', function (e) {
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                clearTimeout(searchTimer);
+                state.keyword = $.trim($search.val());
+                state.page = 1;
+                load();
+            }
+        });
+        $search.on('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                var v = $.trim($search.val());
+                if (v === state.keyword) return;
+                state.keyword = v;
+                state.page = 1;
+                load();
+            }, 380);
+        });
+
+        // 确认/取消
+        function confirmPick() {
+            if (!state.selected) return;
+            try {
+                if (window.parent && typeof window.parent.__onImagePicked === 'function') {
+                    window.parent.__onImagePicked(state.selected);
+                }
+            } catch (e) { /* ignore */ }
+        }
+        $confirm.on('click', confirmPick);
+        $cancel.on('click', function () {
+            try {
+                if (window.parent && typeof window.parent.__onImagePickerCancel === 'function') {
+                    window.parent.__onImagePickerCancel();
+                }
+            } catch (e) { /* ignore */ }
+        });
+
+        // 空状态：跳转到图片库
+        $('#picker-goto-upload').on('click', function (e) {
+            e.preventDefault();
+            try {
+                if (window.parent && typeof window.parent.__onImagePickerGotoLibrary === 'function') {
+                    window.parent.__onImagePickerGotoLibrary();
+                }
+            } catch (err) { /* ignore */ }
+        });
+
+        // 初始化加载
+        load();
+    })();
+</script>
+</body>
+</html>

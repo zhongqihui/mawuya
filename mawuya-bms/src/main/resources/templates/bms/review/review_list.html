@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div class="page-head">
+    <ol class="breadcrumb">
+        <li>留言管理</li>
+        <li class="active">留言审批</li>
+        <span style="float:right;">
+            <button type="button" title="刷新列表" onclick="refreshReviewList()"
+                    class="btn btn-default btn-xs">
+                <i class="fa fa-refresh"></i> 刷新
+            </button>
+        </span>
+    </ol>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="block-flat">
+            <div class="content">
+                <!-- 状态切换 tab：待审核优先 -->
+                <ul class="nav nav-tabs review-status-tabs" style="margin-bottom: 14px;">
+                    <li th:classappend="${currentStatus == '0' ? 'active' : ''}">
+                        <a class="review-tab" data-status="0">
+                            <i class="fa fa-clock-o"></i> 待审核
+                            <span class="badge" style="background:#f0ad4e;" th:text="${countPending}">0</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentStatus == '1' ? 'active' : ''}">
+                        <a class="review-tab" data-status="1">
+                            <i class="fa fa-check-circle"></i> 已通过
+                            <span class="badge" style="background:#5cb85c;" th:text="${countApproved}">0</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentStatus == '2' ? 'active' : ''}">
+                        <a class="review-tab" data-status="2">
+                            <i class="fa fa-times-circle"></i> 已拒绝
+                            <span class="badge" style="background:#d9534f;" th:text="${countRejected}">0</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentStatus == 'all' ? 'active' : ''}">
+                        <a class="review-tab" data-status="all">
+                            <i class="fa fa-list"></i> 全部
+                            <span class="badge" th:text="${countAll}">0</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="datatable-review">
+                        <thead>
+                        <tr>
+                            <th style="width:60px;">#</th>
+                            <th style="width:120px;">昵称</th>
+                            <th>评论内容</th>
+                            <th style="width:200px;">所属文章</th>
+                            <th style="width:140px;">提交时间</th>
+                            <th style="width:90px;">状态</th>
+                            <th style="width:160px;">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!--
+                          注意：不要在 <tbody> 里塞 colspan 占位行作为空状态，
+                          否则 DataTables 会把它当成数据行取第 1..N 列，触发：
+                            "Requested unknown parameter 'N' from the data source for row 0"
+                          空表交给 DataTables 自身的 emptyTable 文案处理（见 JS 配置），
+                          或在外部独立块展示空状态（见下方 #review-empty）。
+                        -->
+                        <tr th:each="r, st : ${reviewList}" th:attr="data-sn=${r.sn}">
+                            <td th:text="${st.count}"></td>
+                            <td th:text="${r.reviewName}"></td>
+                            <td>
+                                <div class="review-content" th:text="${r.reviewContent}"
+                                     style="max-width:520px; white-space:pre-wrap; word-break:break-word;"></div>
+                            </td>
+                            <td>
+                                <span th:if="${r.articleTitle != null}" th:text="${r.articleTitle}"
+                                      style="color:#444;">title</span>
+                                <span th:if="${r.articleTitle == null}" style="color:#bbb;">（文章不存在）</span>
+                                <br/>
+                                <a th:if="${r.articleSn != null}"
+                                   th:href="@{|http://localhost:8080/${r.articleSn}|}"
+                                   target="_blank" style="font-size:12px; color:#5b9bd5;">
+                                    <i class="fa fa-external-link"></i> 查看原文
+                                </a>
+                            </td>
+                            <td th:text="${r.reviewDate != null and #strings.length(r.reviewDate) gt 16
+                                          ? #strings.substring(r.reviewDate, 0, 16) : r.reviewDate}"></td>
+                            <td>
+                                <span th:if="${r.reviewStatus == 0}" class="label" style="background:#f0ad4e;">待审核</span>
+                                <span th:if="${r.reviewStatus == 1}" class="label" style="background:#5cb85c;">已通过</span>
+                                <span th:if="${r.reviewStatus == 2}" class="label" style="background:#d9534f;">已拒绝</span>
+                            </td>
+                            <td class="center review-actions">
+                                <button type="button" class="btn btn-success btn-xs review-approve-btn"
+                                        th:attr="data-sn=${r.sn}" th:disabled="${r.reviewStatus == 1}">
+                                    <i class="fa fa-check"></i> 通过
+                                </button>
+                                <button type="button" class="btn btn-danger btn-xs review-reject-btn"
+                                        th:attr="data-sn=${r.sn}" th:disabled="${r.reviewStatus == 2}">
+                                    <i class="fa fa-times"></i> 拒绝
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .review-status-tabs > li > a {
+        cursor: pointer; padding: 8px 16px; display: inline-block;
+        color: #555; border: 1px solid transparent; border-bottom: 0;
+        border-top-left-radius: 4px; border-top-right-radius: 4px;
+    }
+    .review-status-tabs > li > a:hover { background: #f5f5f5; color: #333; }
+    .review-status-tabs > li.active > a {
+        background: #fff; border-color: #ddd; color: #333; font-weight: 500;
+    }
+    .review-status-tabs .badge { margin-left: 6px; }
+    .review-actions .btn { margin-right: 4px; }
+    .review-actions .btn[disabled] { opacity: .55; cursor: not-allowed; }
+    .label { padding: 3px 8px; border-radius: 3px; color: #fff; font-size: 11px; }
+</style>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    /*]]>*/
+
+    $(function () {
+        /*
+         * DataTable 初始化注意点：
+         *  1) bDestroy=true：BMS 通过 contentN 区域 .load() 重渲染整个片段，
+         *     旧的 DataTable 实例若不销毁会报 reinitialise 错误，或后续取列时
+         *     抛 "Requested unknown parameter" 警告。
+         *  2) 空表不要在 tbody 里放 colspan 占位行，否则 DataTables 把它当数据行
+         *     去取第 N 列，报警 "Requested unknown parameter 'N' from row 0"。
+         *     改用 oLanguage.sEmptyTable 让 DataTable 自己渲染空态文案。
+         *  3) order 配置用变量分两步赋值（dtOrder = 双层数组），避免双方括号被
+         *     Thymeleaf inline 识别为表达式。
+         *     注：本注释里也避免出现连续的两个左方括号，以免 Thymeleaf inline 误判。
+         */
+        try {
+            var dtOrder = [ [0, 'asc'] ];
+            $('#datatable-review').dataTable({
+                "bLengthChange": true,
+                "iDisplayLength": 25,
+                "bDestroy": true,
+                "order": dtOrder,
+                "oLanguage": {
+                    "sEmptyTable":     "当前分类下暂无评论",
+                    "sZeroRecords":    "未匹配到评论",
+                    "sLengthMenu":     "每页 _MENU_ 条",
+                    "sInfo":           "第 _PAGE_ / _PAGES_ 页 · 共 _TOTAL_ 条",
+                    "sInfoEmpty":      "共 0 条",
+                    "sInfoFiltered":   "（从 _MAX_ 条中筛选）",
+                    "sSearch":         "搜索：",
+                    "oPaginate": {
+                        "sFirst":    "首页",
+                        "sPrevious": "上一页",
+                        "sNext":     "下一页",
+                        "sLast":     "末页"
+                    }
+                }
+            });
+        } catch (e) { /* DataTable 不可用时降级为普通 table */ }
+
+        // tab 切换：通过 link-li 的同一容器（#content6）重新 load 当前页
+        $('.review-tab').off('click.tab').on('click.tab', function () {
+            var status = $(this).data('status');
+            $('#content6').load(_u('/bms/review/list.do?status=') + status);
+        });
+
+        // 通过
+        $(document).off('click.approve', '.review-approve-btn')
+                   .on('click.approve', '.review-approve-btn', function () {
+            var sn = $(this).data('sn');
+            doStatusChange(sn, 'approve.do', '确认通过这条评论？通过后将在前台公开展示。');
+        });
+
+        // 拒绝
+        $(document).off('click.reject', '.review-reject-btn')
+                   .on('click.reject', '.review-reject-btn', function () {
+            var sn = $(this).data('sn');
+            doStatusChange(sn, 'reject.do', '确认拒绝这条评论？拒绝后前台将不展示。');
+        });
+    });
+
+    function doStatusChange(sn, endpoint, confirmText) {
+        layer.confirm(confirmText, {btn: ['确定', '取消'], skin: 'layui-layer-lan'}, function (idx) {
+            var load = layer.load(0, {shade: [0.1, '#fff']});
+            $.ajax({
+                type: 'post',
+                url: _u('/bms/review/' + endpoint),
+                data: {sn: sn},
+                cache: false,
+                dataType: 'json',
+                success: function (res) {
+                    layer.close(load);
+                    layer.close(idx);
+                    if (res && res.success === 1) {
+                        layer.msg(res.message || '操作成功', {icon: 1, time: 1000});
+                        // 重新加载当前 tab 页：保持 status 上下文不变
+                        var current = /*[[${currentStatus}]]*/ '0';
+                        $('#content6').load(_u('/bms/review/list.do?status=') + current);
+                    } else {
+                        layer.alert((res && res.message) || '操作失败',
+                                    {skin: 'layui-layer-lan', icon: 2});
+                    }
+                },
+                error: function () {
+                    layer.close(load);
+                    layer.alert('网络异常，请稍后重试', {icon: 2});
+                }
+            });
+        });
+    }
+
+    /**
+     * 刷新当前留言审批列表（保持当前 status tab 上下文不变）
+     * currentStatus 由后端 model 注入，可能值：'0' / '1' / '2' / 'all'
+     */
+    function refreshReviewList() {
+        var current = /*[[${currentStatus}]]*/ '0';
+        var $tab = $('#content6');
+        if ($tab.length === 0) {
+            window.location.reload();
+            return;
+        }
+        var load = layer.load(0, {shade: [0.1, '#fff']});
+        $tab.load(_u('/bms/review/list.do?status=') + current, function () {
+            layer.close(load);
+            layer.msg('已刷新', {icon: 1, time: 800});
+        });
+    }
+</script>
+</body>
+</html>

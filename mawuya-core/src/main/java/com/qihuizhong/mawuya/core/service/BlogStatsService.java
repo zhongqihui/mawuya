@@ -68,7 +68,8 @@ public class BlogStatsService {
 
     public int getReviewCount() {
         try {
-            return reviewInfoMapper.selectCount(new HashMap<>());
+            // 站点对外暴露的"评论总数"仅计算已通过评论（与详情页可见数量一致）
+            return reviewInfoMapper.countByStatus(ReviewService.STATUS_APPROVED);
         } catch (Exception e) {
             return 0;
         }

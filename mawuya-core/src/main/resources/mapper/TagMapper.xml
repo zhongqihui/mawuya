@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qihuizhong.mawuya.core.mapper.TagMapper">
+
+    <sql id="_columns">sn,tag_name,tag_color</sql>
+
+    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.entity.Tag">
+        INSERT INTO tag_info (tag_name, tag_color) VALUES (#{tagName}, #{tagColor})
+        ON DUPLICATE KEY UPDATE tag_color = VALUES(tag_color)
+    </insert>
+
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM tag_info WHERE sn = #{value}
+    </delete>
+
+    <update id="update" parameterType="com.qihuizhong.mawuya.core.entity.Tag">
+        UPDATE tag_info SET tag_name = #{tagName}, tag_color = #{tagColor} WHERE sn = #{sn}
+    </update>
+
+    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.entity.Tag">
+        SELECT <include refid="_columns"/> FROM tag_info WHERE sn = #{value}
+    </select>
+
+    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.Tag">
+        SELECT <include refid="_columns"/> FROM tag_info ORDER BY sn ASC
+    </select>
+
+    <select id="selectByPage" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.Tag">
+        SELECT <include refid="_columns"/> FROM tag_info ORDER BY sn ASC
+        <if test="@com.qihuizhong.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
+            LIMIT #{start},#{limit}
+        </if>
+    </select>
+
+    <select id="selectCount" parameterType="map" resultType="int">
+        SELECT count(sn) FROM tag_info
+    </select>
+
+    <select id="selectAllWithArtSize" resultType="com.qihuizhong.mawuya.core.entity.Tag">
+        SELECT t.sn, t.tag_name, t.tag_color, COUNT(at.article_sn) AS art_size
+        FROM tag_info t
+        LEFT JOIN article_tag at ON at.tag_sn = t.sn
+        GROUP BY t.sn, t.tag_name, t.tag_color
+        ORDER BY art_size DESC, t.sn ASC
+    </select>
+
+    <select id="selectByArticleSn" resultType="com.qihuizhong.mawuya.core.entity.Tag">
+        SELECT t.sn, t.tag_name, t.tag_color
+        FROM tag_info t
+        INNER JOIN article_tag at ON at.tag_sn = t.sn
+        WHERE at.article_sn = #{articleSn}
+        ORDER BY t.sn ASC
+    </select>
+
+    <delete id="unbindByArticle">
+        DELETE FROM article_tag WHERE article_sn = #{articleSn}
+    </delete>
+
+    <insert id="bindArticleTag">
+        INSERT IGNORE INTO article_tag (article_sn, tag_sn) VALUES (#{articleSn}, #{tagSn})
+    </insert>
+
+    <select id="selectArticleSnByTag" resultType="int">
+        SELECT article_sn FROM article_tag WHERE tag_sn = #{tagSn}
+    </select>
+
+</mapper>

@@ -48,7 +48,9 @@
                         </li>
                         <li><a href="#"><i class="fa fa-list-alt"></i><span>留言管理</span></a>
                             <ul class="sub-menu">
-                                <li><a href="#">Components</a></li>
+                                <li>
+                                    <a th:attr="link-url=@{/bms/review/list.do}" class="link-li" id="6">&nbsp;&nbsp;留言审批</a>
+                                </li>
                             </ul>
                         </li>
                         <li><a href="#"><i class="fa fa-table"></i><span>日志管理</span></a>

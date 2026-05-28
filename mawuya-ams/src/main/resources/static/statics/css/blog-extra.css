@@ -771,3 +771,35 @@
     .post-body { font-size: 12pt; line-height: 1.7; }
     .post-body img { max-height: none !important; page-break-inside: avoid; }
 }
+
+/* ===== 评论审核提示（v2.1） ===== */
+.comment-tip {
+    margin: 8px 0 14px;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.6;
+    border-left: 4px solid #999;
+    background: #f7f7f7;
+    color: #444;
+}
+.comment-tip-success {
+    border-left-color: #52c41a;
+    background: #f6ffed;
+    color: #389e0d;
+}
+.comment-tip-error {
+    border-left-color: #f5222d;
+    background: #fff1f0;
+    color: #cf1322;
+}
+.comment-review-note {
+    margin: 0 0 14px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #888;
+    background: #fafafa;
+    border: 1px dashed #e5e5e5;
+    border-radius: 4px;
+}
+.comment-review-note .fa { margin-right: 6px; color: #5b9bd5; }

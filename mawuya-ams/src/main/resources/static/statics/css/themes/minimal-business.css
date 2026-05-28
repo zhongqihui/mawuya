@@ -1,0 +1,218 @@
+/* ============================================================
+ *  minimal-business —— 极简商务风
+ * ------------------------------------------------------------
+ *  近白底 + 细线分割 + 灰阶字 + 深蓝单色强调 + 扁平化卡片
+ *  作用域：html[data-theme="minimal-business"]
+ * ============================================================ */
+
+html[data-theme="minimal-business"] {
+    --th-bg:       #fafafa;
+    --th-card-bg:  #ffffff;
+    --th-fg:       #111827;
+    --th-fg-mid:   #374151;
+    --th-fg-mute:  #6b7280;
+    --th-border:   #e5e7eb;
+    --th-accent:   #1e3a8a;
+    --th-accent-hover: #1e40af;
+}
+
+/* ---------- 全站底色 ---------- */
+html[data-theme="minimal-business"] body {
+    background: var(--th-bg) !important;
+    color: var(--th-fg-mid) !important;
+    font-weight: 400;
+}
+
+/* ---------- 站点标题 ---------- */
+html[data-theme="minimal-business"] .site-title {
+    color: var(--th-fg) !important;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+html[data-theme="minimal-business"] .site-subtitle {
+    color: var(--th-fg-mute) !important;
+    font-weight: 400;
+}
+
+/* ---------- 主容器 / 卡片 ---------- */
+html[data-theme="minimal-business"] .post-block,
+html[data-theme="minimal-business"] .posts-expand .post {
+    background: var(--th-card-bg) !important;
+    border: 1px solid var(--th-border) !important;
+    border-radius: 4px;
+    box-shadow: none !important;
+    transition: border-color .2s;
+}
+html[data-theme="minimal-business"] .post-block:hover {
+    border-color: var(--th-accent) !important;
+}
+
+/* ---------- 文章标题 ---------- */
+html[data-theme="minimal-business"] .posts-expand .post-title-link {
+    color: var(--th-fg) !important;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+html[data-theme="minimal-business"] .posts-expand .post-title-link:hover {
+    color: var(--th-accent) !important;
+}
+html[data-theme="minimal-business"] .posts-expand .post-title-link::before {
+    background-color: var(--th-accent) !important;
+}
+
+/* ---------- 链接 ---------- */
+html[data-theme="minimal-business"] a {
+    color: var(--th-accent) !important;
+}
+html[data-theme="minimal-business"] a:hover {
+    color: var(--th-accent-hover) !important;
+    text-decoration: underline;
+}
+
+/* ---------- 正文 ---------- */
+html[data-theme="minimal-business"] .posts-expand .post-body {
+    color: var(--th-fg-mid) !important;
+    line-height: 1.8;
+}
+html[data-theme="minimal-business"] .posts-expand .post-body h1,
+html[data-theme="minimal-business"] .posts-expand .post-body h2,
+html[data-theme="minimal-business"] .posts-expand .post-body h3,
+html[data-theme="minimal-business"] .posts-expand .post-body h4 {
+    color: var(--th-fg) !important;
+    font-weight: 600;
+    border-bottom: 1px solid var(--th-border) !important;
+    padding-bottom: 6px;
+}
+html[data-theme="minimal-business"] .posts-expand .post-body code {
+    background: #f3f4f6 !important;
+    color: var(--th-fg) !important;
+    border: 1px solid var(--th-border);
+    border-radius: 2px;
+    padding: 1px 6px;
+}
+
+/* ---------- post-meta ---------- */
+html[data-theme="minimal-business"] .posts-expand .post-meta {
+    color: var(--th-fg-mute) !important;
+    border-bottom-color: var(--th-border) !important;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+}
+html[data-theme="minimal-business"] .post-meta .post-meta-item-icon {
+    color: var(--th-fg-mute) !important;
+}
+html[data-theme="minimal-business"] .post-meta .post-meta-num {
+    color: var(--th-fg) !important;
+    font-weight: 500;
+}
+
+/* ---------- 标签 ---------- */
+html[data-theme="minimal-business"] .posts-expand .post-tags a {
+    border: 1px solid var(--th-border) !important;
+    color: var(--th-fg-mid) !important;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-right: 6px;
+    background: transparent !important;
+}
+html[data-theme="minimal-business"] .posts-expand .post-tags a:hover {
+    border-color: var(--th-accent) !important;
+    color: var(--th-accent) !important;
+}
+
+/* ---------- 侧边栏 ---------- */
+html[data-theme="minimal-business"] .sidebar {
+    background: var(--th-card-bg) !important;
+    border: 1px solid var(--th-border) !important;
+    border-radius: 4px;
+}
+html[data-theme="minimal-business"] .sidebar,
+html[data-theme="minimal-business"] .site-overview {
+    color: var(--th-fg-mid) !important;
+}
+html[data-theme="minimal-business"] .sidebar a {
+    color: var(--th-fg-mid) !important;
+}
+html[data-theme="minimal-business"] .sidebar a:hover {
+    color: var(--th-accent) !important;
+}
+html[data-theme="minimal-business"] .site-author-name {
+    color: var(--th-fg) !important;
+    font-weight: 600;
+}
+html[data-theme="minimal-business"] .site-description {
+    color: var(--th-fg-mute) !important;
+}
+
+/* ---------- 标签云 ---------- */
+html[data-theme="minimal-business"] .tagcloud a {
+    border: 1px solid var(--th-border) !important;
+    color: var(--th-fg-mid) !important;
+    background: transparent !important;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin: 2px;
+    transition: all .15s;
+    display: inline-block;
+}
+html[data-theme="minimal-business"] .tagcloud a:hover {
+    background: var(--th-accent) !important;
+    color: #ffffff !important;
+    border-color: var(--th-accent) !important;
+}
+
+/* ---------- 按钮 ---------- */
+html[data-theme="minimal-business"] .btn {
+    background: transparent !important;
+    border: 1px solid var(--th-accent) !important;
+    color: var(--th-accent) !important;
+    border-radius: 2px !important;
+    padding: 6px 18px !important;
+    font-weight: 500;
+    box-shadow: none !important;
+    transition: all .15s;
+}
+html[data-theme="minimal-business"] .btn:hover {
+    background: var(--th-accent) !important;
+    color: #ffffff !important;
+}
+
+/* ---------- 菜单 ---------- */
+html[data-theme="minimal-business"] .menu-item a {
+    color: var(--th-fg-mid) !important;
+    font-weight: 500;
+}
+html[data-theme="minimal-business"] .menu-item a:hover {
+    color: var(--th-accent) !important;
+}
+
+/* ---------- 分隔线 ---------- */
+html[data-theme="minimal-business"] .posts-expand .post-eof {
+    background: var(--th-border) !important;
+    height: 1px !important;
+    opacity: 1;
+}
+html[data-theme="minimal-business"] hr {
+    border-color: var(--th-border) !important;
+}
+
+/* ---------- 评论区 / 表单 ---------- */
+html[data-theme="minimal-business"] input[type="text"],
+html[data-theme="minimal-business"] textarea {
+    background: #ffffff !important;
+    border: 1px solid var(--th-border) !important;
+    border-radius: 2px !important;
+    color: var(--th-fg) !important;
+}
+html[data-theme="minimal-business"] input[type="text"]:focus,
+html[data-theme="minimal-business"] textarea:focus {
+    border-color: var(--th-accent) !important;
+    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.1);
+}
+
+/* ---------- footer ---------- */
+html[data-theme="minimal-business"] .footer,
+html[data-theme="minimal-business"] .footer-inner {
+    color: var(--th-fg-mute) !important;
+    border-top: 1px solid var(--th-border);
+}

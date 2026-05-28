@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div class="page-head">
+    <ol class="breadcrumb">
+        <i class="fa fa-paint-brush"></i>&nbsp;主题外观 ｜ 一键切换 AMS 站点风格
+    </ol>
+</div>
+
+<!-- 当前主题提示条 -->
+<div class="row" style="margin: 0 0 16px 0;">
+    <div class="col-md-12">
+        <div style="background: #e7f3ff; border-left: 4px solid #3a8fcf; padding: 10px 14px; border-radius: 3px; color: #1f4d75;">
+            <i class="fa fa-info-circle"></i>&nbsp;
+            当前生效主题：<strong id="current-theme-code" th:text="${currentCode}">default</strong>
+            &nbsp;·&nbsp;切换后访问 <a href="http://localhost:8080/" target="_blank" style="color:#1f4d75;text-decoration:underline;">AMS 前台首页</a> 即可看到效果（强刷一次以清掉浏览器缓存）。
+        </div>
+    </div>
+</div>
+
+<!-- 4 张主题卡片栅格 -->
+<div class="row" id="theme-card-row">
+    <div class="col-md-6 col-lg-3" th:each="t : ${themes}" style="margin-bottom: 18px;">
+        <div th:class="${t.code == currentCode} ? 'theme-card theme-card-active' : 'theme-card'"
+             th:attr="data-code=${t.code}"
+             style="background:#fff; border:2px solid #e5e7eb; border-radius:8px; overflow:hidden; transition: all .2s; position: relative; height: 280px; display: flex; flex-direction: column;">
+
+            <!-- 角标：生效中 -->
+            <div th:if="${t.code == currentCode}"
+                 style="position:absolute; top:8px; right:8px; background:#3a8fcf; color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; z-index:2;">
+                <i class="fa fa-check"></i>&nbsp;生效中
+            </div>
+
+            <!-- 配色预览条（3 色横向铺满） -->
+            <div style="height: 80px; display: flex;">
+                <div style="flex:1;" th:attr="style=|background:${t.color2}; flex:1.4;|"></div>
+                <div style="flex:1;" th:attr="style=|background:${t.color1}; flex:1;|"></div>
+                <div style="flex:1;" th:attr="style=|background:${t.color3}; flex:0.6;|"></div>
+            </div>
+
+            <!-- 卡中：标题 + 描述 -->
+            <div style="padding: 14px 16px 10px 16px; flex: 1;">
+                <div style="font-size:17px; font-weight:600; color:#222; margin-bottom:4px;"
+                     th:text="${t.name}">主题名</div>
+                <div style="font-size:11px; color:#999; margin-bottom:6px; font-family: Consolas, monospace;"
+                     th:text="${t.code}">code</div>
+                <div style="font-size:12.5px; color:#666; line-height:1.55;" th:text="${t.description}">描述</div>
+            </div>
+
+            <!-- 卡底：按钮 -->
+            <div style="padding: 0 16px 14px 16px;">
+                <button type="button"
+                        th:if="${t.code == currentCode}"
+                        class="btn btn-default btn-block" disabled
+                        style="background:#f3f4f6; color:#999; border-color:#e5e7eb; cursor:not-allowed;">
+                    已应用
+                </button>
+                <button type="button"
+                        th:unless="${t.code == currentCode}"
+                        class="btn btn-primary btn-block apply-theme-btn"
+                        th:attr="data-code=${t.code}">
+                    应用此主题
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 卡片悬浮 / 选中态 */
+    .theme-card { box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+    .theme-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(58,143,207,.18); border-color: #b8d4ea !important; }
+    .theme-card-active { border-color: #3a8fcf !important; box-shadow: 0 4px 14px rgba(58,143,207,.25); }
+    .apply-theme-btn { background:#3a8fcf; border-color:#3a8fcf; }
+    .apply-theme-btn:hover { background:#2c7bb8; border-color:#2c7bb8; }
+</style>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    /*]]>*/
+
+    $(function () {
+        $('.apply-theme-btn').click(function () {
+            var code = $(this).attr('data-code');
+            var name = $(this).closest('.theme-card').find('div[style*="font-weight:600"]').first().text();
+            layer.confirm('确定将 AMS 站点主题切换为「' + name + '」？', {
+                btn: ['确定', '取消'],
+                skin: 'layui-layer-lan',
+                title: '一键换皮确认'
+            }, function (index) {
+                layer.close(index);
+                var load = layer.load(0, {shade: [0.1, '#fff']});
+                $.ajax({
+                    type: 'POST',
+                    url: _u('/bms/theme/apply.do'),
+                    data: { code: code },
+                    success: function (result) {
+                        layer.close(load);
+                        if (result === 'success') {
+                            layer.alert('已切换为「' + name + '」，访问 AMS 前台即可看到新风格。', {
+                                skin: 'layui-layer-lan',
+                                icon: 1,
+                                end: function () {
+                                    $('#content5').load(_u('/bms/theme/list.do'));
+                                }
+                            });
+                        } else {
+                            layer.alert('切换失败，请检查后台日志', {skin: 'layui-layer-lan', icon: 2});
+                        }
+                    },
+                    error: function () {
+                        layer.close(load);
+                        layer.alert('请求失败', {skin: 'layui-layer-lan', icon: 2});
+                    }
+                });
+            });
+        });
+    });
+</script>
+</body>
+</html>

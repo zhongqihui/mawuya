@@ -1,12 +1,47 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
+<style>
+    /* 「写博客」按钮：在 Bootstrap btn-primary 基础上做渐变 + 阴影，与 BMS 整体蓝色基调协调 */
+    .btn-write-blog {
+        background: linear-gradient(135deg, #4facfe 0%, #00b8d4 100%);
+        border: none;
+        color: #fff;
+        padding: 6px 16px;
+        font-weight: 500;
+        box-shadow: 0 2px 6px rgba(0, 184, 212, .25);
+        transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    }
+    .btn-write-blog:hover,
+    .btn-write-blog:focus {
+        background: linear-gradient(135deg, #4facfe 0%, #00b8d4 100%);
+        color: #fff;
+        filter: brightness(1.06);
+        box-shadow: 0 4px 12px rgba(0, 184, 212, .35);
+        transform: translateY(-1px);
+    }
+    .btn-write-blog:active {
+        transform: translateY(0);
+        filter: brightness(.96);
+        box-shadow: 0 1px 3px rgba(0, 184, 212, .25);
+    }
+    .btn-write-blog .fa { margin-right: 4px; }
+</style>
+
 <div class="page-head">
     <ol class="breadcrumb">
-        这是一个疯子的世界，只有疯子才能生存下去
-        <button type="button" title="发布博客" onclick="toAddBlogPage()" class="btn btn-default btn-xs">
-            <i class="fa fa-file"></i>
-        </button>
+        <li>博客管理</li>
+        <li class="active">博客列表</li>
+        <span style="float:right;">
+            <button type="button" title="撰写并发布一篇新博客" onclick="toAddBlogPage()"
+                    class="btn btn-primary btn-sm btn-write-blog">
+                <i class="fa fa-pencil-square-o"></i> 写博客
+            </button>
+            <button type="button" title="刷新列表" onclick="refreshArticleList()"
+                    class="btn btn-default btn-sm" style="margin-left:6px;">
+                <i class="fa fa-refresh"></i> 刷新
+            </button>
+        </span>
     </ol>
 </div>
 <div class="row">
@@ -89,11 +124,35 @@
         $('#content3').load(_u('/bms/article/toAdd.do?'));
     }
 
+    /** 刷新当前博客列表（不跳页面、保持 tab 容器） */
+    function refreshArticleList() {
+        var $tab = $('#content3');
+        if ($tab.length === 0) {
+            // 兜底：未在 tab 容器中（极少数直接打开的场景）
+            window.location.reload();
+            return;
+        }
+        var load = layer.load(0, {shade: [0.1, '#fff']});
+        $tab.load(_u('/bms/article/list.do'), function () {
+            layer.close(load);
+            layer.msg('已刷新', {icon: 1, time: 800});
+        });
+    }
+
     function uploadPicture(sn) {
         var html = ''
             + '<form enctype="multipart/form-data" method="post" id="backgroundImgUploadForm" '
-            + '      style="padding:18px 16px 6px; box-sizing:border-box;">'
+            + '      style="padding:14px 16px 6px; box-sizing:border-box;">'
             + '  <input name="sn" type="hidden" value="' + sn + '" />'
+            // —— 顶部：选择来源（本地上传 / 图片库选择）——
+            + '  <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">'
+            + '    <button type="button" class="btn btn-default btn-sm" id="bg-pick-from-lib-' + sn + '">'
+            + '      <i class="fa fa-picture-o"></i> 从图片库选择'
+            + '    </button>'
+            + '    <span style="line-height:30px; font-size:12px; color:#888;">'
+            + '      或在下方上传新图片'
+            + '    </span>'
+            + '  </div>'
             + '  <div class="img-upload-zone">'
             + '    <label for="bgImgInput-' + sn + '" class="img-upload-trigger">'
             + '      <i class="fa fa-cloud-upload"></i>'
@@ -115,18 +174,19 @@
         layer.open({
             type: 1,
             skin: 'layui-layer-lan',
-            title: '上传背景图片',
+            title: '设置背景图片',
             content: html,
-            area: ['460px', 'auto'],
+            area: ['480px', 'auto'],
             btn: ['确定上传', '取消'],
             success: function () {
                 bindBgImgPreview(sn);
+                bindBgImgPickFromLibrary(sn);
             },
             yes: function (index) {
                 var form = $('#backgroundImgUploadForm');
                 var fileInput = form.find('input[type=file]')[0];
                 if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                    layer.msg('请先选择一张图片', {icon: 7});
+                    layer.msg('请先选择一张图片，或点击"从图片库选择"', {icon: 7});
                     return;
                 }
                 var load = layer.load(0, {shade: [0.1, '#fff']});
@@ -158,6 +218,72 @@
                     }
                 });
             }
+        });
+    }
+
+    /**
+     * 给"从图片库选择"按钮绑定行为：
+     * 1) 打开 picker iframe（layer type=2）
+     * 2) picker 选中 → 注册 window.__onImagePicked → 调 setBackgroundFromLibrary.do
+     * 3) 成功后关闭 picker 与外层上传弹窗，刷新文章列表
+     */
+    function bindBgImgPickFromLibrary(sn) {
+        var $btn = $('#bg-pick-from-lib-' + sn);
+        $btn.off('click.libpick').on('click.libpick', function () {
+            var iw = Math.min(window.innerWidth - 40, 1100);
+            var ih = Math.min(window.innerHeight - 40, 720);
+            var isMobile = window.innerWidth <= 600;
+            var areaW = isMobile ? '100%' : iw + 'px';
+            var areaH = isMobile ? '100%' : ih + 'px';
+
+            var pickerLayer = layer.open({
+                type: 2,
+                title: '从图片库选择背景图',
+                skin: 'layui-layer-lan',
+                shadeClose: false,
+                maxmin: !isMobile,
+                area: [areaW, areaH],
+                content: _u('/bms/image/picker.do')
+            });
+
+            // picker iframe 内会调 parent.__onImagePicked / __onImagePickerCancel / __onImagePickerGotoLibrary
+            window.__onImagePicked = function (item) {
+                if (!item || !item.sn) {
+                    layer.msg('选择失败', {icon: 2});
+                    return;
+                }
+                var load = layer.load(0, {shade: [0.1, '#fff']});
+                $.ajax({
+                    type: 'post',
+                    url: _u('/bms/article/setBackgroundFromLibrary.do'),
+                    data: {sn: sn, imageSn: item.sn},
+                    cache: false,
+                    success: function (result) {
+                        layer.close(load);
+                        if (result === 'success') {
+                            layer.close(pickerLayer);
+                            // 关掉外层"设置背景图片"弹窗（找当前最外层 layer）
+                            layer.closeAll('page');
+                            layer.msg('背景图设置成功', {icon: 1, time: 1000});
+                            $('#content3').load(_u('/bms/article/list.do'));
+                        } else {
+                            layer.alert('设置背景图失败', {skin: 'layui-layer-lan', icon: 2});
+                        }
+                    },
+                    error: function () {
+                        layer.close(load);
+                        layer.alert('网络异常，设置失败', {icon: 2});
+                    }
+                });
+            };
+            window.__onImagePickerCancel = function () {
+                layer.close(pickerLayer);
+            };
+            window.__onImagePickerGotoLibrary = function () {
+                layer.close(pickerLayer);
+                layer.closeAll('page');
+                $('#content3').load(_u('/bms/image/library.do'));
+            };
         });
     }
 

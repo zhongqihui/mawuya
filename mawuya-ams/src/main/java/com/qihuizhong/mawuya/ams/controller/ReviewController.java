@@ -10,13 +10,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * 评论提交 controller。
  *
- * <p>表单提交后跳回原文章详情页（带 #comments 锚点）。</p>
+ * <p>表单提交后跳回原文章详情页（带 #comments 锚点）。
+ * 评论默认进入「待审核」状态，由 BMS 审批通过后才会在前台展示；
+ * 故提交后通过 flash attribute 把提示信息（成功 or 校验错误）带回详情页。</p>
  *
  * @author 钟启辉
  */
@@ -35,13 +36,18 @@ public class ReviewController extends BaseController {
     public String submit(@RequestParam("articleSn") Integer articleSn,
                          @RequestParam("name") String name,
                          @RequestParam("content") String content,
-                         HttpServletRequest request) {
+                         RedirectAttributes ra) {
         if (articleSn == null) {
             return ret404Page();
         }
-        // 简单防灌水：内容/昵称由 Service 层校验
-        reviewService.submit(articleSn, name, content);
-        // 不论成功失败都回到详情页，错误提示通过 service 返回信息可在更高级版本中通过 flash attr 展示
+        String err = reviewService.submit(articleSn, name, content);
+        if (err == null || err.isEmpty()) {
+            ra.addFlashAttribute("commentTip", "评论已提交，待管理员审核通过后将公开展示。");
+            ra.addFlashAttribute("commentTipType", "success");
+        } else {
+            ra.addFlashAttribute("commentTip", err);
+            ra.addFlashAttribute("commentTipType", "error");
+        }
         return "redirect:/" + articleSn + "#comments";
     }
 }

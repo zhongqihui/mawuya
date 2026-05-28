@@ -38,5 +38,18 @@ public interface ImageBlobMapper {
 
     int countAll();
 
+    /**
+     * 按关键词模糊匹配 file_name 列出 metadata（不含二进制）。
+     * keyword 为 null/空则等价于 listMeta，按 sn DESC 排序。
+     * <p>注意：keyword 由 mapper 中通过 #{keyword} 参数化绑定，xml 内部仅做 CONCAT('%', #{keyword}, '%')，
+     * 不存在 SQL 字符串拼接，已防注入。</p>
+     */
+    List<ImageBlob> listMetaByKeyword(@Param("keyword") String keyword,
+                                      @Param("limit") Integer limit,
+                                      @Param("offset") Integer offset);
+
+    /** 与 listMetaByKeyword 配套，返回匹配总数。keyword 为 null/空则等价于 countAll。 */
+    int countByKeyword(@Param("keyword") String keyword);
+
     int deleteById(@Param("sn") Long sn);
 }

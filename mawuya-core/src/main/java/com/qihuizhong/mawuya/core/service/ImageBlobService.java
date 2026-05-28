@@ -70,6 +70,21 @@ public class ImageBlobService {
         return imageBlobMapper.countAll();
     }
 
+    /**
+     * 按关键词分页查询图片 metadata。
+     * keyword 为 null/空白等价于 listMeta；offset/limit 由调用方做合法性收敛。
+     */
+    public List<ImageBlob> listMetaByKeyword(String keyword, int limit, int offset) {
+        String kw = (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim();
+        return imageBlobMapper.listMetaByKeyword(kw, limit, offset);
+    }
+
+    /** 与 listMetaByKeyword 配套的总数查询 */
+    public int countByKeyword(String keyword) {
+        String kw = (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim();
+        return imageBlobMapper.countByKeyword(kw);
+    }
+
     public boolean deleteById(Long sn) {
         return imageBlobMapper.deleteById(sn) > 0;
     }

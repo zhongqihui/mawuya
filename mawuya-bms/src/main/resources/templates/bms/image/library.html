@@ -168,6 +168,8 @@
         $.ajax({
             type: 'get',
             url: _u('/bms/image/list.do'),
+            // size=200 保持图片库主页"最近 200 张"的原观感；分页搜索由"从图片库选择"弹窗承担
+            data: {size: 200, page: 1},
             cache: false,
             success: function (res) {
                 var $grid = $('#img-lib-grid').empty();
