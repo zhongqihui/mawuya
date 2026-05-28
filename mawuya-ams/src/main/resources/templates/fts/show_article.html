@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion">
+<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion" th:attr="data-theme=${currentTheme}">
 <head>
     <title th:text="|${article.articleTitle} - Zqh Blog|">Zqh's Blog</title>
     <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>

@@ -8,8 +8,8 @@ import com.qihuizhong.mawuya.core.entity.ArticleInfo;
 import com.qihuizhong.mawuya.core.entity.ReviewInfo;
 import com.qihuizhong.mawuya.core.entity.Tag;
 import com.qihuizhong.mawuya.core.service.BlogStatsService;
+import com.qihuizhong.mawuya.core.service.SiteThemeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -36,10 +36,22 @@ public class GlobalModelAttributes {
     private static final int TAG_CLOUD_LIMIT = 30;
 
     private final BlogStatsService blogStatsService;
+    private final SiteThemeService siteThemeService;
 
     @Autowired
-    public GlobalModelAttributes(BlogStatsService blogStatsService) {
+    public GlobalModelAttributes(BlogStatsService blogStatsService, SiteThemeService siteThemeService) {
         this.blogStatsService = blogStatsService;
+        this.siteThemeService = siteThemeService;
+    }
+
+    /**
+     * 当前生效的 AMS 主题 code，由 BMS【主题切换】管理，落库于 blog_info.theme_code。
+     * 视图通过 ${currentTheme} 写到 <html data-theme="..."> 上，配合主题 CSS 属性选择器命中皮肤。
+     * 任意异常 / 空值 / 非法值 都会被 service 兜底为 'default'，前台永远不白屏。
+     */
+    @ModelAttribute("currentTheme")
+    public String currentTheme() {
+        return siteThemeService.getCurrentTheme();
     }
 
     @ModelAttribute("siteStats")

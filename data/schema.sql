@@ -61,11 +61,21 @@ CREATE TABLE `category_info` (
     UNIQUE KEY `uk_category_name` (`category_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章分类表';
 
--- 5. 博客信息表
+-- 5. 博客信息表（单例表：固定 id=1 一行，承载站点级配置）
+-- 历史上仅有 blogger_name 一字段且无主键无数据；现新增：
+--   id          —— 单例主键，固定为 1（用于 UPDATE WHERE id=1）
+--   theme_code  —— AMS 当前皮肤主题，用于 BMS 一键换皮
 DROP TABLE IF EXISTS `blog_info`;
 CREATE TABLE `blog_info` (
-    `blogger_name` VARCHAR(30) DEFAULT NULL COMMENT '博主名'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='博客信息表';
+    `id`           INT          NOT NULL DEFAULT 1                     COMMENT '单例主键，固定为 1',
+    `blogger_name` VARCHAR(30)  DEFAULT NULL                            COMMENT '博主名',
+    `theme_code`   VARCHAR(40)  NOT NULL DEFAULT 'default'              COMMENT 'AMS 当前主题：default / tech-dark / gradient-vivid / minimal-business',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='博客信息表（单例）';
+
+-- 初始化默认行（theme_code 默认 default = 原版皮肤）
+INSERT INTO `blog_info` (`id`, `theme_code`) VALUES (1, 'default')
+    ON DUPLICATE KEY UPDATE `id` = `id`;
 
 -- 6. 访客记录表
 DROP TABLE IF EXISTS `log_info`;

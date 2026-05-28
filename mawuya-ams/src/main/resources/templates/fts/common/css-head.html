@@ -22,7 +22,15 @@
     <link rel="stylesheet" th:href="@{/statics/plugins/editor.md/css/editormd.css}"/>
     <link rel="stylesheet" th:href="@{/statics/plugins/editor.md/css/editormd.preview.min.css}"/>
     <!-- 站点定制样式：响应式增强 + 新组件 -->
-    <link rel="stylesheet" th:href="@{/statics/css/blog-extra.css(v=1.9)}"/>
+    <link rel="stylesheet" th:href="@{/statics/css/blog-extra.css(v=2.0)}"/>
+    <!--
+      一键换皮：始终加载 3 套备用主题 CSS（default 不出文件，原版即默认）。
+      AMS 模板 <html data-theme="xxx"> 由 GlobalModelAttributes 注入，
+      属性选择器命中对应皮肤。新增/切换主题只动 blog_info.theme_code 与此处。
+    -->
+    <link rel="stylesheet" th:href="@{/statics/css/themes/tech-dark.css(v=1.0)}"/>
+    <link rel="stylesheet" th:href="@{/statics/css/themes/gradient-vivid.css(v=1.0)}"/>
+    <link rel="stylesheet" th:href="@{/statics/css/themes/minimal-business.css(v=1.0)}"/>
 
     <script type="text/javascript" id="hexo.configuration">
         var NexT = window.NexT || {};
