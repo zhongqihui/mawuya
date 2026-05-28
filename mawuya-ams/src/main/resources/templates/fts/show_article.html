@@ -34,12 +34,17 @@
                                     </span>
 
                                     <span class="post-category">&nbsp; | &nbsp;
-                                        <a href="#comments"><span th:text="|${article.reviewNum} 条评论|"></span></a>
+                                        <a href="#comments" class="post-comments-link">
+                                            <span class="post-meta-item-icon"><i class="fa fa-comments-o"></i></span>
+                                            <span class="post-meta-num" th:text="${article.reviewNum}"></span>
+                                            <span class="post-meta-item-text post-meta-unit"> 条评论</span>
+                                        </a>
                                     </span>
 
                                     <span>&nbsp; | &nbsp;
                                         <span class="post-meta-item-icon"><i class="fa fa-eye"></i></span>
-                                        <span th:text="|${article.readNum} 阅读|"></span>
+                                        <span class="post-meta-num" th:text="${article.readNum}"></span>
+                                        <span class="post-meta-item-text post-meta-unit"> 阅读</span>
                                     </span>
                                 </div>
 

@@ -5,17 +5,19 @@
  * ================================================================== */
 
 /* ---------- 通用图文排版增强 ---------- */
-/* 文章正文中的所有图片：宽度自适应，按自然比例缩放，不强制高度上限。
- *
- * 修订（2026-05）：去掉 max-height: 70vh —— 该规则在移动端 + width:auto/height:auto +
- * object-fit:contain 组合下，会让普通比例图片高度异常拉伸（特别是高比例长图），
- * 用户反馈\"详情页内容异常超长\"主因即此。
- * 现在：仅约束最大宽度，高度由浏览器按图片自然比例自适应。
+/* ---------- 通用图文排版增强 ----------
+ * 关键：主题 main5174.css 第 1169 行 .posts-expand .post-body img 特异性 (0,0,3)
+ * 高于通用 .post-body img (0,0,2)，且原规则不限 max-width，导致大图在移动端溢出
+ * 整个视口（看起来就像\"页面被拉超长\"）。
+ * 这里用同等或更高特异性的选择器 + !important 兜底，确保图片永远不撑破容器。
  */
+.posts-expand .post-body img,
 .post-body img,
-.editormd-html-preview img {
-    max-width: 100%;
-    height: auto;
+.editormd-html-preview img,
+#articleContentDiv img {
+    max-width: 100% !important;
+    height: auto !important;
+    box-sizing: border-box;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
     margin: 1em auto;
@@ -85,13 +87,27 @@
 }
 
 /* 正文长 URL / 长英文不要撑破容器 */
+/* 详情页正文容器：强制不溢出（关键兜底） */
+.posts-expand .post-body,
+.post-body,
+#articleContentDiv,
+#articleContentDiv .markdown-body {
+    max-width: 100% !important;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    box-sizing: border-box;
+}
+
+/* 长 URL / 长英文不要撑破容器 */
 .post-body p,
 .post-body li,
 .post-body blockquote,
 .editormd-html-preview p,
-.editormd-html-preview li {
+.editormd-html-preview li,
+#articleContentDiv p,
+#articleContentDiv li {
     word-wrap: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;     /* 比 break-word 更激进，强制断长 token */
 }
 
 .post-body table,
@@ -334,14 +350,28 @@
    左右各留 ~290px 空白显得很浪费。这里把中间断点拉宽到 980px，让阅读区更舒展。 */
 @media (min-width: 992px) and (max-width: 1599px) {
     .container .main-inner,
+    .container .header-inner,
     .container .footer-inner {
         width: min(980px, calc(100vw - 80px)) !important;
+    }
+}
+
+/* 桌面/平板（≥768px）：清掉 .site-meta 的负 margin
+ * 主题 main5174.css line 2273 给 .site-meta 设了 margin-left:-20px（为 logo 装饰位预留），
+ * 导致 site-title 比 header 内容边界更靠左 20px，与正文容器不对齐（用户主诉）。
+ * 这里在所有桌面断点（含 1600+）都清掉，让 site-title 与正文左边界对齐。
+ * 移动端不受影响（移动端 site-meta 设了 width:100% + text-align:center，没有此问题）。
+ */
+@media (min-width: 768px) {
+    .container .site-meta {
+        margin-left: 0 !important;
     }
 }
 
 /* ---------- 平板（768-991px）：容器铺到 92vw + sidebar 强制内嵌 ---------- */
 @media (min-width: 768px) and (max-width: 991px) {
     .container .main-inner,
+    .container .header-inner,
     .container .footer-inner {
         width: 92vw !important;
         max-width: 920px !important;
@@ -427,32 +457,43 @@
     .custom-logo-site-title { padding: 4px 0; }
     .logo-line-before, .logo-line-after { display: none !important; }
 
-    /* 3. 汉堡菜单按钮（修订：header 是白底，按钮条必须用深色才看得见）-- */
+    /* 3. 汉堡菜单按钮：用 fontawesome fa-bars/fa-times 替代纯 CSS 三横线，更精致 -----
+     * 用 .header .site-nav-toggle 提高特异性 (0,2,1)，超过主题 line 2347 的
+     * `.site-nav-toggle { position:static; float:right }` (0,1,0)，且全部加 !important
+     * 兜底，避免被任何后加载的规则覆盖。
+     */
+    .header .site-nav-toggle,
+    #header .site-nav-toggle,
     .site-nav-toggle {
         display: block !important;
         position: absolute !important;
-        top: 14px !important;
-        right: 12px !important;
-        z-index: 100;
+        top: 18px !important;
+        left: 10px !important;       /* 主题 line 1018 设了 left:10px，必须显式清掉 */
+        right: auto !important;
+        bottom: auto !important;
+        float: none !important;      /* 主题 line 2347 设了 float:right，与 absolute 冲突 */
+        z-index: 100 !important;
     }
     .site-nav-toggle button {
         background: transparent;
         border: 0;
         cursor: pointer;
-        padding: 8px;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        line-height: 0;
+        padding: 8px 10px;
+        line-height: 1;
+        color: #555;
+        font-size: 22px;
+        border-radius: 6px;
+        transition: background .2s, color .2s;
     }
-    .site-nav-toggle .btn-bar {
-        display: block;
-        width: 24px;
-        height: 2px;
-        background: #333;       /* 关键：白底用深灰横杠 */
-        border-radius: 1px;
-        transition: transform .25s, opacity .25s;
+    .site-nav-toggle button:hover,
+    .site-nav-toggle button:active {
+        background: rgba(0, 0, 0, .05);
+        color: #222;
     }
+    .site-nav-toggle .site-nav-toggle-icon-close { display: none; }
+    /* 展开后切换：bars → times */
+    .site-nav-toggle button[aria-expanded="true"] .site-nav-toggle-icon { display: none; }
+    .site-nav-toggle button[aria-expanded="true"] .site-nav-toggle-icon-close { display: inline-block; }
 
     /* 4. 导航：默认隐藏，由 JS 切换 .show 类 ------------------- */
     .site-nav {
@@ -473,7 +514,7 @@
         to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* 5. 菜单：横向均分网格 + 深色文字（关键修复：原配色是 #eee 白字，白底白字看不见）*/
+    /* 5. 菜单：横向均分网格 + 图标文字垂直居中（关键修复：原本 <i> 默认 inline 不居中） */
     .site-nav .menu,
     .site-nav #menu.menu,
     .site-nav .menu.menu-left {
@@ -487,29 +528,43 @@
     .site-nav .menu > .menu-item {
         display: block !important;
         margin: 0 !important;
-        padding: 10px 0 !important;
+        padding: 0 !important;
         text-align: center;
-        border-right: 1px solid #ececec;     /* 浅灰分隔，配合浅灰底 */
+        border-right: 1px solid #ececec;
     }
     .site-nav .menu > .menu-item:last-child { border-right: 0; }
+
+    /*
+     * 关键：用 flex column + center 对齐，让图标与文字共享同一中线。
+     * 同时把 <br> 隐藏（inline 的 <br> 会破坏 flex 节奏，改由 flex 自身换行）。
+     */
     .site-nav .menu .menu-item a {
-        display: block !important;
-        padding: 4px 2px !important;
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;        /* 横向居中 */
+        justify-content: center;    /* 纵向居中 */
+        gap: 4px;
+        padding: 10px 4px !important;
         font-size: 11px !important;
-        line-height: 1.25 !important;
-        color: #333 !important;              /* 关键：深色文字！ */
+        line-height: 1.2 !important;
+        color: #555 !important;     /* 与品牌灰色调一致，不再使用蓝色 */
         border-bottom: 0 !important;
         text-decoration: none;
+        min-height: 56px;
+        text-align: center;
     }
-    .site-nav .menu .menu-item a:hover {
-        color: #2494f2 !important;
-        border-bottom: 0 !important;
+    .site-nav .menu .menu-item a br { display: none !important; }
+    .site-nav .menu .menu-item a:hover,
+    .site-nav .menu .menu-item a:active {
+        color: #222 !important;
+        background: rgba(0, 0, 0, .03);
     }
     .site-nav .menu .menu-item-icon {
-        font-size: 18px !important;
-        margin: 0 auto 4px !important;
         display: block;
-        color: #2494f2;                      /* 主色调图标，与文字对比鲜明 */
+        font-size: 18px !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        color: inherit !important;  /* 继承 a 的颜色，不再独立蓝色 */
     }
 
     /* 6. 移动端搜索框：菜单展开时位于浅灰背景上，需要换成深色边框/文字 */
@@ -540,6 +595,28 @@
     .post-meta .post-category {
         display: inline-block;
         margin: 1px 4px 1px 0;
+    }
+    /*
+     * 评论数 / 阅读数的双端差异化展示：
+     *   - 移动端 (≤767px)：图标 + 数字（不要\\"评论\\"/\\"阅读\\"文字，省空间）
+     *   - 桌面端 (≥992px)：数字 + \\"评论\\"/\\"阅读\\"（不要图标，文字风格更克制）
+     *
+     * HTML 拆成两段 span：
+     *   .post-meta-num   —— 纯数字，移动端必须显示
+     *   .post-meta-unit  —— \\" 评论\\"/\\" 阅读\\" 单位文字，沿用主题 .post-meta-item-text
+     *                       的默认行为（移动端隐藏，桌面显示）
+     *
+     * 主题在 ≤767px 默认 .post-meta-item-text { display: none }，会把单位文字也隐藏，
+     * 正好符合需求；这里只需保证 .post-meta-num 不被一起隐藏即可。
+     */
+    .post-meta .post-meta-num {
+        display: inline !important;
+        margin-left: 1px;
+        color: #999;
+    }
+    /* 图标与紧跟其后的数据保持极小间距 */
+    .post-meta .post-meta-item-icon {
+        margin-right: 3px !important;
     }
 
     /* 8. 详情页 ----------------------------------------------- */

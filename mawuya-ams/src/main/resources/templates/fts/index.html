@@ -44,14 +44,14 @@
 
                                     <span class="post-category">&nbsp; | &nbsp;
                                         <span class="post-meta-item-icon"><i class="fa fa-comments-o"></i></span>
-                                        <span class="post-meta-item-text"
-                                              th:text="|${article.reviewNum} 评论|"></span>
+                                        <span class="post-meta-num" th:text="${article.reviewNum}"></span>
+                                        <span class="post-meta-item-text post-meta-unit"> 评论</span>
                                     </span>
 
                                     <span>&nbsp; | &nbsp;
                                        <span class="post-meta-item-icon"><i class="fa fa-eye"></i></span>
-                                       <span class="post-meta-item-text"
-                                             th:text="|${article.readNum} 阅读|"></span>
+                                       <span class="post-meta-num" th:text="${article.readNum}"></span>
+                                       <span class="post-meta-item-text post-meta-unit"> 阅读</span>
                                     </span>
                                 </div>
                             </header>
