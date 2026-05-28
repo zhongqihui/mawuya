@@ -55,7 +55,9 @@
                         </li>
                         <li><a href="#"><i class="fa fa-table"></i><span>日志管理</span></a>
                             <ul class="sub-menu">
-                                <li><a href="#">General</a></li>
+                                <li>
+                                    <a th:attr="link-url=@{/bms/log/list.do}" class="link-li" id="7">&nbsp;&nbsp;访客记录</a>
+                                </li>
                             </ul>
                         </li>
                     </ul>

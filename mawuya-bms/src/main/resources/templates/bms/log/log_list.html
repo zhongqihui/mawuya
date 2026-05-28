@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div class="page-head">
+    <ol class="breadcrumb">
+        <li>日志管理</li>
+        <li class="active">访客记录</li>
+        <span style="float:right;">
+            <button type="button" title="刷新当前查询" onclick="logQuery()"
+                    class="btn btn-default btn-sm">
+                <i class="fa fa-refresh"></i> 刷新
+            </button>
+        </span>
+    </ol>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <!-- ============ 筛选条 ============ -->
+        <div class="block-flat">
+            <div class="content">
+                <form id="log-filter-form" class="log-filter">
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6 col-xs-12">
+                            <label>IP 地址</label>
+                            <input type="text" name="ipAddr" class="form-control input-sm"
+                                   placeholder="部分匹配，如 114.114"/>
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12">
+                            <label>请求路径</label>
+                            <input type="text" name="reqUrl" class="form-control input-sm"
+                                   placeholder="部分匹配，如 /article"/>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-xs-6">
+                            <label>请求方法</label>
+                            <select name="reqMethod" class="form-control input-sm">
+                                <option value="">全部</option>
+                                <option>GET</option>
+                                <option>POST</option>
+                                <option>PUT</option>
+                                <option>DELETE</option>
+                                <option>PATCH</option>
+                                <option>OPTIONS</option>
+                                <option>HEAD</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-xs-6">
+                            <label>响应状态</label>
+                            <select name="respStatus" class="form-control input-sm">
+                                <option value="">全部</option>
+                                <option value="0">成功</option>
+                                <option value="1">失败</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-xs-12">
+                            <label>省份</label>
+                            <input type="text" name="province" class="form-control input-sm"
+                                   placeholder="如 广东"/>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top:10px;">
+                        <div class="col-md-3 col-sm-6 col-xs-12">
+                            <label>开始时间</label>
+                            <input type="text" name="startTime" class="form-control input-sm log-datetime"
+                                   placeholder="yyyy-MM-dd 或 yyyy-MM-dd HH:mm:ss"/>
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12">
+                            <label>结束时间</label>
+                            <input type="text" name="endTime" class="form-control input-sm log-datetime"
+                                   placeholder="yyyy-MM-dd 或 yyyy-MM-dd HH:mm:ss"/>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-xs-6">
+                            <label>每页条数</label>
+                            <select name="size" class="form-control input-sm">
+                                <option>10</option>
+                                <option selected>20</option>
+                                <option>50</option>
+                                <option>100</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-sm-12 col-xs-12 log-filter-actions">
+                            <button type="button" class="btn btn-primary btn-sm" id="log-search-btn">
+                                <i class="fa fa-search"></i> 查询
+                            </button>
+                            <button type="button" class="btn btn-default btn-sm" id="log-reset-btn">
+                                <i class="fa fa-undo"></i> 重置
+                            </button>
+                            <button type="button" class="btn btn-link btn-sm" id="log-quick-today">今日</button>
+                            <button type="button" class="btn btn-link btn-sm" id="log-quick-7d">近 7 天</button>
+                            <button type="button" class="btn btn-link btn-sm" id="log-quick-30d">近 30 天</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ============ 列表 ============ -->
+        <div class="block-flat">
+            <div class="content">
+                <div style="margin-bottom:8px; color:#666; font-size:13px;">
+                    共找到 <b id="log-total">0</b> 条记录
+                    <span style="margin-left:14px; color:#999;">点击表头可排序</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="log-table">
+                        <thead>
+                        <tr>
+                            <th class="log-sort" data-field="sn" style="width:70px;">
+                                # <i class="fa fa-sort"></i>
+                            </th>
+                            <th class="log-sort" data-field="ip_addr" style="width:120px;">
+                                IP <i class="fa fa-sort"></i>
+                            </th>
+                            <th style="width:160px;">访客地点</th>
+                            <th class="log-sort" data-field="req_method" style="width:80px;">
+                                方法 <i class="fa fa-sort"></i>
+                            </th>
+                            <th>请求路径</th>
+                            <th class="log-sort" data-field="resp_status" style="width:80px;">
+                                状态 <i class="fa fa-sort"></i>
+                            </th>
+                            <th class="log-sort" data-field="consume_time" style="width:90px;">
+                                耗时 <i class="fa fa-sort"></i>
+                            </th>
+                            <th class="log-sort" data-field="req_time" style="width:160px;">
+                                访问时间 <i class="fa fa-sort-desc"></i>
+                            </th>
+                            <th style="width:80px;">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="log-tbody">
+                        <tr><td colspan="9" style="text-align:center; padding:40px 0; color:#999;">加载中…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div id="log-pagination" class="log-pagination"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .log-filter label {
+        display: block; font-size: 12px; color: #666;
+        margin-bottom: 4px; font-weight: normal;
+    }
+    .log-filter .input-sm { font-size: 13px; }
+    .log-filter-actions { padding-top: 22px; }
+    .log-filter-actions .btn { margin-right: 4px; margin-bottom: 4px; }
+
+    /* 表格 */
+    #log-table th { white-space: nowrap; background: #f7f9fb; }
+    #log-table td { vertical-align: middle; }
+    #log-table .log-sort { cursor: pointer; user-select: none; }
+    #log-table .log-sort:hover { background: #eef2f6; }
+    #log-table .log-sort .fa { color: #bbb; margin-left: 4px; font-size: 11px; }
+    #log-table .log-sort.asc  .fa { color: #5b9bd5; }
+    #log-table .log-sort.desc .fa { color: #5b9bd5; }
+    #log-table .url-cell {
+        max-width: 360px; word-break: break-all; color: #444;
+    }
+    #log-table .label { padding: 3px 8px; border-radius: 3px; color: #fff; font-size: 11px; }
+    #log-table .label-method-GET    { background: #5b9bd5; }
+    #log-table .label-method-POST   { background: #5cb85c; }
+    #log-table .label-method-PUT    { background: #f0ad4e; }
+    #log-table .label-method-DELETE { background: #d9534f; }
+    #log-table .label-method-OTHER  { background: #777; }
+    #log-table .label-status-0 { background: #5cb85c; }
+    #log-table .label-status-1 { background: #d9534f; }
+
+    /* 分页 */
+    .log-pagination {
+        display: flex; justify-content: center; align-items: center; gap: 6px;
+        padding: 16px 0 4px; flex-wrap: wrap;
+    }
+    .log-pagination .pg-btn {
+        min-width: 32px; height: 32px; padding: 0 10px;
+        line-height: 30px; text-align: center;
+        border: 1px solid #ddd; border-radius: 4px;
+        background: #fff; color: #555; cursor: pointer; font-size: 13px;
+    }
+    .log-pagination .pg-btn:hover { border-color: #5b9bd5; color: #5b9bd5; }
+    .log-pagination .pg-btn.active {
+        background: #5b9bd5; border-color: #5b9bd5; color: #fff; cursor: default;
+    }
+    .log-pagination .pg-btn[disabled] { opacity: .45; cursor: not-allowed; }
+    .log-pagination .pg-info { font-size: 12px; color: #888; margin: 0 8px; }
+
+    /* 详情弹窗 */
+    .log-detail-table { width: 100%; font-size: 13px; }
+    .log-detail-table th {
+        text-align: right; width: 110px; color: #777;
+        font-weight: normal; padding: 6px 10px; vertical-align: top;
+        background: #f7f9fb;
+    }
+    .log-detail-table td {
+        padding: 6px 10px; word-break: break-all; color: #333;
+    }
+    .log-detail-table tr + tr td,
+    .log-detail-table tr + tr th { border-top: 1px solid #eee; }
+
+    /* 移动端 */
+    @media (max-width: 767px) {
+        .log-filter-actions { padding-top: 8px; }
+        #log-table { font-size: 12px; }
+        #log-table .url-cell { max-width: 180px; }
+    }
+</style>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    /*]]>*/
+
+    var logState = {
+        orderField: 'req_time',
+        orderDir:   'DESC',
+        page:       1
+    };
+
+    $(function () {
+        // 默认排序：req_time DESC
+        applySortIndicator();
+
+        // 查询 / 重置
+        $('#log-search-btn').on('click', function () { logState.page = 1; logQuery(); });
+        $('#log-reset-btn').on('click', function () {
+            $('#log-filter-form')[0].reset();
+            $('select[name="size"]').val('20');
+            logState.page = 1;
+            logState.orderField = 'req_time';
+            logState.orderDir = 'DESC';
+            applySortIndicator();
+            logQuery();
+        });
+
+        // 快捷时间范围
+        $('#log-quick-today').on('click', function () { setQuickRange(0); });
+        $('#log-quick-7d').on('click',    function () { setQuickRange(7); });
+        $('#log-quick-30d').on('click',   function () { setQuickRange(30); });
+
+        // 表头排序
+        $('#log-table .log-sort').on('click', function () {
+            var f = $(this).data('field');
+            if (logState.orderField === f) {
+                logState.orderDir = (logState.orderDir === 'ASC') ? 'DESC' : 'ASC';
+            } else {
+                logState.orderField = f;
+                logState.orderDir = 'DESC';
+            }
+            applySortIndicator();
+            logState.page = 1;
+            logQuery();
+        });
+
+        // 表行操作（事件代理）
+        $('#log-tbody').on('click', '.log-detail-btn', function () {
+            var sn = $(this).data('sn');
+            showLogDetail(sn);
+        });
+
+        // 分页（事件代理）
+        $('#log-pagination').on('click', '.pg-btn', function () {
+            var p = parseInt($(this).data('page'), 10);
+            if (isNaN(p) || p < 1 || $(this).attr('disabled')) return;
+            logState.page = p;
+            logQuery();
+        });
+
+        // 表单回车查询
+        $('#log-filter-form').on('keydown', 'input', function (e) {
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                $('#log-search-btn').click();
+            }
+        });
+
+        // 首次加载
+        logQuery();
+    });
+
+    function applySortIndicator() {
+        $('#log-table .log-sort').removeClass('asc desc')
+            .find('.fa').removeClass('fa-sort-asc fa-sort-desc').addClass('fa-sort');
+        var $th = $('#log-table .log-sort[data-field="' + logState.orderField + '"]');
+        $th.addClass(logState.orderDir.toLowerCase());
+        $th.find('.fa').removeClass('fa-sort')
+            .addClass(logState.orderDir === 'ASC' ? 'fa-sort-asc' : 'fa-sort-desc');
+    }
+
+    function setQuickRange(daysBack) {
+        var now = new Date();
+        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+        function fmtDate(d) {
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+        }
+        var start;
+        if (daysBack === 0) {
+            start = fmtDate(now);
+        } else {
+            var s = new Date(now.getTime() - daysBack * 24 * 3600 * 1000);
+            start = fmtDate(s);
+        }
+        $('input[name="startTime"]').val(start + ' 00:00:00');
+        $('input[name="endTime"]').val(fmtDate(now) + ' 23:59:59');
+        logState.page = 1;
+        logQuery();
+    }
+
+    function logQuery() {
+        var $form = $('#log-filter-form');
+        var data = {
+            ipAddr:     $form.find('input[name="ipAddr"]').val(),
+            reqUrl:     $form.find('input[name="reqUrl"]').val(),
+            reqMethod:  $form.find('select[name="reqMethod"]').val(),
+            respStatus: $form.find('select[name="respStatus"]').val(),
+            province:   $form.find('input[name="province"]').val(),
+            startTime:  $form.find('input[name="startTime"]').val(),
+            endTime:    $form.find('input[name="endTime"]').val(),
+            orderField: logState.orderField,
+            orderDir:   logState.orderDir,
+            page:       logState.page,
+            size:       $form.find('select[name="size"]').val() || 20
+        };
+
+        $('#log-tbody').html('<tr><td colspan="9" style="text-align:center; padding:30px 0; color:#999;">'
+            + '<i class="fa fa-spinner fa-spin"></i> 查询中…</td></tr>');
+
+        $.ajax({
+            type: 'get',
+            url: _u('/bms/log/query.do'),
+            data: data,
+            cache: false,
+            dataType: 'json',
+            success: function (res) {
+                if (!res || res.success !== 1) {
+                    renderEmpty('查询失败');
+                    return;
+                }
+                $('#log-total').text(res.total || 0);
+                if (!res.list || res.list.length === 0) {
+                    renderEmpty('未匹配到记录');
+                    $('#log-pagination').empty();
+                    return;
+                }
+                renderRows(res.list, (res.page - 1) * res.size);
+                renderPagination(res.page, res.pages);
+            },
+            error: function () {
+                renderEmpty('网络异常');
+            }
+        });
+    }
+
+    function renderEmpty(text) {
+        $('#log-tbody').html('<tr><td colspan="9" style="text-align:center; padding:40px 0; color:#999;">'
+            + '<i class="fa fa-inbox" style="font-size:24px; display:block; margin-bottom:6px;"></i>'
+            + text + '</td></tr>');
+    }
+
+    function escHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function renderRows(list, indexOffset) {
+        var html = '';
+        list.forEach(function (it, idx) {
+            var loc = [it.country, it.province, it.city].filter(function (v) { return !!v; }).join(' / ');
+            if (!loc) loc = '<span style="color:#bbb;">—</span>';
+            var method = (it.reqMethod || '').toUpperCase();
+            var methodCls = ['GET','POST','PUT','DELETE'].indexOf(method) >= 0 ? method : 'OTHER';
+            var statusLabel = it.respStatus === '0' ? '成功' : (it.respStatus === '1' ? '失败' : '-');
+            var statusCls = (it.respStatus === '0' || it.respStatus === '1') ? it.respStatus : '';
+            var consume = it.consumeTime ? escHtml(it.consumeTime) : '-';
+            var time = it.reqTime ? escHtml(it.reqTime).substring(0, 19) : '-';
+
+            html += '<tr>'
+                +    '<td>' + (indexOffset + idx + 1) + '</td>'
+                +    '<td>' + escHtml(it.ipAddr || '-') + '</td>'
+                +    '<td>' + (loc.indexOf('<') === 0 ? loc : escHtml(loc)) + '</td>'
+                +    '<td><span class="label label-method-' + methodCls + '">'
+                +       escHtml(method || '-') + '</span></td>'
+                +    '<td class="url-cell" title="' + escHtml(it.reqUrl || '') + '">'
+                +       escHtml(it.reqUrl || '-') + '</td>'
+                +    '<td>' + (statusCls
+                                ? '<span class="label label-status-' + statusCls + '">' + statusLabel + '</span>'
+                                : '-') + '</td>'
+                +    '<td>' + consume + '</td>'
+                +    '<td>' + time + '</td>'
+                +    '<td><button type="button" class="btn btn-default btn-xs log-detail-btn" '
+                +       'data-sn="' + escHtml(it.sn) + '"><i class="fa fa-eye"></i> 详情</button></td>'
+                +  '</tr>';
+        });
+        $('#log-tbody').html(html);
+    }
+
+    function renderPagination(page, pages) {
+        if (!pages || pages <= 1) {
+            $('#log-pagination').empty();
+            return;
+        }
+        var html = '';
+        html += '<button type="button" class="pg-btn" data-page="' + (page - 1) + '" '
+             +  (page <= 1 ? 'disabled' : '') + '><i class="fa fa-chevron-left"></i></button>';
+
+        var start = Math.max(1, page - 2);
+        var end   = Math.min(pages, page + 2);
+        if (start > 1) {
+            html += '<button type="button" class="pg-btn" data-page="1">1</button>';
+            if (start > 2) html += '<span class="pg-info">…</span>';
+        }
+        for (var i = start; i <= end; i++) {
+            html += '<button type="button" class="pg-btn ' + (i === page ? 'active' : '') + '" '
+                 +  'data-page="' + i + '">' + i + '</button>';
+        }
+        if (end < pages) {
+            if (end < pages - 1) html += '<span class="pg-info">…</span>';
+            html += '<button type="button" class="pg-btn" data-page="' + pages + '">' + pages + '</button>';
+        }
+        html += '<button type="button" class="pg-btn" data-page="' + (page + 1) + '" '
+             +  (page >= pages ? 'disabled' : '') + '><i class="fa fa-chevron-right"></i></button>';
+        html += '<span class="pg-info">第 ' + page + ' / ' + pages + ' 页</span>';
+        $('#log-pagination').html(html);
+    }
+
+    function showLogDetail(sn) {
+        var load = layer.load(0, {shade: [0.1, '#fff']});
+        $.ajax({
+            type: 'get',
+            url: _u('/bms/log/detail.do'),
+            data: {sn: sn},
+            cache: false,
+            dataType: 'json',
+            success: function (res) {
+                layer.close(load);
+                if (!res || res.success !== 1 || !res.data) {
+                    layer.alert(res && res.message ? res.message : '记录不存在', {icon: 2});
+                    return;
+                }
+                var d = res.data;
+                var rows = [
+                    ['SN',          d.sn],
+                    ['IP 地址',     d.ipAddr],
+                    ['国家',        d.country],
+                    ['省份',        d.province],
+                    ['城市',        d.city],
+                    ['ISP',         d.isp],
+                    ['请求方法',    d.reqMethod],
+                    ['请求路径',    d.reqUrl],
+                    ['请求参数',    d.params],
+                    ['响应状态',    d.respStatus === '0' ? '成功' : (d.respStatus === '1' ? '失败' : d.respStatus)],
+                    ['访问时间',    d.reqTime],
+                    ['响应时间',    d.respTime],
+                    ['耗时',        d.consumeTime],
+                    ['浏览器/UA',   d.browser],
+                    ['异常信息',    d.exceptMessage]
+                ];
+                var html = '<div style="padding:14px 16px; max-height:70vh; overflow:auto;">'
+                         + '<table class="log-detail-table">';
+                rows.forEach(function (r) {
+                    html += '<tr><th>' + escHtml(r[0]) + '</th><td>'
+                          + (r[1] == null || r[1] === '' ? '<span style="color:#bbb;">—</span>' : escHtml(r[1]))
+                          + '</td></tr>';
+                });
+                html += '</table></div>';
+
+                var isMobile = window.innerWidth <= 600;
+                layer.open({
+                    type: 1,
+                    title: '访客记录详情',
+                    skin: 'layui-layer-lan',
+                    area: isMobile ? ['100%', '100%'] : ['620px', 'auto'],
+                    content: html
+                });
+            },
+            error: function () {
+                layer.close(load);
+                layer.alert('网络异常', {icon: 2});
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -64,4 +64,84 @@
         SELECT count(sn) FROM log_info
     </select>
 
+    <!--
+      多条件 + 时间范围 + 排序的分页查询。
+      安全要点：
+        1) 所有过滤条件均使用 #{} 参数化绑定；模糊匹配通过 CONCAT('%', x, '%') 拼装；
+        2) order by 用 ${q.orderField} ${q.orderDir}，但这两个字段已由 service 层
+           做白名单收敛（仅允许下表枚举），不存在 SQL 注入空间；若空则走默认排序。
+    -->
+    <select id="selectByConditionPage" resultType="com.qihuizhong.mawuya.core.entity.LogInfo">
+        SELECT <include refid="_columns"/> FROM log_info
+        <where>
+            <if test="q.ipAddr != null and q.ipAddr != ''">
+                AND ip_addr LIKE CONCAT('%', #{q.ipAddr}, '%')
+            </if>
+            <if test="q.reqUrl != null and q.reqUrl != ''">
+                AND req_url LIKE CONCAT('%', #{q.reqUrl}, '%')
+            </if>
+            <if test="q.reqMethod != null and q.reqMethod != ''">
+                AND req_method = #{q.reqMethod}
+            </if>
+            <if test="q.respStatus != null and q.respStatus != ''">
+                AND resp_status = #{q.respStatus}
+            </if>
+            <if test="q.country != null and q.country != ''">
+                AND country = #{q.country}
+            </if>
+            <if test="q.province != null and q.province != ''">
+                AND province LIKE CONCAT('%', #{q.province}, '%')
+            </if>
+            <if test="q.startTime != null and q.startTime != ''">
+                AND req_time >= #{q.startTime}
+            </if>
+            <if test="q.endTime != null and q.endTime != ''">
+                AND req_time &lt;= #{q.endTime}
+            </if>
+        </where>
+        <choose>
+            <when test="q.orderField != null and q.orderField != '' and q.orderDir != null and q.orderDir != ''">
+                ORDER BY ${q.orderField} ${q.orderDir}
+            </when>
+            <otherwise>
+                ORDER BY sn DESC
+            </otherwise>
+        </choose>
+        <if test="q.limit != null">
+            LIMIT
+            <if test="q.offset != null">#{q.offset},</if>
+            #{q.limit}
+        </if>
+    </select>
+
+    <select id="countByCondition" resultType="int">
+        SELECT count(sn) FROM log_info
+        <where>
+            <if test="q.ipAddr != null and q.ipAddr != ''">
+                AND ip_addr LIKE CONCAT('%', #{q.ipAddr}, '%')
+            </if>
+            <if test="q.reqUrl != null and q.reqUrl != ''">
+                AND req_url LIKE CONCAT('%', #{q.reqUrl}, '%')
+            </if>
+            <if test="q.reqMethod != null and q.reqMethod != ''">
+                AND req_method = #{q.reqMethod}
+            </if>
+            <if test="q.respStatus != null and q.respStatus != ''">
+                AND resp_status = #{q.respStatus}
+            </if>
+            <if test="q.country != null and q.country != ''">
+                AND country = #{q.country}
+            </if>
+            <if test="q.province != null and q.province != ''">
+                AND province LIKE CONCAT('%', #{q.province}, '%')
+            </if>
+            <if test="q.startTime != null and q.startTime != ''">
+                AND req_time >= #{q.startTime}
+            </if>
+            <if test="q.endTime != null and q.endTime != ''">
+                AND req_time &lt;= #{q.endTime}
+            </if>
+        </where>
+    </select>
+
 </mapper>
