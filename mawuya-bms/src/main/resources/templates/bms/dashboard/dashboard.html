@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  BMS 首页数据看板 fragment
+  - 由 left.html 的 #content0 引入，替换原占位 <p>首页</p>
+  - 数据由 GET /bms/dashboard/data.do 一次性拉取
+  - Chart.js 走 BootCDN（首屏拉取一次，后续 tab 切换不会重复加载）
+  - sparkline 用纯 SVG 自绘，无外部依赖
+-->
+<th:block th:fragment="dashboard">
+
+<style>
+    /* ============ Dashboard 主体 ============ */
+    .dash-wrap {
+        padding: 16px 18px 32px;
+        background: linear-gradient(180deg, #f5f8fc 0%, #ffffff 220px);
+        min-height: 100%;
+    }
+    .dash-hero {
+        margin-bottom: 18px;
+        padding: 18px 20px;
+        background: linear-gradient(135deg, #4facfe 0%, #00b8d4 100%);
+        color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0, 184, 212, .25);
+        display: flex; align-items: center; flex-wrap: wrap; gap: 14px;
+    }
+    .dash-hero .hero-info { flex: 1 1 280px; }
+    .dash-hero .hero-title {
+        font-size: 20px; font-weight: 600; margin: 0 0 6px;
+    }
+    .dash-hero .hero-sub {
+        font-size: 13px; opacity: .9;
+    }
+    .dash-hero .hero-score {
+        text-align: center; padding: 0 18px;
+        border-left: 1px solid rgba(255,255,255,.25);
+    }
+    .dash-hero .hero-score .num {
+        font-size: 38px; font-weight: 700; line-height: 1; letter-spacing: 1px;
+    }
+    .dash-hero .hero-score .label-level {
+        display: inline-block; margin-top: 6px;
+        padding: 2px 10px; font-size: 12px;
+        background: rgba(255,255,255,.22); border-radius: 12px;
+    }
+    .dash-hero .hero-todo {
+        display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .dash-hero .todo-pill {
+        background: rgba(255,255,255,.22);
+        padding: 6px 14px; border-radius: 16px;
+        font-size: 13px; cursor: pointer;
+        transition: background .15s ease;
+    }
+    .dash-hero .todo-pill:hover { background: rgba(255,255,255,.36); }
+    .dash-hero .todo-pill .num {
+        font-weight: 700; margin-right: 4px;
+    }
+    .dash-hero .todo-pill.warn .num { color: #fff8b0; }
+
+    /* 分组标题 */
+    .dash-section-title {
+        font-size: 15px; font-weight: 600;
+        margin: 18px 4px 10px; padding-left: 10px;
+        border-left: 3px solid #5b9bd5;
+        color: #444;
+    }
+    .dash-section-title .meta {
+        font-size: 12px; color: #999; font-weight: normal; margin-left: 8px;
+    }
+
+    /* 数据卡 */
+    .dash-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        margin-bottom: 14px;
+        position: relative;
+        overflow: hidden;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .dash-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    }
+    .dash-card .card-icon {
+        position: absolute; right: 12px; top: 12px;
+        width: 42px; height: 42px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; color: #fff;
+    }
+    .dash-card .card-label {
+        font-size: 13px; color: #888; margin-bottom: 6px;
+    }
+    .dash-card .card-value {
+        font-size: 26px; font-weight: 700; color: #2c3e50; line-height: 1.2;
+        font-family: "Helvetica Neue", "Arial", sans-serif;
+    }
+    .dash-card .card-value .unit {
+        font-size: 13px; color: #888; font-weight: 400; margin-left: 4px;
+    }
+    .dash-card .card-extra {
+        font-size: 12px; color: #999; margin-top: 6px;
+    }
+    .dash-card .card-extra .up   { color: #5cb85c; font-weight: 600; }
+    .dash-card .card-extra .down { color: #d9534f; font-weight: 600; }
+    .dash-card .card-extra .badge-warn {
+        background: #fa8c16; color: #fff; padding: 1px 8px; border-radius: 10px;
+        font-size: 11px; margin-left: 4px; cursor: pointer;
+    }
+    .dash-card .card-spark {
+        position: absolute; right: 14px; bottom: 12px; opacity: .9;
+    }
+
+    /* 配色组 */
+    .dc-blue   .card-icon { background: linear-gradient(135deg, #4facfe, #00b8d4); }
+    .dc-green  .card-icon { background: linear-gradient(135deg, #6dd5ed, #2193b0); }
+    .dc-orange .card-icon { background: linear-gradient(135deg, #ffb75e, #ed8f03); }
+    .dc-pink   .card-icon { background: linear-gradient(135deg, #ff9a9e, #fad0c4); }
+    .dc-purple .card-icon { background: linear-gradient(135deg, #a18cd1, #fbc2eb); }
+    .dc-teal   .card-icon { background: linear-gradient(135deg, #84fab0, #8fd3f4); }
+    .dc-red    .card-icon { background: linear-gradient(135deg, #ff6a88, #ff99ac); }
+    .dc-cyan   .card-icon { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+    /* 趋势图区 */
+    .dash-trend {
+        background: #fff;
+        border-radius: 8px;
+        padding: 16px 18px 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        margin-bottom: 14px;
+    }
+    .dash-trend .title {
+        font-size: 14px; font-weight: 600; color: #444; margin-bottom: 10px;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .dash-trend .title .legend { font-size: 12px; color: #888; font-weight: 400; }
+    .dash-trend canvas { width: 100% !important; height: 220px !important; }
+
+    /* 健康度因子 */
+    .dash-health-factors { padding: 4px 0; }
+    .dash-health-factors .factor {
+        margin-bottom: 10px;
+    }
+    .dash-health-factors .factor .name {
+        display: flex; justify-content: space-between;
+        font-size: 12px; color: #666; margin-bottom: 4px;
+    }
+    .dash-health-factors .factor .bar {
+        height: 6px; background: #f0f2f5; border-radius: 3px; overflow: hidden;
+    }
+    .dash-health-factors .factor .bar-inner {
+        height: 100%;
+        background: linear-gradient(90deg, #4facfe, #00b8d4);
+        transition: width .6s ease;
+    }
+
+    /* TOP 列表 */
+    .dash-top-list { padding: 0; margin: 0; list-style: none; }
+    .dash-top-list li {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 0; border-bottom: 1px dashed #eee;
+        font-size: 13px;
+    }
+    .dash-top-list li:last-child { border-bottom: none; }
+    .dash-top-list .rank {
+        width: 22px; height: 22px; border-radius: 50%;
+        background: #f0f2f5; color: #888; font-size: 12px;
+        text-align: center; line-height: 22px; flex-shrink: 0; font-weight: 600;
+    }
+    .dash-top-list .rank.r1 { background: #ffd666; color: #fff; }
+    .dash-top-list .rank.r2 { background: #d9d9d9; color: #fff; }
+    .dash-top-list .rank.r3 { background: #f4a261; color: #fff; }
+    .dash-top-list .title {
+        flex: 1; min-width: 0;
+        white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+        color: #333;
+    }
+    .dash-top-list .meta {
+        color: #888; font-size: 12px; flex-shrink: 0;
+    }
+
+    /* 通用空态 */
+    .dash-empty {
+        padding: 28px 0; text-align: center; color: #bbb; font-size: 13px;
+    }
+    .dash-empty .fa { font-size: 22px; display: block; margin-bottom: 4px; }
+
+    /* 响应式 */
+    @media (max-width: 767px) {
+        .dash-wrap { padding: 12px 10px 24px; }
+        .dash-hero { padding: 14px; }
+        .dash-hero .hero-score { padding: 0; border-left: none; }
+        .dash-hero .hero-score .num { font-size: 30px; }
+        .dash-card { padding: 12px 14px; }
+        .dash-card .card-value { font-size: 22px; }
+        .dash-card .card-icon { width: 36px; height: 36px; font-size: 16px; }
+    }
+</style>
+
+<div class="dash-wrap" id="dash-wrap">
+    <!-- 顶部欢迎条 + 健康度 + 待办速览 -->
+    <div class="dash-hero">
+        <div class="hero-info">
+            <div class="hero-title">
+                <i class="fa fa-dashboard"></i>
+                欢迎回来，钟启辉 👋
+            </div>
+            <div class="hero-sub" id="dash-hero-sub">
+                正在加载站点概览…
+            </div>
+            <div class="hero-todo" id="dash-todo" style="margin-top:10px;"></div>
+        </div>
+        <div class="hero-score">
+            <div class="num" id="dash-health-score">--</div>
+            <div class="label-level" id="dash-health-level">健康度</div>
+        </div>
+    </div>
+
+    <!-- ============ 1. 内容数据 ============ -->
+    <div class="dash-section-title">
+        <i class="fa fa-pencil-square-o"></i> 内容数据
+        <span class="meta">博客创作 / 知识沉淀</span>
+    </div>
+    <div class="row">
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-blue">
+                <div class="card-icon"><i class="fa fa-file-text-o"></i></div>
+                <div class="card-label">文章总数</div>
+                <div class="card-value" data-key="content.articles">0</div>
+                <div class="card-extra">
+                    近 7 天新增 <span class="up" data-key="content.articlesNew7d">0</span> 篇
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-teal">
+                <div class="card-icon"><i class="fa fa-keyboard-o"></i></div>
+                <div class="card-label">总字数</div>
+                <div class="card-value">
+                    <span data-key-fmt="content.contentChars|fmtKw">0</span><span class="unit">字</span>
+                </div>
+                <div class="card-extra">
+                    持续更新见证成长
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-purple">
+                <div class="card-icon"><i class="fa fa-folder-open-o"></i></div>
+                <div class="card-label">分类数</div>
+                <div class="card-value" data-key="content.categories">0</div>
+                <div class="card-extra" id="dash-uncategorized-tip">—</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-cyan">
+                <div class="card-icon"><i class="fa fa-tags"></i></div>
+                <div class="card-label">标签数</div>
+                <div class="card-value" data-key="content.tags">0</div>
+                <div class="card-extra">用标签建立内容索引</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ 2. 互动数据 ============ -->
+    <div class="dash-section-title">
+        <i class="fa fa-comments-o"></i> 互动数据
+        <span class="meta">读者参与度</span>
+    </div>
+    <div class="row">
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-green">
+                <div class="card-icon"><i class="fa fa-comment-o"></i></div>
+                <div class="card-label">评论总数</div>
+                <div class="card-value" data-key="interact.reviews">0</div>
+                <div class="card-extra" id="dash-comment-extra">—</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-orange">
+                <div class="card-icon"><i class="fa fa-clock-o"></i></div>
+                <div class="card-label">待审核评论</div>
+                <div class="card-value" data-key="interact.pending">0</div>
+                <div class="card-extra" id="dash-pending-extra">—</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-pink">
+                <div class="card-icon"><i class="fa fa-thumbs-o-up"></i></div>
+                <div class="card-label">总点赞数</div>
+                <div class="card-value" data-key="interact.praise">0</div>
+                <div class="card-extra">
+                    踩 <span data-key="interact.tease">0</span>
+                    · 好评率 <span class="up" id="dash-praise-ratio">--%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-red">
+                <div class="card-icon"><i class="fa fa-fire"></i></div>
+                <div class="card-label">人气指数</div>
+                <div class="card-value" id="dash-engagement">0</div>
+                <div class="card-extra">评论 + 点赞综合活跃</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ 3. 流量数据 ============ -->
+    <div class="dash-section-title">
+        <i class="fa fa-area-chart"></i> 流量数据
+        <span class="meta">访问与覆盖</span>
+    </div>
+    <div class="row">
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-blue">
+                <div class="card-icon"><i class="fa fa-eye"></i></div>
+                <div class="card-label">今日 PV</div>
+                <div class="card-value" data-key="traffic.pvToday">0</div>
+                <svg class="card-spark" id="spark-pv" width="80" height="28"></svg>
+                <div class="card-extra" id="dash-pv-trend">—</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-cyan">
+                <div class="card-icon"><i class="fa fa-user-o"></i></div>
+                <div class="card-label">今日 UV</div>
+                <div class="card-value" data-key="traffic.uvToday">0</div>
+                <svg class="card-spark" id="spark-uv" width="80" height="28"></svg>
+                <div class="card-extra" id="dash-uv-trend">—</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-purple">
+                <div class="card-icon"><i class="fa fa-bar-chart"></i></div>
+                <div class="card-label">累计 PV（近 365 天）</div>
+                <div class="card-value">
+                    <span data-key-fmt="traffic.pvTotal|fmtKw">0</span>
+                </div>
+                <div class="card-extra">来自访问日志统计</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="dash-card dc-teal">
+                <div class="card-icon"><i class="fa fa-users"></i></div>
+                <div class="card-label">累计 UV</div>
+                <div class="card-value" data-key="traffic.uvTotal">0</div>
+                <div class="card-extra">
+                    总阅读 <span data-key-fmt="traffic.readTotal|fmtKw">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ 趋势图 + 洞察 ============ -->
+    <div class="row">
+        <div class="col-md-8 col-sm-12 col-xs-12">
+            <div class="dash-trend">
+                <div class="title">
+                    <span><i class="fa fa-line-chart"></i> 近 14 天 PV / UV 趋势</span>
+                    <span class="legend">蓝线 = PV，绿线 = UV</span>
+                </div>
+                <canvas id="dash-trend-chart"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12 col-xs-12">
+            <div class="dash-trend">
+                <div class="title">
+                    <span><i class="fa fa-heartbeat"></i> 博客健康度</span>
+                    <span class="legend" id="dash-health-tip">—</span>
+                </div>
+                <div class="dash-health-factors" id="dash-health-factors"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TOP 文章 / TOP IP ============ -->
+    <div class="row">
+        <div class="col-md-6 col-sm-12 col-xs-12">
+            <div class="dash-trend">
+                <div class="title">
+                    <span><i class="fa fa-trophy"></i> 阅读 TOP 5 文章</span>
+                    <span class="legend">点击查看原文</span>
+                </div>
+                <ul class="dash-top-list" id="dash-top-articles"></ul>
+            </div>
+        </div>
+        <div class="col-md-6 col-sm-12 col-xs-12">
+            <div class="dash-trend">
+                <div class="title">
+                    <span><i class="fa fa-globe"></i> 今日 TOP 5 访客 IP</span>
+                    <span class="legend">来自访问日志</span>
+                </div>
+                <ul class="dash-top-list" id="dash-top-ips"></ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    /*]]>*/
+
+    /** 数字格式化：>= 10000 显示 1.2w；>=1000 显示 1.5k；其余原样 */
+    function fmtKw(n) {
+        n = Number(n) || 0;
+        if (n >= 100000000) return (n / 100000000).toFixed(1) + 'e';
+        if (n >= 10000)     return (n / 10000).toFixed(1) + 'w';
+        if (n >= 1000)      return (n / 1000).toFixed(1) + 'k';
+        return String(n);
+    }
+    function getByPath(obj, path) {
+        if (!obj) return undefined;
+        var parts = path.split('.');
+        var cur = obj;
+        for (var i = 0; i < parts.length; i++) {
+            if (cur == null) return undefined;
+            cur = cur[parts[i]];
+        }
+        return cur;
+    }
+
+    function ensureChartJs(cb) {
+        if (window.Chart) { cb(); return; }
+        var s = document.createElement('script');
+        s.src = 'https://cdn.bootcdn.net/ajax/libs/Chart.js/3.9.1/chart.min.js';
+        s.onload = cb;
+        s.onerror = function () {
+            // 拉取失败也不要阻断 dashboard 其他部分
+            console.warn('Chart.js 加载失败，趋势图将不可见');
+            cb();
+        };
+        document.head.appendChild(s);
+    }
+
+    /** 把 1D 数组绘成 SVG sparkline；面积填充，最后一个点圆点高亮 */
+    function drawSpark(svgId, values, color) {
+        var svg = document.getElementById(svgId);
+        if (!svg || !values || !values.length) return;
+        var w = svg.clientWidth || parseInt(svg.getAttribute('width'), 10) || 80;
+        var h = parseInt(svg.getAttribute('height'), 10) || 28;
+        var max = Math.max.apply(null, values);
+        var min = Math.min.apply(null, values);
+        var range = (max - min) || 1;
+        var step = w / Math.max(1, values.length - 1);
+        var pts = values.map(function (v, i) {
+            var x = i * step;
+            var y = h - 2 - ((v - min) / range) * (h - 4);
+            return [x, y];
+        });
+        var path = 'M ' + pts.map(function (p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' L ');
+        var area = path + ' L ' + (w).toFixed(1) + ' ' + h + ' L 0 ' + h + ' Z';
+        var last = pts[pts.length - 1];
+        svg.innerHTML =
+            '<path d="' + area + '" fill="' + color + '" fill-opacity="0.15"/>' +
+            '<path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="1.5"/>' +
+            '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) +
+            '" r="2.4" fill="' + color + '"/>';
+    }
+
+    function bindHeroTodo(todo) {
+        var html = '';
+        if (todo.pendingReviews > 0) {
+            html += '<span class="todo-pill warn" data-jump="6">'
+                 +  '<span class="num">' + todo.pendingReviews + '</span>条评论待审核 →</span>';
+        }
+        if (todo.uncategorized > 0) {
+            html += '<span class="todo-pill" data-jump="3">'
+                 +  '<span class="num">' + todo.uncategorized + '</span>篇未分类文章 →</span>';
+        }
+        if (!html) {
+            html = '<span class="todo-pill"><i class="fa fa-check-circle"></i>&nbsp;暂无待办，棒！</span>';
+        }
+        $('#dash-todo').html(html);
+    }
+
+    function renderHealthFactors(factors) {
+        var html = '';
+        factors.forEach(function (f) {
+            var pct = Math.round(f.value * 100 / f.weight);
+            html += '<div class="factor">'
+                 +  '  <div class="name"><span>' + f.name + '</span><span>' + f.value + ' / ' + f.weight + '</span></div>'
+                 +  '  <div class="bar"><div class="bar-inner" style="width:' + pct + '%"></div></div>'
+                 +  '</div>';
+        });
+        $('#dash-health-factors').html(html);
+    }
+
+    function renderTopArticles(list) {
+        if (!list || !list.length) {
+            $('#dash-top-articles').html('<div class="dash-empty"><i class="fa fa-inbox"></i>暂无数据</div>');
+            return;
+        }
+        var html = '';
+        list.forEach(function (a, i) {
+            var rk = (i < 3) ? 'r' + (i + 1) : '';
+            html += '<li>'
+                 +  '  <span class="rank ' + rk + '">' + (i + 1) + '</span>'
+                 +  '  <a class="title" target="_blank" href="http://localhost:8080/' + a.sn + '" '
+                 +  '     title="' + escHtml(a.title || '') + '">'
+                 +       escHtml(a.title || '(无标题)') + '</a>'
+                 +  '  <span class="meta"><i class="fa fa-eye"></i> ' + (a.readNum || 0)
+                 +  '    · <i class="fa fa-comment-o"></i> ' + (a.reviewNum || 0)
+                 +  '    · <i class="fa fa-thumbs-o-up"></i> ' + (a.praiseNum || 0) + '</span>'
+                 +  '</li>';
+        });
+        $('#dash-top-articles').html(html);
+    }
+    function renderTopIps(list) {
+        if (!list || !list.length) {
+            $('#dash-top-ips').html('<div class="dash-empty"><i class="fa fa-inbox"></i>今日暂无访问</div>');
+            return;
+        }
+        var html = '';
+        list.forEach(function (it, i) {
+            var rk = (i < 3) ? 'r' + (i + 1) : '';
+            var loc = [it.country, it.province, it.city]
+                .filter(function (v) { return !!v; }).join(' / ') || '<span style="color:#bbb;">未知地点</span>';
+            html += '<li>'
+                 +  '  <span class="rank ' + rk + '">' + (i + 1) + '</span>'
+                 +  '  <span class="title" title="' + escHtml(it.ipAddr || '') + '">'
+                 +       escHtml(it.ipAddr || '-') + '</span>'
+                 +  '  <span class="meta">' + (loc.indexOf('<') === 0 ? loc : escHtml(loc))
+                 +    ' · <b>' + (it.cnt || 0) + '</b> 次</span>'
+                 +  '</li>';
+        });
+        $('#dash-top-ips').html(html);
+    }
+    function escHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function applyDataKeys(data) {
+        // data-key="content.articles"
+        $('[data-key]').each(function () {
+            var key = $(this).attr('data-key');
+            var v = getByPath(data, key);
+            $(this).text(v == null ? 0 : v);
+        });
+        // data-key-fmt="traffic.pvTotal|fmtKw"
+        $('[data-key-fmt]').each(function () {
+            var spec = $(this).attr('data-key-fmt').split('|');
+            var v = getByPath(data, spec[0]);
+            var fn = spec[1];
+            if (fn === 'fmtKw') $(this).text(fmtKw(v));
+            else $(this).text(v == null ? 0 : v);
+        });
+    }
+
+    function renderTrendChart(trend) {
+        ensureChartJs(function () {
+            if (!window.Chart) return;
+            var ctx = document.getElementById('dash-trend-chart');
+            if (!ctx) return;
+            // 销毁旧图表（tab 重新加载场景）
+            if (window.__dashChart) { try { window.__dashChart.destroy(); } catch (e) {} }
+            // 折线 + 渐变填充
+            var ctx2d = ctx.getContext('2d');
+            var pvGrad = ctx2d.createLinearGradient(0, 0, 0, 220);
+            pvGrad.addColorStop(0, 'rgba(91,155,213,0.35)');
+            pvGrad.addColorStop(1, 'rgba(91,155,213,0)');
+            var uvGrad = ctx2d.createLinearGradient(0, 0, 0, 220);
+            uvGrad.addColorStop(0, 'rgba(82,196,26,0.35)');
+            uvGrad.addColorStop(1, 'rgba(82,196,26,0)');
+
+            window.__dashChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: (trend.dates || []).map(function (d) { return d.substring(5); }),
+                    datasets: [
+                        {
+                            label: 'PV', data: trend.pv, fill: true,
+                            backgroundColor: pvGrad, borderColor: '#5b9bd5',
+                            borderWidth: 2, tension: 0.35, pointRadius: 3, pointHoverRadius: 5
+                        },
+                        {
+                            label: 'UV', data: trend.uv, fill: true,
+                            backgroundColor: uvGrad, borderColor: '#52c41a',
+                            borderWidth: 2, tension: 0.35, pointRadius: 3, pointHoverRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#999', font: {size: 11} } },
+                        y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { color: '#999', font: {size: 11} } }
+                    }
+                }
+            });
+        });
+    }
+
+    function renderDashboard(data) {
+        applyDataKeys(data);
+
+        // hero 子文案
+        var trafic = data.traffic || {};
+        var content = data.content || {};
+        $('#dash-hero-sub').text(
+            '当前共 ' + (content.articles || 0) + ' 篇文章；今日 ' +
+            (trafic.pvToday || 0) + ' 次访问 · ' + (trafic.uvToday || 0) + ' 个独立访客'
+        );
+
+        // 健康度
+        var health = data.health || {};
+        $('#dash-health-score').text(health.score == null ? '--' : health.score);
+        $('#dash-health-level').text(health.level || '健康度');
+        $('#dash-health-tip').text(
+            (health.penalty > 0 ? ('因待办减 ' + health.penalty + ' 分；') : '') +
+            '满分 100'
+        );
+        renderHealthFactors(health.factors || []);
+
+        // 待办
+        bindHeroTodo(data.todo || {});
+
+        // 互动指标补充
+        var interact = data.interact || {};
+        $('#dash-praise-ratio').text((interact.praiseRatio == null ? 0 : interact.praiseRatio) + '%');
+        $('#dash-comment-extra').html(
+            '已通过 <span class="up">' + (interact.approved || 0) + '</span>'
+            + ' · 已拒绝 <span>' + (interact.rejected || 0) + '</span>'
+        );
+        if (interact.pending > 0) {
+            $('#dash-pending-extra').html(
+                '<span class="badge-warn" id="dash-pending-jump">'
+                + '前往审批 →</span>'
+            );
+        } else {
+            $('#dash-pending-extra').text('暂无待审核评论');
+        }
+
+        // 人气指数：评论 * 1 + 点赞 * 0.5
+        var engagement = (interact.reviews || 0) + Math.round((interact.praise || 0) * 0.5);
+        $('#dash-engagement').text(engagement);
+
+        // 未分类提示
+        var todo = data.todo || {};
+        if (todo.uncategorized > 0) {
+            $('#dash-uncategorized-tip').html(
+                '<span class="badge-warn">'
+                + todo.uncategorized + ' 篇未分类</span>'
+            );
+        } else {
+            $('#dash-uncategorized-tip').text('全部文章已分类');
+        }
+
+        // sparkline
+        var trend = data.trend || {};
+        if (trend.pv) drawSpark('spark-pv', trend.pv.slice(-7), '#5b9bd5');
+        if (trend.uv) drawSpark('spark-uv', trend.uv.slice(-7), '#52c41a');
+
+        // PV/UV 7 天对比文案
+        if (trend.pv && trend.pv.length >= 14) {
+            var last7 = trend.pv.slice(-7).reduce(function(a,b){return a+b;}, 0);
+            var prev7 = trend.pv.slice(-14, -7).reduce(function(a,b){return a+b;}, 0);
+            var diff = prev7 === 0 ? (last7 > 0 ? 100 : 0) : Math.round((last7 - prev7) * 100 / prev7);
+            $('#dash-pv-trend').html(
+                '近 7 天对前 7 天 ' +
+                (diff >= 0 ? '<span class="up">↑ ' + diff + '%</span>'
+                           : '<span class="down">↓ ' + Math.abs(diff) + '%</span>')
+            );
+        }
+        if (trend.uv && trend.uv.length >= 14) {
+            var last7u = trend.uv.slice(-7).reduce(function(a,b){return a+b;}, 0);
+            var prev7u = trend.uv.slice(-14, -7).reduce(function(a,b){return a+b;}, 0);
+            var diffU = prev7u === 0 ? (last7u > 0 ? 100 : 0) : Math.round((last7u - prev7u) * 100 / prev7u);
+            $('#dash-uv-trend').html(
+                '近 7 天 ' +
+                (diffU >= 0 ? '<span class="up">↑ ' + diffU + '%</span>'
+                            : '<span class="down">↓ ' + Math.abs(diffU) + '%</span>')
+            );
+        }
+
+        // 趋势图
+        renderTrendChart(trend);
+
+        // TOP
+        renderTopArticles(data.topArticles || []);
+        renderTopIps(data.topIpsToday || []);
+    }
+
+    function loadDashboard() {
+        $.ajax({
+            type: 'get',
+            url: _u('/bms/dashboard/data.do'),
+            cache: false,
+            dataType: 'json',
+            success: function (res) {
+                if (!res || res.success !== 1) {
+                    $('#dash-hero-sub').text((res && res.message) || '看板数据加载失败');
+                    return;
+                }
+                renderDashboard(res);
+            },
+            error: function () {
+                $('#dash-hero-sub').text('网络异常，看板加载失败');
+            }
+        });
+    }
+
+    // 待办 pill 跳转：6 = 留言审批，3 = 博客列表
+    function bindDashGlobalEvents() {
+        $(document).off('click.dashtodo').on('click.dashtodo', '[data-jump]', function () {
+            var id = $(this).attr('data-jump');
+            var $link = $('.cl-vnavigation .link-li#' + id);
+            if ($link.length) $link.trigger('click');
+        });
+        $(document).off('click.dashpending').on('click.dashpending', '#dash-pending-jump', function () {
+            var $link = $('.cl-vnavigation .link-li#6');
+            if ($link.length) $link.trigger('click');
+        });
+    }
+
+    /*
+     * 启动器：dashboard fragment 嵌在 left.html 中，比 js-footer 中的 jQuery 更早渲染。
+     * 直接 $.ajax 会因 jQuery 未加载而静默失败 → 页面所有数据停留在 HTML 中的 0。
+     * 这里用轮询等待 window.$ 出现后再启动。同时考虑 DOMContentLoaded 已过的场景。
+     */
+    (function bootDashboard() {
+        var tries = 0;
+        var maxTries = 100; // 100 * 60ms = 6s 上限
+        function tryStart() {
+            if (window.jQuery && window.$ && typeof window.$ === 'function') {
+                bindDashGlobalEvents();
+                loadDashboard();
+                return;
+            }
+            if (++tries > maxTries) {
+                // 超时：jQuery 没加载成功，给用户一个明显提示
+                var sub = document.getElementById('dash-hero-sub');
+                if (sub) sub.textContent = '依赖（jQuery）未就绪，看板加载失败';
+                return;
+            }
+            setTimeout(tryStart, 60);
+        }
+        tryStart();
+    })();
+</script>
+
+</th:block>
+
+</body>
+</html>

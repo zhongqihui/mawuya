@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qihuizhong.mawuya.core.mapper.DashboardMapper">
+
+    <!--
+      BMS 首页 dashboard 专用聚合 SQL。
+      所有日期参数来自 service 层，已校验为 yyyy-MM-dd 格式（参数化绑定）。
+      不存在 SQL 注入空间。
+    -->
+
+    <select id="countArticlesInLastDays" resultType="int">
+        SELECT COUNT(*) FROM article_info
+        WHERE insert_time >= DATE_SUB(NOW(), INTERVAL #{days} DAY)
+    </select>
+
+    <select id="countUncategorizedArticles" resultType="int">
+        SELECT COUNT(*) FROM article_info WHERE category_sn = 0
+    </select>
+
+    <select id="sumArticleContentLength" resultType="long">
+        SELECT IFNULL(SUM(CHAR_LENGTH(article_content)), 0) FROM article_info
+    </select>
+
+    <select id="topArticles" resultType="map">
+        SELECT
+            sn         AS sn,
+            article_title AS title,
+            read_num   AS readNum,
+            review_num AS reviewNum,
+            praise_num AS praiseNum
+        FROM article_info
+        ORDER BY read_num DESC, sn DESC
+        LIMIT #{limit}
+    </select>
+
+    <!--
+      日期范围统计 PV/UV。
+      字段：req_time 是 VARCHAR(50)，但写入时是 yyyy-MM-dd HH:mm:ss 格式
+      所以用 DATE(req_time) 提取日期是安全的（MySQL 会自动解析）。
+    -->
+    <select id="pvUvByDay" resultType="map">
+        SELECT
+            DATE(req_time) AS date,
+            COUNT(*)       AS pv,
+            COUNT(DISTINCT ip_addr) AS uv
+        FROM log_info
+        WHERE DATE(req_time) >= #{startDate}
+          AND DATE(req_time) &lt;= #{endDate}
+        GROUP BY DATE(req_time)
+        ORDER BY DATE(req_time) ASC
+    </select>
+
+    <select id="topIpsToday" resultType="map">
+        SELECT
+            ip_addr  AS ipAddr,
+            country  AS country,
+            province AS province,
+            city     AS city,
+            COUNT(*) AS cnt
+        FROM log_info
+        WHERE DATE(req_time) = CURDATE()
+          AND ip_addr IS NOT NULL AND ip_addr != ''
+        GROUP BY ip_addr, country, province, city
+        ORDER BY cnt DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="pvToday" resultType="int">
+        SELECT COUNT(*) FROM log_info WHERE DATE(req_time) = CURDATE()
+    </select>
+
+    <select id="uvToday" resultType="int">
+        SELECT COUNT(DISTINCT ip_addr) FROM log_info
+        WHERE DATE(req_time) = CURDATE() AND ip_addr IS NOT NULL AND ip_addr != ''
+    </select>
+
+    <select id="uvTotal" resultType="int">
+        SELECT COUNT(DISTINCT ip_addr) FROM log_info
+        WHERE ip_addr IS NOT NULL AND ip_addr != ''
+    </select>
+
+    <select id="sumPraiseNum" resultType="long">
+        SELECT IFNULL(SUM(praise_num), 0) FROM article_info
+    </select>
+
+    <select id="sumTeaseNum" resultType="long">
+        SELECT IFNULL(SUM(tease_num), 0) FROM article_info
+    </select>
+
+    <select id="sumReadNum" resultType="long">
+        SELECT IFNULL(SUM(read_num), 0) FROM article_info
+    </select>
+
+</mapper>
