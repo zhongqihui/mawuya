@@ -1,0 +1,696 @@
+/* ================================================================== *
+ * Mawuya Blog · 扩展样式
+ * - 不动 main5174.css 原 NexT 主题样式
+ * - 仅追加新组件 + 移动端响应式补强
+ * ================================================================== */
+
+/* ---------- 通用图文排版增强 ---------- */
+/* 文章正文中的所有图片：宽度自适应，按自然比例缩放，不强制高度上限。
+ *
+ * 修订（2026-05）：去掉 max-height: 70vh —— 该规则在移动端 + width:auto/height:auto +
+ * object-fit:contain 组合下，会让普通比例图片高度异常拉伸（特别是高比例长图），
+ * 用户反馈\"详情页内容异常超长\"主因即此。
+ * 现在：仅约束最大宽度，高度由浏览器按图片自然比例自适应。
+ */
+.post-body img,
+.editormd-html-preview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    margin: 1em auto;
+    display: block;
+    cursor: zoom-in;
+    transition: box-shadow .2s;
+}
+.post-body img:hover,
+.editormd-html-preview img:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
+}
+
+/* ---------- 首页/列表的文章卡片缩略图：强制统一尺寸 16:9 ---------- */
+/* 关键：原 CSS 在选择器 `.post-body img` 里写了 width:auto + height:auto + object-fit:contain，
+   配合 `max-height:360px` 时，因为 height 是 auto，object-fit 不生效，导致每张图高度参差。
+   这里用专属类 .post-thumb-fixed 让首页卡片图 100% 走"固定盒子 + cover 裁剪"模式，
+   并用更高优先级（id + class）覆盖通用规则。 */
+.posts-expand .post-thumb-fixed,
+#posts .post-thumb-fixed,
+.post-body img.post-thumb-fixed {
+    width: 100% !important;
+    height: auto !important;       /* 现代浏览器：与 aspect-ratio 协同算出固定高度 */
+    aspect-ratio: 16 / 9;          /* 强制 16:9 宽高比 */
+    max-height: 360px !important;  /* 极宽屏幕也不至于无限放大 */
+    object-fit: cover !important;  /* 配合固定盒子裁剪而不是变形 */
+    object-position: center center;
+    display: block;
+    margin: 16px auto !important;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* 老浏览器（不支持 aspect-ratio）的兜底：用经典 padding-top 占位法 */
+@supports not (aspect-ratio: 16 / 9) {
+    .post-thumb-wrap {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%;        /* 16:9 = 9/16 = 56.25% */
+        margin: 16px 0;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #f3f4f6;
+    }
+    .post-thumb-wrap .post-thumb-fixed {
+        position: absolute !important;
+        inset: 0;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100% !important;
+        height: 100% !important;
+        max-height: none !important;
+        margin: 0 !important;
+        border-radius: 0;
+    }
+}
+
+/* 文章列表页中分类/标签下的小卡片图：限制更小尺寸 */
+.post-thumb {
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* GIF / 表情图等小图不要被强制放大 */
+.post-body img.no-zoom {
+    cursor: default;
+}
+
+/* 正文长 URL / 长英文不要撑破容器 */
+.post-body p,
+.post-body li,
+.post-body blockquote,
+.editormd-html-preview p,
+.editormd-html-preview li {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.post-body table,
+.editormd-html-preview table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+.post-body pre,
+.editormd-html-preview pre {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+.post-body blockquote,
+.editormd-html-preview blockquote {
+    border-left: 4px solid #2494f2;
+    background: #f7f9fc;
+    padding: .6em 1em;
+    margin: 1em 0;
+    color: #555;
+    border-radius: 0 4px 4px 0;
+}
+
+/* ---------- 图片点击放大预览（轻量级 lightbox） ---------- */
+.image-lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    cursor: zoom-out;
+    animation: fadeIn .15s ease;
+}
+.image-lightbox img {
+    max-width: 92vw;
+    max-height: 92vh;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, .5);
+    border-radius: 4px;
+}
+.image-lightbox .lightbox-close {
+    position: absolute;
+    top: 20px; right: 24px;
+    color: #fff; font-size: 32px;
+    cursor: pointer;
+    line-height: 1;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- 顶部搜索框 ---------- */
+.site-search { position: relative; margin-top: 8px; }
+.site-search-form { position: relative; display: flex; align-items: center; }
+.site-search input.st-search-input {
+    width: 100%;
+    padding: 6px 32px 6px 12px;
+    border: 1px solid rgba(255, 255, 255, .35);
+    background: rgba(255, 255, 255, .15);
+    color: #fff;
+    border-radius: 20px;
+    outline: none;
+    font-size: 13px;
+    transition: background .25s;
+}
+.site-search input.st-search-input::placeholder { color: rgba(255, 255, 255, .65); }
+.site-search input.st-search-input:focus { background: rgba(255, 255, 255, .25); }
+.site-search .search-submit {
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: 0; color: #fff; cursor: pointer; padding: 4px 8px;
+}
+
+/* ---------- 侧边栏新组件 ---------- */
+/* ---------- 侧边栏新组件 ----------
+ * 注意：原主题在桌面端把 .sidebar 设为 background:#222 黑底 + color:#999，
+ * 所以默认 widget 文字必须用浅色。在 ≤991px 我们把 sidebar 改成白底，
+ * 那里再单独覆盖成深色（见对应媒体查询段）。
+ */
+.sidebar .sidebar-panel { padding: 18px 22px; border-top: 1px solid rgba(255,255,255,.06); }
+.sidebar .sidebar-panel:first-child { border-top: 0; }
+.sidebar .widget-title {
+    font-size: 14px; font-weight: 600;
+    margin: 0 0 12px 0; padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,.12); color: #ddd;
+}
+.sidebar .widget-title .fa { margin-right: 6px; color: #2494f2; }
+
+.widget-hot-list, .widget-recent-list {
+    list-style: none; padding: 0; margin: 0;
+}
+.widget-hot-list li {
+    padding: 6px 0; font-size: 13px; line-height: 1.5;
+    border-bottom: 1px dashed rgba(255,255,255,.08);
+}
+.widget-hot-list li:last-child { border-bottom: 0; }
+.widget-hot-list a {
+    display: block; color: #ccc; text-decoration: none;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.widget-hot-list a:hover { color: #2494f2; }
+.widget-hot-list .hot-meta { color: #888; font-size: 11px; }
+
+.widget-recent-list li {
+    padding: 8px 0; font-size: 12px; line-height: 1.6;
+    border-bottom: 1px dashed rgba(255,255,255,.08);
+}
+.widget-recent-list li:last-child { border-bottom: 0; }
+.widget-recent-list .recent-name { color: #2494f2; }
+.widget-recent-list .recent-content {
+    color: #bbb; margin: 2px 0;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.widget-recent-list .recent-target {
+    color: #888; font-size: 11px; text-decoration: none;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;
+}
+.widget-recent-list .recent-target:hover { color: #2494f2; }
+
+.tag-cloud { line-height: 2.2; }
+.tag-cloud-item {
+    display: inline-block; padding: 3px 10px; margin: 3px 4px;
+    border: 1px solid currentColor; border-radius: 12px;
+    text-decoration: none; font-size: 12px;
+    transition: all .2s;
+}
+.tag-cloud-item:hover {
+    background: currentColor;
+}
+.tag-cloud-item:hover span,
+.tag-cloud-item:hover small { color: #fff; }
+.tag-cloud-item small { margin-left: 4px; opacity: .6; }
+
+/* ---------- 标签详情页 ---------- */
+.tag-detail-header { padding: 30px 0 20px; text-align: center; border-bottom: 1px solid #eee; }
+.tag-detail-header h1 { display: inline-block; padding: 6px 18px; border-radius: 18px; color: #fff; font-size: 20px; }
+.tag-detail-list { list-style: none; padding: 0; }
+.tag-detail-list li { padding: 12px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.tag-detail-list li a { color: #333; text-decoration: none; flex: 1; min-width: 0; }
+.tag-detail-list li a:hover { color: #2494f2; }
+.tag-detail-list .tag-detail-date { color: #999; font-size: 12px; flex-shrink: 0; }
+
+/* ---------- 搜索结果页 ---------- */
+.search-meta {
+    padding: 18px 0; border-bottom: 1px solid #eee; margin-bottom: 16px;
+    color: #555; font-size: 14px;
+}
+.search-meta strong { color: #2494f2; }
+.search-empty { padding: 60px 0; text-align: center; color: #999; }
+.search-empty .fa { font-size: 32px; margin-bottom: 10px; display: block; }
+.search-result-item { padding: 16px 0; border-bottom: 1px dashed #eee; }
+.search-result-item .title { font-size: 16px; font-weight: 600; }
+.search-result-item .title a { color: #333; text-decoration: none; }
+.search-result-item .title a:hover { color: #2494f2; }
+.search-result-item .summary { color: #666; font-size: 13px; margin-top: 4px; line-height: 1.6; }
+.search-result-item .meta { color: #999; font-size: 12px; margin-top: 4px; }
+
+/* ---------- 评论模块 ---------- */
+.comment-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid #eee; }
+.comment-section h3 { font-size: 16px; margin: 0 0 16px 0; }
+.comment-list { list-style: none; padding: 0; }
+.comment-item { padding: 14px 0; border-bottom: 1px dashed #eee; }
+.comment-item .comment-head {
+    display: flex; align-items: center; gap: 10px;
+    color: #555; font-size: 13px; margin-bottom: 6px;
+}
+.comment-item .comment-head .author { color: #2494f2; font-weight: 600; }
+.comment-item .comment-head .date { color: #999; font-size: 12px; margin-left: auto; }
+.comment-item .comment-body { color: #333; line-height: 1.7; word-wrap: break-word; }
+.comment-empty { padding: 24px 0; text-align: center; color: #999; }
+
+.comment-form-box {
+    margin-top: 24px; padding: 18px;
+    background: #f9fafb; border-radius: 6px; border: 1px solid #eef0f3;
+}
+.comment-form-box h4 { margin: 0 0 12px 0; font-size: 14px; color: #333; }
+.comment-form-box .form-row { margin-bottom: 10px; }
+.comment-form-box input[type=text],
+.comment-form-box textarea {
+    width: 100%; box-sizing: border-box;
+    padding: 8px 10px; border: 1px solid #ddd;
+    border-radius: 4px; font-size: 13px; outline: none;
+    transition: border-color .2s;
+    font-family: inherit;
+}
+.comment-form-box textarea { resize: vertical; min-height: 90px; }
+.comment-form-box input[type=text]:focus,
+.comment-form-box textarea:focus { border-color: #2494f2; }
+.comment-form-box .submit-btn {
+    background: #2494f2; color: #fff; border: 0;
+    padding: 8px 18px; border-radius: 4px; cursor: pointer;
+    font-size: 13px; transition: background .2s;
+}
+.comment-form-box .submit-btn:hover { background: #167cd6; }
+
+/* ---------- 标签徽标（详情页/列表页文章卡片中） ---------- */
+.article-tags { margin-top: 6px; }
+.article-tag {
+    display: inline-block; padding: 2px 8px; margin-right: 6px;
+    border-radius: 10px; font-size: 11px; color: #fff;
+    text-decoration: none;
+}
+.article-tag:hover { opacity: .85; }
+
+/* ---------- 关于页 ---------- */
+.about-page { padding: 30px 0; line-height: 1.9; font-size: 15px; color: #333; }
+.about-page h1 { font-size: 24px; margin-bottom: 18px; }
+.about-page h2 { font-size: 18px; margin-top: 28px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+.about-page ul { padding-left: 22px; }
+.about-page .stack-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px; margin-top: 12px;
+}
+.about-page .stack-grid div {
+    padding: 10px; background: #f7f9fc; border-radius: 4px; text-align: center; font-size: 13px;
+}
+
+/* ============================================================== *
+ * 全端响应式（手机 / 平板 / 桌面 / 宽屏）
+ *
+ * 设计目标：
+ *   - 完全覆盖原 NexT 主题 main5174.css 的固定 700/900px 容器
+ *   - 在所有屏幕尺寸下都能用，单元测试视口包括 320 / 393 (iPhone 15)
+ *     / 430 (iPhone 15 Pro Max) / 768 / 1024 / 1280 / 1600+
+ *   - 不破坏原视觉设计，仅修复布局缺陷
+ *
+ * 断点：
+ *   ≤480px   超小屏（iPhone SE 等）
+ *   481-767  小屏（多数手机横屏 / 大手机竖屏）
+ *   768-991  平板
+ *   992-1199 小桌面（笔记本）
+ *   1200+    大桌面
+ *   1600+    宽屏（保留主题原始大间距设计）
+ * ============================================================== */
+
+/* ---------- 大屏：把 .main-inner 适当加宽，缓解\"左侧间距过宽\"主诉 ---------- */
+/* 主题原 .main-inner = 700px（@1600px+ = 900px）。在 1280-1599 屏宽下，
+   左右各留 ~290px 空白显得很浪费。这里把中间断点拉宽到 980px，让阅读区更舒展。 */
+@media (min-width: 992px) and (max-width: 1599px) {
+    .container .main-inner,
+    .container .footer-inner {
+        width: min(980px, calc(100vw - 80px)) !important;
+    }
+}
+
+/* ---------- 平板（768-991px）：容器铺到 92vw + sidebar 强制内嵌 ---------- */
+@media (min-width: 768px) and (max-width: 991px) {
+    .container .main-inner,
+    .container .footer-inner {
+        width: 92vw !important;
+        max-width: 920px !important;
+        padding: 0 16px !important;
+        box-sizing: border-box;
+    }
+
+    /* 平板下的 .posts-expand 不再额外加 margin（防止主题某些规则影响） */
+    .posts-expand { margin: 0 !important; }
+
+    /* 主题默认在 768-991 直接 display:none 隐藏 sidebar，但我们的侧栏含统计 / 热门 / 标签云
+       等有用信息，应保留。强制把它从 fixed 抽屉改成内容下方的内嵌区块。 */
+    aside#sidebar.sidebar {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        margin: 24px 0 0 !important;
+        padding: 0 !important;
+        border-top: 2px solid #2494f2;
+        border-radius: 0;
+    }
+    aside#sidebar.sidebar a { color: #555; border-bottom-color: #ddd; }
+    aside#sidebar.sidebar a:hover { color: #2494f2; }
+    .sidebar-toggle { display: none !important; }
+    .sidebar-inner { padding: 16px !important; color: #333 !important; }
+    .site-author-name, .site-description { color: #333 !important; }
+    .site-state-item-count, .site-state-item-name { color: #333 !important; }
+    /* 白底场景下 widget 内的元素覆盖回深色 */
+    .sidebar .widget-title { color: #333 !important; border-bottom-color: #eee !important; }
+    .widget-hot-list a, .widget-hot-list li { color: #555 !important; border-bottom-color: #eee !important; }
+    .widget-hot-list .hot-meta { color: #999 !important; }
+    .widget-recent-list li { border-bottom-color: #eee !important; }
+    .widget-recent-list .recent-content { color: #444 !important; }
+    .widget-recent-list .recent-target { color: #999 !important; }
+}
+
+/* ---------- 手机（≤767px）：完整移动端布局 ---------- */
+@media (max-width: 767px) {
+    /* 1. 全局容器：铺满视口 ----------------------------------------- */
+    html, body { overflow-x: hidden; }
+    .container,
+    .container .main-inner,
+    .container .footer-inner,
+    .header,
+    .header-inner,
+    .main,
+    .content-wrap,
+    .content {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .container .main-inner { padding: 0 14px !important; }
+    .content { padding: 0 !important; }
+
+    /*
+     * 关键修复：main5174.css 在 ≤767px 给 .posts-expand 加了 margin: 0 20px。
+     * 与 .main-inner 自身的 14px 内边距叠加后，移动端文章左右各占 34px，
+     * 在 iPhone 15 (393px) 上正文宽度只剩 ~325px，看起来就是\"左侧间距过宽\"。
+     * 此处强制清掉这个外边距，让 .posts-expand 跟随 .main-inner 的 14px 即可。
+     */
+    .posts-expand,
+    #posts.posts-expand,
+    .container .posts-expand {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-top: 16px !important;
+    }
+
+    /* 2. 顶部 header / banner ------------------------------------ */
+    .header-inner {
+        padding: 14px 14px 8px !important;
+        text-align: center;
+        position: relative;
+    }
+    .site-meta { width: 100%; padding-right: 50px; box-sizing: border-box; }
+    .site-title { font-size: 20px !important; line-height: 1.3; }
+    .site-subtitle { font-size: 12px !important; padding: 0 8px; line-height: 1.4; }
+    .custom-logo-site-title { padding: 4px 0; }
+    .logo-line-before, .logo-line-after { display: none !important; }
+
+    /* 3. 汉堡菜单按钮（修订：header 是白底，按钮条必须用深色才看得见）-- */
+    .site-nav-toggle {
+        display: block !important;
+        position: absolute !important;
+        top: 14px !important;
+        right: 12px !important;
+        z-index: 100;
+    }
+    .site-nav-toggle button {
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        line-height: 0;
+    }
+    .site-nav-toggle .btn-bar {
+        display: block;
+        width: 24px;
+        height: 2px;
+        background: #333;       /* 关键：白底用深灰横杠 */
+        border-radius: 1px;
+        transition: transform .25s, opacity .25s;
+    }
+
+    /* 4. 导航：默认隐藏，由 JS 切换 .show 类 ------------------- */
+    .site-nav {
+        display: none;
+        padding: 0;
+        margin-top: 8px;
+        background: #fafafa;             /* 浅灰底，跟白色 header 区分开 */
+        border-top: 1px solid #ececec;
+        border-bottom: 1px solid #ececec;
+        animation: slideDown .2s ease-out;
+    }
+    .site-nav.show,
+    .site-nav[style*="block"] {
+        display: block !important;
+    }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-6px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 5. 菜单：横向均分网格 + 深色文字（关键修复：原配色是 #eee 白字，白底白字看不见）*/
+    .site-nav .menu,
+    .site-nav #menu.menu,
+    .site-nav .menu.menu-left {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr);
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        gap: 0;
+    }
+    .site-nav .menu > .menu-item {
+        display: block !important;
+        margin: 0 !important;
+        padding: 10px 0 !important;
+        text-align: center;
+        border-right: 1px solid #ececec;     /* 浅灰分隔，配合浅灰底 */
+    }
+    .site-nav .menu > .menu-item:last-child { border-right: 0; }
+    .site-nav .menu .menu-item a {
+        display: block !important;
+        padding: 4px 2px !important;
+        font-size: 11px !important;
+        line-height: 1.25 !important;
+        color: #333 !important;              /* 关键：深色文字！ */
+        border-bottom: 0 !important;
+        text-decoration: none;
+    }
+    .site-nav .menu .menu-item a:hover {
+        color: #2494f2 !important;
+        border-bottom: 0 !important;
+    }
+    .site-nav .menu .menu-item-icon {
+        font-size: 18px !important;
+        margin: 0 auto 4px !important;
+        display: block;
+        color: #2494f2;                      /* 主色调图标，与文字对比鲜明 */
+    }
+
+    /* 6. 移动端搜索框：菜单展开时位于浅灰背景上，需要换成深色边框/文字 */
+    .site-nav .site-search { padding: 10px 14px 14px; }
+    .site-nav .site-search input.st-search-input {
+        padding: 7px 32px 7px 12px;
+        font-size: 13px;
+        background: #fff;
+        border: 1px solid #ddd;
+        color: #333;
+    }
+    .site-nav .site-search input.st-search-input::placeholder { color: #999; }
+    .site-nav .site-search .search-submit { color: #666; }
+
+    /* 7. 主内容区 --------------------------------------------- */
+    .main { padding-bottom: 60px !important; }
+    /* 文章卡片：原 .post-header padding 较大，移动端收紧 */
+    .post { padding: 14px 0 !important; }
+    .post-header { padding-bottom: 8px; }
+    .post-header .post-title,
+    .post-header .post-title-link { font-size: 18px !important; line-height: 1.4; }
+    .post-meta {
+        font-size: 12px;
+        line-height: 1.6;
+    }
+    /* meta 在小屏分两行更易读 */
+    .post-meta .post-time,
+    .post-meta .post-category {
+        display: inline-block;
+        margin: 1px 4px 1px 0;
+    }
+
+    /* 8. 详情页 ----------------------------------------------- */
+    .page-post-detail .post-body { font-size: 15px; line-height: 1.75; }
+    .page-post-detail .post-body h2 { font-size: 18px; margin-top: 1.5em; }
+    .page-post-detail .post-body h3 { font-size: 16px; }
+    .page-post-detail .post-body p { word-break: break-word; }
+
+    /* 上下篇导航：竖排 */
+    .post-nav {
+        flex-direction: column !important;
+        display: flex !important;
+    }
+    .post-nav .post-nav-item {
+        width: 100% !important;
+        padding: 6px 0 !important;
+        border: 0 !important;
+    }
+
+    /* 9. 侧边栏：从 fixed 抽屉 → 主内容下方静态区块 -------------- */
+    /* 主题原 CSS 在 ≤767px 直接 display:none，必须用更高优先级覆盖 */
+    aside#sidebar.sidebar {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        margin: 20px 0 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        border-top: 2px solid #2494f2;
+        z-index: auto;
+    }
+    aside#sidebar.sidebar a { color: #555; border-bottom-color: #ddd; }
+    aside#sidebar.sidebar a:hover { color: #2494f2; }
+    .sidebar-toggle { display: none !important; }
+    .sidebar-inner {
+        padding: 14px 14px !important;
+        color: #333 !important;
+        text-align: left !important;
+    }
+    .sidebar .sidebar-panel { padding: 14px 0 !important; }
+    /* 暗色背景下的小标题在白底下不可见，统一改为深色 */
+    .site-author-name, .site-description,
+    .site-state-item-count, .site-state-item-name,
+    .sidebar .widget-title { color: #333 !important; }
+    .sidebar .widget-title { border-bottom-color: #eee !important; }
+    .widget-hot-list a, .widget-hot-list li { color: #555 !important; border-bottom-color: #eee !important; }
+    .widget-hot-list .hot-meta { color: #999 !important; }
+    .widget-recent-list li { border-bottom-color: #eee !important; }
+    .widget-recent-list .recent-content { color: #444 !important; }
+    .widget-recent-list .recent-target { color: #999 !important; }
+    .site-state-item { width: 33.3% !important; }
+
+    /* 10. 表格 / 代码块横向滚动（关键修复：原本只设了 max-width:100%，pre 默认不换行
+       会导致内容横向溢出 → 整个页面被撑出现横向滚动条，看起来"页面异常超长"）------ */
+    .post-body table,
+    .post-body pre,
+    .editormd-html-preview table,
+    .editormd-html-preview pre {
+        font-size: 12px;
+        max-width: 100%;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    /* pre 内 code 不要试图换行（保留代码格式 + 横向滚动） */
+    .post-body pre code,
+    .editormd-html-preview pre code {
+        white-space: pre;
+        word-break: normal;
+    }
+    /* 移动端图片再次保险：高度无上限，按比例自然缩放 */
+    .post-body img,
+    .editormd-html-preview img {
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+
+    /* 11. 评论 ----------------------------------------------- */
+    .comment-form-box { padding: 12px; }
+    .comment-form-box .submit-btn { width: 100%; }
+    .comment-section h3 { font-size: 15px; }
+    .comment-item .comment-head { flex-wrap: wrap; }
+    .comment-item .comment-head .date { margin-left: 0; width: 100%; font-size: 11px; }
+
+    /* 12. 标签详情页 ----------------------------------------- */
+    .tag-detail-list li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    .tag-detail-list .tag-detail-date { font-size: 11px; }
+
+    /* 13. 关于页 grid ---------------------------------------- */
+    .about-page { padding: 16px 0; font-size: 14px; }
+    .about-page h1 { font-size: 20px; }
+    .about-page h2 { font-size: 16px; }
+    .about-page .stack-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+    /* 14. footer --------------------------------------------- */
+    .footer { font-size: 12px; padding: 0 14px !important; }
+    .footer-inner { width: 100% !important; max-width: 100% !important; }
+}
+
+/* ---------- 超小屏（≤480px，iPhone SE / 折叠屏窄态）-------- */
+@media (max-width: 480px) {
+    .site-title { font-size: 18px !important; }
+    .site-subtitle { font-size: 11px !important; }
+    /* 5 个菜单挤一行字号过小，改成两行 */
+    .site-nav .menu,
+    .site-nav #menu.menu,
+    .site-nav .menu.menu-left {
+        grid-template-columns: repeat(5, 1fr) !important;
+    }
+    .site-nav .menu .menu-item-icon { font-size: 16px !important; }
+    .site-nav .menu .menu-item a { font-size: 10px !important; }
+
+    .post-header .post-title,
+    .post-header .post-title-link { font-size: 17px !important; }
+    .page-post-detail .post-body { font-size: 14px; }
+
+    /* 卡片缩略图调矮一点 */
+    .posts-expand .post-thumb-fixed,
+    #posts .post-thumb-fixed { max-height: 220px !important; }
+
+    .about-page .stack-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ---------- 320px 兜底：极小屏不破版 -------------------------- */
+@media (max-width: 360px) {
+    .site-title { font-size: 16px !important; }
+    .site-meta { padding-right: 40px; }
+    .site-nav .menu .menu-item a { font-size: 9px !important; }
+}
+
+/* ---------- 横屏手机 / iPad mini 横屏：高度小 ----------------- */
+@media (max-height: 480px) and (orientation: landscape) {
+    .header-inner { padding: 8px 14px !important; }
+    .site-title { font-size: 16px !important; }
+    .site-subtitle { display: none; }
+}
+
+/* ---------- 打印样式（PDF / 打印预览 友好） ---------- */
+@media print {
+    .header, .footer, .sidebar, .site-search, .post-nav, .back-to-top,
+    .site-nav-toggle, .comment-form-box {
+        display: none !important;
+    }
+    .container .main-inner { width: 100% !important; max-width: 100% !important; }
+    .post-body { font-size: 12pt; line-height: 1.7; }
+    .post-body img { max-height: none !important; page-break-inside: avoid; }
+}

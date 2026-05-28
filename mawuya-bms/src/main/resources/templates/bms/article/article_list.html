@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div class="page-head">
+    <ol class="breadcrumb">
+        这是一个疯子的世界，只有疯子才能生存下去
+        <button type="button" title="发布博客" onclick="toAddBlogPage()" class="btn btn-default btn-xs">
+            <i class="fa fa-file"></i>
+        </button>
+    </ol>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="block-flat">
+            <div class="content">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="datatable-article">
+                        <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>博客标题</th>
+                            <th>博客分类</th>
+                            <th>阅读次数</th>
+                            <th>评论次数</th>
+                            <th>背景图片</th>
+                            <th>发布时间</th>
+                            <th>修改时间</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr class="odd gradeX" th:each="item, status : ${articleList}">
+                            <td th:text="${status.count}"></td>
+                            <td th:text="${item.articleTitle}"></td>
+                            <td>
+                                <span th:if="${item.categorySn == 0}">暂无分类</span>
+                                <th:block th:if="${item.categorySn != 0}">
+                                    <th:block th:each="c : ${categoryList}">
+                                        <span th:if="${c.sn == item.categorySn}" th:text="${c.categoryName}"></span>
+                                    </th:block>
+                                </th:block>
+                            </td>
+                            <td th:text="${item.readNum}"></td>
+                            <td th:text="${item.reviewNum}"></td>
+                            <td>
+                                <img th:if="${item.pictureUrl != null and !#strings.isEmpty(item.pictureUrl)}"
+                                     th:with="firstImg=${#strings.contains(item.pictureUrl, ';') ? #strings.substringBefore(item.pictureUrl, ';') : item.pictureUrl}"
+                                     th:src="${firstImg}" alt="背景图"
+                                     class="bms-thumb"
+                                     style="width:64px;height:40px;object-fit:cover;border-radius:3px;cursor:pointer;"
+                                     th:attr="onclick=|previewImg('${firstImg}')|"/>
+                                <span th:if="${item.pictureUrl == null or #strings.isEmpty(item.pictureUrl)}"
+                                      style="color:#bbb;">—</span>
+                            </td>
+                            <td th:text="${item.insertTime}"></td>
+                            <td th:text="${item.updateTime}"></td>
+                            <td class="center">
+                                <i class="fa fa-cloud-upload" title="上传背景图"
+                                   th:attr="onclick=|uploadPicture('${item.sn}')|"></i>&nbsp;&nbsp;
+                                <i class="fa fa-pencil" title="修改"
+                                   th:attr="onclick=|toModBlogPage('${item.sn}')|"></i>&nbsp;&nbsp;
+                                <i class="fa fa-trash-o" title="删除"
+                                   th:attr="onclick=|delBlog('${item.sn}')|"></i>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    /*]]>*/
+
+    $(function () {
+        $('#datatable-article').dataTable();
+    });
+
+    function toModBlogPage(sn) {
+        $('#content3').load(_u('/bms/article/toUpdate.do?sn=') + sn);
+    }
+
+    function toAddBlogPage() {
+        $('#content3').load(_u('/bms/article/toAdd.do?'));
+    }
+
+    function uploadPicture(sn) {
+        var html = ''
+            + '<form enctype="multipart/form-data" method="post" id="backgroundImgUploadForm" '
+            + '      style="padding:18px 16px 6px; box-sizing:border-box;">'
+            + '  <input name="sn" type="hidden" value="' + sn + '" />'
+            + '  <div class="img-upload-zone">'
+            + '    <label for="bgImgInput-' + sn + '" class="img-upload-trigger">'
+            + '      <i class="fa fa-cloud-upload"></i>'
+            + '      <span class="hint">点击或将图片拖到此处</span>'
+            + '      <span class="meta">支持 jpg/png/gif/webp，≤10MB</span>'
+            + '    </label>'
+            + '    <input type="file" id="bgImgInput-' + sn + '" name="backgroundImg" '
+            + '           accept="image/*" style="display:none" />'
+            + '    <div class="img-preview-wrap" style="display:none;">'
+            + '      <img class="img-preview" alt="预览" />'
+            + '      <div class="img-preview-meta"></div>'
+            + '      <button type="button" class="btn btn-default btn-xs img-preview-clear">'
+            + '        <i class="fa fa-times"></i> 清除'
+            + '      </button>'
+            + '    </div>'
+            + '  </div>'
+            + '</form>';
+
+        layer.open({
+            type: 1,
+            skin: 'layui-layer-lan',
+            title: '上传背景图片',
+            content: html,
+            area: ['460px', 'auto'],
+            btn: ['确定上传', '取消'],
+            success: function () {
+                bindBgImgPreview(sn);
+            },
+            yes: function (index) {
+                var form = $('#backgroundImgUploadForm');
+                var fileInput = form.find('input[type=file]')[0];
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    layer.msg('请先选择一张图片', {icon: 7});
+                    return;
+                }
+                var load = layer.load(0, {shade: [0.1, '#fff']});
+                $.ajax({
+                    type: "post",
+                    url: _u("/bms/article/backgroundImgUpload.do"),
+                    cache: false,
+                    data: new FormData(form[0]),
+                    processData: false,
+                    contentType: false,
+                    success: function (result) {
+                        layer.close(load);
+                        layer.close(index);
+                        if (result === 'success') {
+                            layer.alert("上传背景图片成功！", {
+                                skin: 'layui-layer-lan',
+                                icon: 1,
+                                end: function () {
+                                    $('#content3').load(_u('/bms/article/list.do'));
+                                }
+                            });
+                        } else {
+                            layer.alert('上传背景图片失败！', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                        }
+                    },
+                    error: function () {
+                        layer.close(load);
+                        layer.alert('上传出错（网络/格式/大小？）', {icon: 2});
+                    }
+                });
+            }
+        });
+    }
+
+    /** 给上传 form 注册：选择文件即时预览 + 拖拽支持 + 清除按钮 */
+    function bindBgImgPreview(sn) {
+        var $form = $('#backgroundImgUploadForm');
+        var $zone = $form.find('.img-upload-zone');
+        var $trigger = $form.find('.img-upload-trigger');
+        var $input = $form.find('input[type=file]');
+        var $previewWrap = $form.find('.img-preview-wrap');
+        var $img = $form.find('.img-preview');
+        var $meta = $form.find('.img-preview-meta');
+
+        function show(file) {
+            if (!file) return;
+            if (!/^image\//.test(file.type)) {
+                layer.msg('请选择图片文件', {icon: 7});
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                layer.msg('图片不能超过 10MB', {icon: 7});
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $img.attr('src', e.target.result);
+                $meta.text(file.name + ' · ' + (file.size / 1024).toFixed(1) + ' KB');
+                $previewWrap.show();
+                $trigger.hide();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        $input.off('change').on('change', function () {
+            if (this.files && this.files[0]) show(this.files[0]);
+        });
+
+        // 拖拽支持
+        $zone.off('dragover dragleave drop')
+            .on('dragover', function (e) { e.preventDefault(); $(this).addClass('drag-over'); })
+            .on('dragleave', function (e) { e.preventDefault(); $(this).removeClass('drag-over'); })
+            .on('drop', function (e) {
+                e.preventDefault();
+                $(this).removeClass('drag-over');
+                var dt = e.originalEvent.dataTransfer;
+                if (dt && dt.files && dt.files[0]) {
+                    // 把拖入的文件赋给 input（用 DataTransfer API 兼容）
+                    try {
+                        var dt2 = new DataTransfer();
+                        dt2.items.add(dt.files[0]);
+                        $input[0].files = dt2.files;
+                    } catch (err) { /* 老浏览器降级：直接预览 */ }
+                    show(dt.files[0]);
+                }
+            });
+
+        // 清除
+        $form.find('.img-preview-clear').off('click').on('click', function () {
+            $input.val('');
+            $img.attr('src', '');
+            $previewWrap.hide();
+            $trigger.show();
+        });
+    }
+
+    function previewImg(url) {
+        if (!url) return;
+        layer.open({
+            type: 1,
+            title: '图片预览',
+            skin: 'layui-layer-lan',
+            area: ['auto', 'auto'],
+            content: '<div style="padding:12px;text-align:center;">' +
+                     '  <img src="' + url + '" style="max-width:80vw;max-height:75vh;display:block;margin:0 auto;border-radius:4px;" />' +
+                     '</div>'
+        });
+    }
+
+    function delBlog(sn) {
+        layer.confirm('确认删除？', {btn: ['是', '我后悔了'], skin: 'layui-layer-lan'}, function () {
+            var load = layer.load(0, {shade: [0.1, '#fff']});
+            $.ajax({
+                type: "get",
+                url: _u("/bms/article/delSubmit.do?sn=") + sn,
+                cache: false,
+                success: function (data) {
+                    layer.close(load);
+                    if (data === 'success') {
+                        layer.alert("删除成功", {
+                            skin: 'layui-layer-lan',
+                            icon: 1,
+                            end: function () {
+                                $('#content3').load(_u('/bms/article/list.do'));
+                            }
+                        });
+                    } else {
+                        layer.alert('删除失败', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                    }
+                }
+            });
+        });
+    }
+</script>
+</body>
+</html>

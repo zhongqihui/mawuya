@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="left" id="cl-wrapper">
+    <div class="cl-sidebar">
+        <div class="cl-toggle"><i class="fa fa-bars"></i></div>
+        <div class="cl-navblock">
+            <div class="menu-space">
+                <div class="content">
+                    <div class="side-user">
+                        <div class="avatar">
+                            <img th:src="@{/statics/images/avatar1_50.jpg}" alt="Avatar"/>
+                        </div>
+                        <div class="info">
+                            <a href="#">钟启辉</a>
+                            <img th:src="@{/statics/images/state_online.png}" alt="Status"/>
+                            <span>Online</span>
+                        </div>
+                    </div>
+                    <ul class="cl-vnavigation">
+                        <li><a href="#"><i class="fa fa-home"></i><span>我的博客</span></a>
+                            <ul class="sub-menu">
+                                <li>
+                                    <a href="http://localhost:8080/index" target="_blank">博客首页</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li><a href="#"><i class="fa fa-smile-o"></i><span>博客管理</span></a>
+                            <ul class="sub-menu">
+                                <li>
+                                    <a th:attr="link-url=@{/bms/category/categoryList.do}" class="link-li" id="2">&nbsp;&nbsp;分类列表</a>
+                                </li>
+                                <li>
+                                    <a th:attr="link-url=@{/bms/article/list.do}" class="link-li" id="3">&nbsp;&nbsp;博客列表</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a href="#"><i class="fa fa-image"></i><span>资源管理</span></a>
+                            <ul class="sub-menu">
+                                <li>
+                                    <a th:attr="link-url=@{/bms/image/library.do}" class="link-li" id="4">&nbsp;&nbsp;图片库</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a href="#"><i class="fa fa-list-alt"></i><span>留言管理</span></a>
+                            <ul class="sub-menu">
+                                <li><a href="#">Components</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#"><i class="fa fa-table"></i><span>日志管理</span></a>
+                            <ul class="sub-menu">
+                                <li><a href="#">General</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-right collapse-button" style="padding:7px 9px;">
+                <input type="text" class="form-control search" placeholder="Search..."/>
+                <button id="sidebar-collapse" class="btn btn-default">
+                    <i style="color:#fff;" class="fa fa-angle-left"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid" id="pcont">
+        <div class="row">
+            <div class="tab-container">
+                <ul class="nav nav-tabs" id="tab-title">
+                    <li class="title-li active" id="title0" style="margin-left: 50px;">
+                        <i class="fa fa-home"></i>首页
+                    </li>
+                </ul>
+                <div class="tab-content" id="tab-content">
+                    <div class="tab-pane active cont" id="content0">
+                        <p>首页</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header" id="header" class="header">
+    <div class="header-inner">
+        <div class="site-meta">
+            <div class="custom-logo-site-title">
+                <a th:href="@{/index}" class="brand" rel="start">
+                    <span class="logo-line-before"><i></i></span>
+                    <span class="site-title">Zqh's Blog</span>
+                    <span class="logo-line-after"><i></i></span>
+                </a>
+            </div>
+            <p class="site-subtitle">这是一个疯子的世界，只有疯子才能生存下去。</p>
+        </div>
+
+        <div class="site-nav-toggle" id="siteNavToggle">
+            <button type="button" aria-label="切换菜单" aria-expanded="false" aria-controls="siteNav">
+                <span class="btn-bar"></span>
+                <span class="btn-bar"></span>
+                <span class="btn-bar"></span>
+            </button>
+        </div>
+
+        <nav class="site-nav" id="siteNav">
+            <ul id="menu" class="menu menu-left">
+                <li class="menu-item menu-item-home">
+                    <a th:href="@{/index}" rel="section">
+                        <i class="menu-item-icon fa fa-home fa-fw"></i> <br/>首页
+                    </a>
+                </li>
+                <li class="menu-item menu-item-archives">
+                    <a th:href="@{/archive}" rel="section">
+                        <i class="menu-item-icon fa fa-archive fa-fw"></i> <br/>归档
+                    </a>
+                </li>
+                <li class="menu-item menu-item-categories">
+                    <a th:href="@{/categories}" rel="section">
+                        <i class="menu-item-icon fa fa-th fa-fw"></i> <br/>分类
+                    </a>
+                </li>
+                <li class="menu-item menu-item-tags">
+                    <a th:href="@{/tags}" rel="section">
+                        <i class="menu-item-icon fa fa-tags fa-fw"></i> <br/>标签
+                    </a>
+                </li>
+                <li class="menu-item menu-item-about">
+                    <a th:href="@{/about}" rel="section">
+                        <i class="menu-item-icon fa fa-user fa-fw"></i> <br/>关于
+                    </a>
+                </li>
+            </ul>
+
+            <div class="site-search">
+                <form class="site-search-form" th:action="@{/search}" method="get" role="search">
+                    <input type="text" name="q" id="st-search-input"
+                           class="st-search-input st-default-search-input"
+                           placeholder="搜索文章..." autocomplete="off"
+                           th:value="${keyword}"/>
+                    <button type="submit" class="search-submit" aria-label="搜索">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        // 移动端汉堡菜单：用 .show class 切换，并随窗口变化自动重置
+        (function () {
+            var toggle = document.getElementById('siteNavToggle');
+            var nav    = document.getElementById('siteNav');
+            if (!toggle || !nav) return;
+
+            var btn = toggle.querySelector('button');
+
+            function open() {
+                nav.classList.add('show');
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+            }
+            function close() {
+                nav.classList.remove('show');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (nav.classList.contains('show')) close(); else open();
+            });
+
+            // 点击菜单项自动收起（移动端体验更好）
+            nav.addEventListener('click', function (e) {
+                if (e.target.closest('a')) close();
+            });
+
+            // 点击空白处收起
+            document.addEventListener('click', function (e) {
+                if (!nav.contains(e.target) && !toggle.contains(e.target)) close();
+            });
+
+            // 视口变到桌面尺寸时重置状态，避免回到桌面时残留 .show 影响布局
+            var mql = window.matchMedia('(min-width: 768px)');
+            (mql.addEventListener ? mql.addEventListener.bind(mql, 'change')
+                                  : mql.addListener.bind(mql))(function (e) {
+                if (e.matches) close();
+            });
+        })();
+    </script>
+</header>
+</body>
+</html>

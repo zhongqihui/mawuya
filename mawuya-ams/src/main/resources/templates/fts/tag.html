@@ -1,0 +1,46 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion">
+<head>
+    <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
+    <title th:text="|#${tag.tagName} - Zqh Blog|">Tag</title>
+</head>
+<body lang="zh-Hans">
+<div class="container one-collumn sidebar-position-left page-home">
+    <div class="headband"></div>
+    <th:block th:replace="~{fts/common/header :: header}"></th:block>
+
+    <main id="main" class="main">
+        <div class="main-inner">
+            <div class="content-wrap">
+                <div id="content" class="content">
+                    <div class="tag-detail-header">
+                        <h1 th:style="|background:${tag.tagColor != null ? tag.tagColor : '#999'};|">
+                            <span th:text="|# ${tag.tagName}|">tag</span>
+                        </h1>
+                        <p style="color:#666; margin-top:8px;"
+                           th:text="|共 ${articles != null ? #lists.size(articles) : 0} 篇文章|"></p>
+                    </div>
+
+                    <ul class="tag-detail-list" th:if="${articles != null and not #lists.isEmpty(articles)}">
+                        <li th:each="a : ${articles}">
+                            <a th:href="@{|/${a.sn}|}" th:text="${a.articleTitle}">title</a>
+                            <span class="tag-detail-date"
+                                  th:if="${a.insertTime != null and #strings.length(a.insertTime) gt 10}"
+                                  th:text="${#strings.substring(a.insertTime, 0, 10)}"></span>
+                        </li>
+                    </ul>
+                    <div class="search-empty" th:if="${articles == null or #lists.isEmpty(articles)}">
+                        <i class="fa fa-frown-o"></i>
+                        该标签下暂无文章
+                    </div>
+                </div>
+            </div>
+
+            <th:block th:replace="~{fts/common/sidebar :: sidebar}"></th:block>
+        </div>
+    </main>
+
+    <th:block th:replace="~{fts/common/footer :: footer}"></th:block>
+</div>
+</body>
+</html>

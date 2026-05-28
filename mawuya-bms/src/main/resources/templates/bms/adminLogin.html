@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="shortcut icon" th:href="@{/statics/images/favicon.ico}"/>
+    <title>zqh's Blog · 登录</title>
+    <link rel="stylesheet" th:href="@{/statics/plugins/bootstrap/dist/css/bootstrap.css}"/>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.6.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" th:href="@{/statics/css/style.css}"/>
+    <!--
+        说明：style.css 全局 body 规则有两个坑：
+          1) `body { opacity: 0 }` —— 配合主题 motion.js 入场动画做淡入，
+             但登录页没有引入 motion.js，导致整页永远透明 → 视觉上"黑屏看不到登录框"。
+          2) `body { margin-left: -20px }` —— 整页向左偏 20px。
+        下方 inline style 用 !important 强制覆盖这两条，并改用 Flexbox 居中重建布局。
+    -->
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 关键修复：style.css 把 body 设了 opacity:0 + margin-left:-20px，必须强制覆盖 */
+        body.texture {
+            opacity: 1 !important;
+            margin: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px 12px;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        /* 重置原 #cl-wrapper 的 absolute / 100% 高度，避免破坏 flex 居中 */
+        #cl-wrapper.login-container {
+            position: static !important;
+            display: block !important;
+            width: 100%;
+            max-width: 430px;
+            height: auto !important;
+            padding-top: 0 !important;
+        }
+
+        /* 把 .middle-login 也从 absolute 改成普通块级 */
+        #cl-wrapper.login-container .middle-login {
+            position: static !important;
+            top: auto !important;
+            left: auto !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+
+        /* 容器卡片细节：圆角 + 更明显的阴影（深底上视觉更突出） */
+        #cl-wrapper.login-container .block-flat {
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .35);
+            margin-bottom: 0;
+        }
+
+        /* 顶部 logo + 标题 */
+        #cl-wrapper.login-container .block-flat .header {
+            padding: 14px 20px;
+            background: #2494F2;
+            border-bottom: 1px solid #2082D5;
+        }
+        #cl-wrapper.login-container .block-flat .header h3 {
+            margin: 0;
+            color: #fff;
+            line-height: 32px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        #cl-wrapper.login-container .block-flat .header .logo-img {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+
+        /* 表单内容区 */
+        #cl-wrapper.login-container .block-flat .content {
+            padding: 26px 24px 6px;
+        }
+        #cl-wrapper.login-container .block-flat .content .title {
+            margin: 0 0 18px 0;
+            font-size: 15px;
+            color: #333;
+        }
+        #cl-wrapper.login-container .block-flat .content .form-control {
+            padding: 10px 12px;
+            height: auto;
+            font-size: 14px;
+        }
+        #cl-wrapper.login-container .block-flat .input-group-addon {
+            background: #fafafa;
+        }
+
+        /* 提交按钮区 */
+        #cl-wrapper.login-container .block-flat .foot {
+            padding: 12px 24px 22px;
+            text-align: right;
+        }
+        #cl-wrapper.login-container .block-flat .foot .btn {
+            min-width: 84px;
+            padding: 8px 18px;
+        }
+
+        /* 移动端：登录卡片占满宽度（保留两侧 padding） */
+        @media (max-width: 480px) {
+            #cl-wrapper.login-container { max-width: 100%; }
+            #cl-wrapper.login-container .block-flat .content { padding: 20px 16px 4px; }
+            #cl-wrapper.login-container .block-flat .foot { padding: 10px 16px 18px; }
+            #cl-wrapper.login-container .block-flat .header h3 { font-size: 16px; }
+        }
+    </style>
+</head>
+
+<body class="texture">
+<div id="cl-wrapper" class="login-container">
+    <div class="middle-login">
+        <div class="block-flat">
+            <div class="header">
+                <h3 class="text-center">
+                    <img class="logo-img" th:src="@{/statics/images/favicon.ico}" alt="logo"/>
+                    <span>Zqh's Blog</span>
+                </h3>
+            </div>
+            <form style="margin-bottom: 0 !important;" class="form-horizontal" method="post"
+                  th:action="@{/bms/login.do}">
+                <div class="content">
+                    <h4 class="title">用户登录</h4>
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                                <input type="text" placeholder="用户名" id="username" name="userName"
+                                       value="admin" class="form-control" autocomplete="username"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                                <input type="password" placeholder="密码" id="password" name="password"
+                                       class="form-control" autocomplete="current-password"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="foot">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fa fa-sign-in"></i> 登录
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

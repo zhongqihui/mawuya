@@ -1,0 +1,43 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion">
+<head>
+    <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
+    <title>标签 - Zqh Blog</title>
+</head>
+<body lang="zh-Hans">
+<div class="container one-collumn sidebar-position-left page-home">
+    <div class="headband"></div>
+    <th:block th:replace="~{fts/common/header :: header}"></th:block>
+
+    <main id="main" class="main">
+        <div class="main-inner">
+            <div class="content-wrap">
+                <div id="content" class="content">
+                    <div id="posts" class="posts-expand">
+                        <div class="category-all-page">
+                            <div class="category-all-title"
+                                 th:text="|目前共计 ${#lists.size(tags)} 个标签|"></div>
+
+                            <div class="tag-cloud" style="padding: 20px 0; line-height: 2.6;">
+                                <a th:each="t : ${tags}"
+                                   class="tag-cloud-item"
+                                   th:href="@{|/tags/${t.sn}|}"
+                                   th:style="|color:${t.tagColor != null ? t.tagColor : '#666'}; font-size:${t.artSize != null and t.artSize >= 5 ? '18px' : (t.artSize != null and t.artSize >= 2 ? '14px' : '12px')};|"
+                                   th:title="|${t.tagName} (${t.artSize ?: 0})|">
+                                    <span th:text="${t.tagName}">tag</span>
+                                    <small th:text="${t.artSize ?: 0}">0</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <th:block th:replace="~{fts/common/sidebar :: sidebar}"></th:block>
+        </div>
+    </main>
+
+    <th:block th:replace="~{fts/common/footer :: footer}"></th:block>
+</div>
+</body>
+</html>

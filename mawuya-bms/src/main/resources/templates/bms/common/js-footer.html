@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="js-footer">
+    <script type="text/javascript" th:src="@{/statics/plugins/jquery.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/jquery.nanoscroller/jquery.nanoscroller.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/behaviour/general.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/jquery.ui/jquery-ui.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/jquery.nestable/jquery.nestable.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/bootstrap.switch/bootstrap-switch.min.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/bootstrap.datetimepicker/js/bootstrap-datetimepicker.min.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/bootstrap.slider/js/bootstrap-slider.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/jquery.gritter/js/jquery.gritter.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/jquery.datatables/jquery.datatables.min.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/jquery.datatables/bootstrap-adapter/js/datatables.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/behaviour/voice-commands.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/jquery.select2/select2.min.js}"></script>
+    <script type="text/javascript" th:src="@{/statics/plugins/layer/layer.js}"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            App.init();
+            App.dataTables();
+
+            $('.link-li').click(function () {
+                var id = $(this).attr('id');
+                var url = $(this).attr('link-url');
+                var title = $(this).html();
+
+                var flag = true;
+                $('#tab-title').find('li').each(function () {
+                    var h = $(this).attr('id');
+                    if (h === 'title' + id) {
+                        flag = false;
+                    }
+                });
+
+                cssActive(id);
+
+                if (flag) {
+                    $('#tab-title').append('<li class="title-li active" id="title' + id + '">' + title + '&nbsp;&nbsp;<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+                    $('#tab-content').append('<div class="tab-pane active" id="content' + id + '"></div>');
+                    $('#content' + id).load(url);
+                }
+
+                $('.title-li').click(function () {
+                    var titleId = $(this).attr('id');
+                    var id2 = titleId.replace('title', '');
+                    cssActive(id2);
+                });
+
+                $('.close').click(function () {
+                    var titleId = $(this).parent('li').attr('id');
+                    var id2 = titleId.replace('title', '');
+                    $('#title' + id2).remove();
+                    $('#content' + id2).remove();
+                    cssActive(0);
+                });
+            });
+
+            function cssActive(id) {
+                $('#tab-title').find('li').each(function () {
+                    $(this).attr("class", "title-li");
+                });
+                $('#title' + id).attr("class", "title-li active");
+                $('#tab-content .tab-pane').each(function () {
+                    $(this).attr("class", "tab-pane");
+                });
+                $('#content' + id).attr("class", "tab-pane active");
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>

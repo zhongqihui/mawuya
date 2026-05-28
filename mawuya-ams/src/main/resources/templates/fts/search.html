@@ -1,0 +1,62 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion">
+<head>
+    <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
+    <title>搜索结果 - Zqh Blog</title>
+</head>
+<body lang="zh-Hans">
+<div class="container one-collumn sidebar-position-left page-home">
+    <div class="headband"></div>
+    <th:block th:replace="~{fts/common/header :: header}"></th:block>
+
+    <main id="main" class="main">
+        <div class="main-inner">
+            <div class="content-wrap">
+                <div id="content" class="content">
+                    <section id="posts" class="posts-expand">
+                        <div class="search-meta" th:if="${keyword != null and not #strings.isEmpty(keyword)}">
+                            搜索 <strong th:text="|“${keyword}”|"></strong>
+                            的结果，共 <strong th:text="${page != null ? #lists.size(page.lists) : 0}"></strong> 条（本页）
+                        </div>
+
+                        <div class="search-empty" th:if="${keyword == null or #strings.isEmpty(keyword)}">
+                            <i class="fa fa-search"></i>
+                            请在顶部搜索框输入关键字
+                        </div>
+
+                        <div class="search-empty"
+                             th:if="${keyword != null and not #strings.isEmpty(keyword) and (page == null or #lists.isEmpty(page.lists))}">
+                            <i class="fa fa-frown-o"></i>
+                            没有找到包含 <strong th:text="|“${keyword}”|"></strong> 的文章
+                        </div>
+
+                        <th:block th:if="${page != null and not #lists.isEmpty(page.lists)}">
+                            <article class="search-result-item" th:each="article : ${page.lists}">
+                                <div class="title">
+                                    <a th:href="@{|/${article.sn}|}" th:text="${article.articleTitle}"></a>
+                                </div>
+                                <div class="summary" th:text="${article.articleSummary}"></div>
+                                <div class="meta">
+                                    <i class="fa fa-calendar-o"></i>
+                                    <span th:if="${article.insertTime != null and #strings.length(article.insertTime) gt 10}"
+                                          th:text="${#strings.substring(article.insertTime, 0, 10)}"></span>
+                                    &nbsp;|&nbsp;
+                                    <i class="fa fa-eye"></i>
+                                    <span th:text="|${article.readNum} 阅读|"></span>
+                                </div>
+                            </article>
+
+                            <th:block th:replace="~{fts/common/page :: page}"></th:block>
+                        </th:block>
+                    </section>
+                </div>
+            </div>
+
+            <th:block th:replace="~{fts/common/sidebar :: sidebar}"></th:block>
+        </div>
+    </main>
+
+    <th:block th:replace="~{fts/common/footer :: footer}"></th:block>
+</div>
+</body>
+</html>

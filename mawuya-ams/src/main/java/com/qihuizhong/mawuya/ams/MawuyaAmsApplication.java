@@ -1,13 +1,26 @@
+/*
+ * www.qihuizhong.com Inc.
+ * Copyright (c) 2026 钟启辉. All Rights Reserved.
+ */
 package com.qihuizhong.mawuya.ams;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+/**
+ * ams（前台）启动类
+ *
+ * @author zqh
+ */
+@SpringBootApplication(scanBasePackages = {
+        "com.qihuizhong.mawuya.core",
+        "com.qihuizhong.mawuya.ams"
+})
+@MapperScan("com.qihuizhong.mawuya.core.mapper")
 public class MawuyaAmsApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(MawuyaAmsApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(MawuyaAmsApplication.class, args);
+    }
 }

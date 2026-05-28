@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<head>
+    <meta charset="utf-8"/>
+    <title>404</title>
+    <link rel="stylesheet" th:href="@{/statics/plugins/bootstrap/dist/css/bootstrap.css}"/>
+    <link rel="stylesheet" th:href="@{/statics/css/style.css}"/>
+</head>
+<body class="texture">
+<div id="cl-wrapper" class="error-container">
+    <div class="page-error">
+        <h1 class="number text-center">404</h1>
+        <h2 class="description text-center">Sorry, this page doesn't exists!</h2>
+        <h3 class="text-center">Would you like to go <a th:href="@{/bms/login.do}">login</a>?</h3>
+    </div>
+</div>
+</body>
+</html>

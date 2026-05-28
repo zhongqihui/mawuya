@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" style="background:#ffffff !important;">
+<head>
+    <meta charset="utf-8"/>
+    <title>图片库</title>
+</head>
+<body>
+<div class="page-head">
+    <ol class="breadcrumb">
+        <li>系统管理</li>
+        <li class="active">图片库</li>
+    </ol>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="block-flat">
+            <div class="content">
+                <!-- 上传区 -->
+                <form id="img-lib-form" enctype="multipart/form-data" class="img-upload-zone" style="margin-bottom: 18px;">
+                    <label for="img-lib-input" class="img-upload-trigger">
+                        <i class="fa fa-cloud-upload"></i>
+                        <span class="hint">点击或将图片拖到此处上传</span>
+                        <span class="meta">支持 jpg/png/gif/bmp/webp，单文件 ≤10MB，可多选</span>
+                    </label>
+                    <input id="img-lib-input" type="file" name="file" accept="image/*" multiple style="display:none"/>
+                    <div class="img-preview-wrap" style="display:none;">
+                        <img class="img-preview" alt="预览" />
+                        <div class="img-preview-meta"></div>
+                        <button type="button" class="btn btn-default btn-xs img-preview-clear">
+                            <i class="fa fa-times"></i> 清除
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 上传进度 -->
+                <div id="img-lib-progress" style="display:none; margin-bottom:14px;">
+                    <div class="progress" style="margin-bottom:0;">
+                        <div class="progress-bar progress-bar-info progress-bar-striped active"
+                             role="progressbar" style="width:0%">
+                            <span class="text">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图库列表 -->
+                <div id="img-lib-grid" class="img-lib-grid"></div>
+                <div id="img-lib-empty" style="display:none; padding:30px 0; color:#999; text-align:center;">
+                    <i class="fa fa-image" style="font-size:32px; margin-bottom:8px; display:block;"></i>
+                    暂无图片，点击上方区域上传
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    /*]]>*/
+
+    $(function () {
+        loadGrid();
+        bindUpload();
+    });
+
+    function bindUpload() {
+        var $form = $('#img-lib-form');
+        var $input = $('#img-lib-input');
+        var $zone = $form;
+        var $trigger = $form.find('.img-upload-trigger');
+        var $previewWrap = $form.find('.img-preview-wrap');
+        var $img = $form.find('.img-preview');
+        var $meta = $form.find('.img-preview-meta');
+
+        function showPreview(file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $img.attr('src', e.target.result);
+                $meta.text(file.name + ' · ' + (file.size / 1024).toFixed(1) + ' KB');
+                $previewWrap.show();
+                $trigger.hide();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function uploadFiles(files) {
+            if (!files || !files.length) return;
+            // 多选：逐个上传
+            var total = files.length;
+            var done = 0, failed = 0;
+            $('#img-lib-progress').show();
+            updateProgress(0);
+
+            Array.prototype.slice.call(files).forEach(function (f, idx) {
+                if (idx === 0) showPreview(f);
+                if (!/^image\//.test(f.type)) {
+                    failed++; afterOne(); return;
+                }
+                if (f.size > 10 * 1024 * 1024) {
+                    layer.msg(f.name + ' 超过 10MB，已跳过', {icon: 7});
+                    failed++; afterOne(); return;
+                }
+                var fd = new FormData();
+                fd.append('file', f);
+                $.ajax({
+                    type: 'post',
+                    url: _u('/bms/image/upload.do'),
+                    data: fd,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (res && res.success === 1) done++;
+                        else { failed++; if (res && res.message) layer.msg(res.message, {icon: 2}); }
+                        afterOne();
+                    },
+                    error: function () { failed++; afterOne(); }
+                });
+            });
+
+            function afterOne() {
+                var p = Math.round(((done + failed) / total) * 100);
+                updateProgress(p);
+                if (done + failed >= total) {
+                    setTimeout(function () {
+                        $('#img-lib-progress').hide();
+                        layer.msg('上传完成：成功 ' + done + ' 失败 ' + failed,
+                                  {icon: failed > 0 ? 2 : 1, time: 1500});
+                        loadGrid();
+                        $input.val('');
+                        $previewWrap.hide();
+                        $trigger.show();
+                    }, 350);
+                }
+            }
+        }
+
+        function updateProgress(p) {
+            var $bar = $('#img-lib-progress .progress-bar');
+            $bar.css('width', p + '%').find('.text').text(p + '%');
+        }
+
+        $input.off('change').on('change', function () {
+            if (this.files && this.files.length) uploadFiles(this.files);
+        });
+
+        $zone.off('dragover dragleave drop')
+            .on('dragover', function (e) { e.preventDefault(); $(this).addClass('drag-over'); })
+            .on('dragleave', function (e) { e.preventDefault(); $(this).removeClass('drag-over'); })
+            .on('drop', function (e) {
+                e.preventDefault();
+                $(this).removeClass('drag-over');
+                var dt = e.originalEvent.dataTransfer;
+                if (dt && dt.files && dt.files.length) uploadFiles(dt.files);
+            });
+
+        $form.find('.img-preview-clear').off('click').on('click', function (e) {
+            e.preventDefault();
+            $input.val('');
+            $img.attr('src', '');
+            $previewWrap.hide();
+            $trigger.show();
+        });
+    }
+
+    function loadGrid() {
+        $.ajax({
+            type: 'get',
+            url: _u('/bms/image/list.do'),
+            cache: false,
+            success: function (res) {
+                var $grid = $('#img-lib-grid').empty();
+                if (!res || !res.list || res.list.length === 0) {
+                    $('#img-lib-empty').show();
+                    return;
+                }
+                $('#img-lib-empty').hide();
+                res.list.forEach(function (it) {
+                    var sizeKb = (it.size / 1024).toFixed(1) + ' KB';
+                    var card =
+                        '<div class="img-lib-card" data-sn="' + it.sn + '" data-url="' + it.url + '">' +
+                        '  <div class="img-lib-thumb" style="background-image:url(\'' + it.url + '\');"></div>' +
+                        '  <div class="img-lib-meta">' +
+                        '    <span class="name" title="' + it.name + '">' + it.name + '</span>' +
+                        '    <span class="size">' + sizeKb + '</span>' +
+                        '  </div>' +
+                        '  <div class="img-lib-actions">' +
+                        '    <button type="button" class="btn btn-xs btn-default" onclick="copyUrl(\'' + it.url + '\')">' +
+                        '      <i class="fa fa-link"></i> 复制 URL</button>' +
+                        '    <button type="button" class="btn btn-xs btn-default" onclick="previewLargeImg(\'' + it.url + '\')">' +
+                        '      <i class="fa fa-search-plus"></i></button>' +
+                        '    <button type="button" class="btn btn-xs btn-default" onclick="deleteImg(' + it.sn + ')">' +
+                        '      <i class="fa fa-trash-o"></i></button>' +
+                        '  </div>' +
+                        '</div>';
+                    $grid.append(card);
+                });
+            }
+        });
+    }
+
+    function previewLargeImg(url) {
+        layer.open({
+            type: 1, title: '预览', skin: 'layui-layer-lan', area: ['auto', 'auto'],
+            content: '<div style="padding:12px;text-align:center;">' +
+                     '<img src="' + url + '" style="max-width:80vw;max-height:75vh;display:block;border-radius:4px;"/></div>'
+        });
+    }
+
+    function copyUrl(url) {
+        // 优先 clipboard API
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function () {
+                layer.msg('已复制 URL', {icon: 1, time: 1200});
+            }, function () { fallbackCopy(url); });
+        } else {
+            fallbackCopy(url);
+        }
+    }
+    function fallbackCopy(url) {
+        var ta = document.createElement('textarea');
+        ta.value = url; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); layer.msg('已复制 URL', {icon: 1, time: 1200}); }
+        catch (e) { layer.msg('复制失败，URL：' + url, {time: 3000}); }
+        document.body.removeChild(ta);
+    }
+
+    function deleteImg(sn) {
+        layer.confirm('确认删除该图片？', {btn: ['是', '否'], skin: 'layui-layer-lan'}, function (idx) {
+            $.ajax({
+                type: 'post',
+                url: _u('/bms/image/delete.do'),
+                data: {sn: sn},
+                success: function (res) {
+                    layer.close(idx);
+                    if (res && res.success === 1) {
+                        layer.msg('已删除', {icon: 1, time: 800});
+                        loadGrid();
+                    } else {
+                        layer.alert(res && res.message ? res.message : '删除失败', {icon: 2});
+                    }
+                }
+            });
+        });
+    }
+</script>
+
+</body>
+</html>

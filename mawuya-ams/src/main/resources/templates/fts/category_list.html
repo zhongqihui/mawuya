@@ -1,0 +1,42 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion">
+<head>
+    <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
+</head>
+<body lang="zh-Hans">
+<div class="container one-collumn sidebar-position-left page-home">
+    <div class="headband"></div>
+    <th:block th:replace="~{fts/common/header :: header}"></th:block>
+
+    <main id="main" class="main">
+        <div class="main-inner">
+            <div class="content-wrap">
+                <div id="content" class="content">
+                    <div id="posts" class="posts-expand">
+                        <div class="category-all-page">
+                            <div class="category-all-title"
+                                 th:text="|目前共计 ${#lists.size(categoryList)} 个分类|"></div>
+
+                            <div class="category-all">
+                                <ul class="category-list">
+                                    <li class="category-list-item" th:each="item : ${categoryList}">
+                                        <a class="category-list-link"
+                                           th:href="@{|/categories/${item.sn}|}"
+                                           th:text="${item.categoryName}"></a>
+                                        <span class="category-list-count" th:text="${item.artSize}"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <th:block th:replace="~{fts/common/sidebar :: sidebar}"></th:block>
+        </div>
+    </main>
+
+    <th:block th:replace="~{fts/common/footer :: footer}"></th:block>
+</div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="page">
+    <nav class="pagination" th:if="${page.pageSize > 1}">
+        <a th:if="${page.curr != 1}" class="extend prev" title="上一页"
+           th:href="|javascript:goURL('${page.curr - 1}')|"><i class="fa fa-angle-left"></i></a>
+
+        <th:block th:each="line : ${page.pageLine}">
+            <a th:if="${line != #strings.toString(page.curr)} and ${line != '...'}"
+               class="page-number" th:href="|javascript:goURL('${line}')|"
+               th:text="${line}"></a>
+            <span th:if="${line == #strings.toString(page.curr)}"
+                  class="page-number current"
+                  th:href="|javascript:goURL('${line}')|"
+                  th:text="${line}"></span>
+            <span th:if="${line == '...'}" class="space">&hellip;</span>
+        </th:block>
+
+        <a th:if="${page.curr != page.pageSize}" class="extend next" title="下一页"
+           th:href="|javascript:goURL('${page.curr + 1}')|"><i class="fa fa-angle-right"></i></a>
+    </nav>
+
+    <script type="text/javascript" th:src="@{/statics/plugins/jquery.js}"></script>
+    <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+        var __pageUrl = /*[[${page.url}]]*/ 'index';
+        var __ctxPath = /*[[@{/}]]*/ '/';
+        function goURL(curr) {
+            $('<form action="' + __ctxPath + __pageUrl + '" method="post" style="display:none">' +
+                '<input type="hidden" name="currNum" value="' + curr + '"/></form>')
+                .appendTo('body')
+                .submit();
+        }
+        /*]]>*/
+    </script>
+</th:block>
+</body>
+</html>

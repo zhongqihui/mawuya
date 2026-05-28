@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion">
+<head>
+    <title th:text="|${article.articleTitle} - Zqh Blog|">Zqh's Blog</title>
+    <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
+</head>
+<body lang="zh-Hans">
+<div class="container one-collumn sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+    <th:block th:replace="~{fts/common/header :: header}"></th:block>
+
+    <main id="main" class="main">
+        <div class="main-inner">
+            <div class="content-wrap">
+                <div id="content" class="content">
+                    <div id="posts" class="posts-expand">
+                        <article class="post post-type-normal">
+                            <header class="post-header">
+                                <h1 class="post-title" th:text="${article.articleTitle}"></h1>
+                                <div class="post-meta">
+                                    <span class="post-time">
+                                        <span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span>
+                                        <span class="post-meta-item-text">发表于 </span>
+                                        <span th:if="${article.insertTime != null and #strings.length(article.insertTime) gt 10}"
+                                              th:text="${#strings.substring(article.insertTime, 0, 10)}"></span>
+                                    </span>
+
+                                    <span class="post-category" th:if="${category != null}">&nbsp; | &nbsp;
+                                        <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i></span>
+                                        <span class="post-meta-item-text">分类于</span>
+                                        <span><a th:href="@{|/categories/${category.sn}|}">
+                                            <span th:text="${category.categoryName}"></span>
+                                        </a></span>
+                                    </span>
+
+                                    <span class="post-category">&nbsp; | &nbsp;
+                                        <a href="#comments"><span th:text="|${article.reviewNum} 条评论|"></span></a>
+                                    </span>
+
+                                    <span>&nbsp; | &nbsp;
+                                        <span class="post-meta-item-icon"><i class="fa fa-eye"></i></span>
+                                        <span th:text="|${article.readNum} 阅读|"></span>
+                                    </span>
+                                </div>
+
+                                <!-- 文章标签徽标 -->
+                                <div class="article-tags" th:if="${tags != null and not #lists.isEmpty(tags)}">
+                                    <a th:each="t : ${tags}" class="article-tag"
+                                       th:href="@{|/tags/${t.sn}|}"
+                                       th:style="|background:${t.tagColor != null ? t.tagColor : '#999'};|"
+                                       th:text="|# ${t.tagName}|"></a>
+                                </div>
+                            </header>
+
+                            <div class="post-body">
+                                <div id="articleContentDiv">
+                                    <textarea style="display: none" th:text="${article.articleContent}"></textarea>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="copyright-txt">
+                                    <a href="#"><i class="fa fa-copyright"></i>著作权归作者所有</a>
+                                </div>
+                            </div>
+
+                            <footer class="post-footer">
+                                <div class="post-tags" th:if="${category != null}">
+                                    <a th:href="@{|/categories/${category.sn}|}" rel="tag"
+                                       th:text="|#${category.categoryName}|"></a>
+                                </div>
+
+                                <div class="post-nav">
+                                    <div class="post-nav-next post-nav-item">
+                                        <a th:if="${prev != null}" th:href="@{|/${prev.sn}|}">
+                                            <i class="fa fa-chevron-left"></i>
+                                            <span th:text="${prev.articleTitle}"></span>
+                                        </a>
+                                    </div>
+                                    <div class="post-nav-prev post-nav-item">
+                                        <a th:if="${next != null}" th:href="@{|/${next.sn}|}">
+                                            <i class="fa fa-chevron-right"></i>
+                                            <span th:text="${next.articleTitle}"></span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </footer>
+                        </article>
+                    </div>
+
+                    <!-- 评论模块 -->
+                    <section class="comment-section" id="comments">
+                        <h3>
+                            <i class="fa fa-comments-o"></i>
+                            评论 <span th:text="|(${reviews != null ? #lists.size(reviews) : 0})|"></span>
+                        </h3>
+
+                        <ul class="comment-list" th:if="${reviews != null and not #lists.isEmpty(reviews)}">
+                            <li class="comment-item" th:each="r : ${reviews}">
+                                <div class="comment-head">
+                                    <i class="fa fa-user-o"></i>
+                                    <span class="author" th:text="${r.reviewName}">name</span>
+                                    <span class="date"
+                                          th:if="${r.reviewDate != null and #strings.length(r.reviewDate) gt 10}"
+                                          th:text="${#strings.substring(r.reviewDate, 0, 16)}"></span>
+                                </div>
+                                <div class="comment-body" th:text="${r.reviewContent}">content</div>
+                            </li>
+                        </ul>
+                        <div class="comment-empty" th:if="${reviews == null or #lists.isEmpty(reviews)}">
+                            <i class="fa fa-comment-o"></i> 暂无评论，快来抢沙发！
+                        </div>
+
+                        <div class="comment-form-box">
+                            <h4>留下你的足迹 ✍️</h4>
+                            <form th:action="@{/comments/submit}" method="post">
+                                <input type="hidden" name="articleSn" th:value="${article.sn}"/>
+                                <div class="form-row">
+                                    <input type="text" name="name" placeholder="昵称（必填，最多 40 字符）"
+                                           required maxlength="40"/>
+                                </div>
+                                <div class="form-row">
+                                    <textarea name="content" rows="4" required maxlength="500"
+                                              placeholder="说点什么吧... (最多 500 字)"></textarea>
+                                </div>
+                                <button type="submit" class="submit-btn">
+                                    <i class="fa fa-paper-plane"></i> 发表评论
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <th:block th:replace="~{fts/common/sidebar :: sidebar}"></th:block>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{fts/common/footer :: footer}"></th:block>
+
+<script type="text/javascript" th:src="@{/statics/plugins/editor.md/lib/marked.min.js}"></script>
+<script type="text/javascript" th:src="@{/statics/plugins/editor.md/lib/prettify.min.js}"></script>
+<script type="text/javascript" th:src="@{/statics/plugins/editor.md/editormd.min.js}"></script>
+<script type="text/javascript">
+    $(function () {
+        editormd.markdownToHTML("articleContentDiv", {
+            htmlDecode: "style,script,iframe",
+            emoji: true,
+            taskList: true,
+            tex: true,
+            codeFold: true
+        });
+
+        /* ====== 图片点击放大（轻量级 lightbox） ====== */
+        // editormd 渲染是异步的，等渲染完成再绑定
+        function bindLightbox() {
+            $('#articleContentDiv img:not(.no-zoom)').off('click.lb').on('click.lb', function (e) {
+                var src = $(this).attr('src');
+                if (!src) return;
+                var $lb = $('<div class="image-lightbox">' +
+                            '  <span class="lightbox-close">&times;</span>' +
+                            '  <img src="' + src + '" alt="" />' +
+                            '</div>');
+                $lb.on('click', function () { $(this).remove(); });
+                $('body').append($lb);
+                e.stopPropagation();
+            });
+        }
+        // 渲染完成后再绑定（500ms 内大概率完成；保险起见用 setTimeout）
+        setTimeout(bindLightbox, 600);
+        setTimeout(bindLightbox, 1500);
+    });
+</script>
+</body>
+</html>

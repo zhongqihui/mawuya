@@ -1,0 +1,99 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion">
+<head>
+    <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
+</head>
+<body lang="zh-Hans">
+<div class="container one-collumn sidebar-position-left page-home">
+    <div class="headband"></div>
+    <th:block th:replace="~{fts/common/header :: header}"></th:block>
+
+    <main id="main" class="main">
+        <div class="main-inner">
+            <div class="content-wrap">
+                <div id="content" class="content">
+                    <section id="posts" class="posts-expand">
+                        <article class="post post-type-normal" th:each="article : ${page.lists}">
+                            <header class="post-header">
+                                <h1 class="post-title">
+                                    <a class="post-title-link"
+                                       th:href="@{|/${article.sn}|}"
+                                       th:text="${article.articleTitle}"></a>
+                                </h1>
+
+                                <div class="post-meta">
+                                    <span class="post-time">
+                                        <span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span>
+                                        <span class="post-meta-item-text">发表于</span>
+                                        <span th:if="${article.insertTime != null and #strings.length(article.insertTime) gt 10}"
+                                              th:text="${#strings.substring(article.insertTime, 0, 10)}"></span>
+                                    </span>
+
+                                    <span class="post-category">&nbsp; | &nbsp;
+                                        <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i></span>
+                                        <span class="post-meta-item-text">分类于</span>
+                                        <span>
+                                          <a th:href="@{|/categories/${article.categorySn}|}">
+                                              <span th:each="c : ${categoryList}">
+                                                  <span th:if="${article.categorySn == c.sn}"
+                                                        th:text="${c.categoryName}"></span>
+                                              </span>
+                                          </a>
+                                        </span>
+                                    </span>
+
+                                    <span class="post-category">&nbsp; | &nbsp;
+                                        <span class="post-meta-item-icon"><i class="fa fa-comments-o"></i></span>
+                                        <span class="post-meta-item-text"
+                                              th:text="|${article.reviewNum} 评论|"></span>
+                                    </span>
+
+                                    <span>&nbsp; | &nbsp;
+                                       <span class="post-meta-item-icon"><i class="fa fa-eye"></i></span>
+                                       <span class="post-meta-item-text"
+                                             th:text="|${article.readNum} 阅读|"></span>
+                                    </span>
+                                </div>
+                            </header>
+
+                            <div class="post-body">
+                                <p th:text="${article.articleSummary}"></p>
+                                <!--
+                                  首页文章卡片预览图：统一 16:9 尺寸，避免不同尺寸图片让卡片高度参差。
+                                  类 .post-thumb-fixed 在 blog-extra.css 中用 aspect-ratio + object-fit:cover
+                                  强制固定盒子 + 裁剪填充。
+                                -->
+                                <div class="post-thumb-wrap"
+                                     th:if="${article.pictureUrl != null and !#strings.isEmpty(article.pictureUrl)}">
+                                    <a th:href="@{|/${article.sn}|}">
+                                        <img class="post-thumb-fixed"
+                                             th:with="firstImg=${#strings.contains(article.pictureUrl, ';') ? #strings.substringBefore(article.pictureUrl, ';') : article.pictureUrl}"
+                                             th:src="${firstImg}"
+                                             th:alt="${article.articleTitle}"
+                                             loading="lazy"/>
+                                    </a>
+                                </div>
+                                <div class="post-more-link text-center">
+                                    <a class="btn" th:href="@{|/${article.sn}|}" rel="contents">
+                                        阅读全文 &raquo;
+                                    </a>
+                                </div>
+                            </div>
+                            <footer class="post-footer">
+                                <div class="post-eof"></div>
+                            </footer>
+                        </article>
+                    </section>
+
+                    <th:block th:replace="~{fts/common/page :: page}"></th:block>
+                </div>
+            </div>
+
+            <th:block th:replace="~{fts/common/sidebar :: sidebar}"></th:block>
+        </div>
+    </main>
+
+    <th:block th:replace="~{fts/common/footer :: footer}"></th:block>
+</div>
+</body>
+</html>

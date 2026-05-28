@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" style="background: #ffffff !important;">
+<head>
+    <meta charset="utf-8"/>
+    <title>layui</title>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+    <link rel="stylesheet" th:href="@{/statics/plugins/editor.md/css/editormd.css}"/>
+    <link rel="stylesheet" th:href="@{/statics/plugins/jquery.validationEngine/validationEngine.jquery.css}"/>
+</head>
+
+<body>
+<div class="page-head">
+    <ol class="breadcrumb">
+        <li>博客管理</li>
+        <li>博客列表</li>
+        <li class="active">发布博客</li>
+        <span style="float: right;"><a onclick="retArticleList()">&lt;返回</a></span>
+    </ol>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="block-flat">
+            <div class="content">
+                <form class="form-horizontal group-border-dashed" id="add-article-form" style="border-radius: 0px;">
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">博客标题</label>
+                        <div class="col-sm-6">
+                            <input type="text" class="form-control validate[required]" name="articleTitle"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">分类于</label>
+                        <div class="col-sm-6">
+                            <select class="select2" name="categorySn">
+                                <option value="0">暂不分类</option>
+                                <option th:each="list : ${categoryList}"
+                                        th:value="${list.sn}"
+                                        th:text="${list.categoryName}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">概要</label>
+                        <div class="col-sm-8">
+                            <textarea class="form-control validate[required]" name="articleSummary"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">博客内容</label>
+                        <div class="col-sm-11" id="add-article-editormd">
+                            <textarea class="editormd-markdown-textarea" name="test-editormd-markdown-doc" id="editormd"></textarea>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="form-group">
+                    <label class="col-sm-1 control-label"></label>
+                    <button type="button" class="btn btn-primary" id="publish_blog">立即发布</button>
+                    <button type="reset" class="btn btn-default" onclick="resetBlog()">重置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" th:src="@{/statics/plugins/editor.md/editormd.min.js}"></script>
+<script type="text/javascript" th:src="@{/statics/plugins/jquery.validationEngine/jquery.validationEngine.min.js}"></script>
+<script type="text/javascript" th:src="@{/statics/plugins/jquery.validationEngine/jquery.validationEngine-zh_CN.js}"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    var __libPath = /*[[@{/statics/plugins/editor.md/lib/}]]*/ '/statics/plugins/editor.md/lib/';
+    var __imgUploadUrl = /*[[@{/bms/article/imgUpload.do}]]*/ '/bms/article/imgUpload.do';
+    /*]]>*/
+
+    $(function () {
+        $("#add-article-form").validationEngine("attach", {scroll: false});
+        // 注意：不要在此处再次调用 App.init()，否则 .cl-vnavigation .parent>a
+        // 的 delegate 事件会被重复绑定，造成"展开后立即收回"。这里只做局部初始化。
+        if ($.fn.select2) { $('#add-article-form .select2').select2({width: '100%'}); }
+
+        var contentEditor = editormd("add-article-editormd", {
+            width: false,
+            height: 640,
+            codeFold: true,
+            syncScrolling: "single",
+            path: __libPath,
+            imageUpload: true,
+            imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+            imageUploadURL: __imgUploadUrl,
+            emoji: true,
+            taskList: true,
+            tocm: true,
+            tex: true,
+            flowChart: true,
+            sequenceDiagram: true
+        });
+
+        $("#publish_blog").click(function () {
+            var flag = $("#add-article-form").validationEngine("validate");
+            if (flag === false) return;
+            var content = contentEditor.getMarkdown();
+            var title = $('#add-article-form').find('input[name="articleTitle"]').val();
+            var categorySn = $('#add-article-form').find('select[name="categorySn"]').val();
+            var summary = $('#add-article-form').find('textarea[name="articleSummary"]').val();
+
+            $.ajax({
+                type: "post",
+                url: _u("/bms/article/addSubmit.do"),
+                data: {
+                    "articleTitle": title,
+                    "categorySn": categorySn,
+                    "articleSummary": summary,
+                    "articleContent": content
+                },
+                cache: false,
+                success: function (data) {
+                    if (data === "success") {
+                        layer.confirm('发布成功！赶快去看看吧', {
+                            btn: ['去看看', '懒，不去'],
+                            skin: 'layui-layer-lan',
+                            anim: 4,
+                            icon: 1
+                        }, function (index) {
+                            retArticleList();
+                            layer.close(index);
+                            window.open('http://localhost:8080/index');
+                        }, function (index) {
+                            retArticleList();
+                            layer.close(index);
+                        });
+                    } else {
+                        layer.alert('发布失败', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                    }
+                }
+            });
+        });
+    });
+
+    function resetBlog() {
+        $('.fa-eraser').trigger('click');
+    }
+
+    function retArticleList() {
+        $('#content3').load(_u('/bms/article/list.do'));
+    }
+</script>
+
+</body>
+</html>

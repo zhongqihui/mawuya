@@ -6,14 +6,15 @@
     <groupId>com.qihuizhong.mawuya</groupId>
     <artifactId>mawuya-all</artifactId>
     <version>1.0.0</version>
+    <packaging>pom</packaging>
 
     <name>mawuya ${project.version}</name>
     <description>Top Mawuya project pom.xml file</description>
 
     <!--子模块-->
     <modules>
-        <module>mawuya-core</module>
         <module>mawuya-common</module>
+        <module>mawuya-core</module>
         <module>mawuya-ams</module>
         <module>mawuya-bms</module>
     </modules>
@@ -21,7 +22,13 @@
     <!--统一定义属性及版本号-->
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
         <spring-boot-dependencies.version>2.2.5.RELEASE</spring-boot-dependencies.version>
+        <mybatis-spring-boot.version>2.1.3</mybatis-spring-boot.version>
+        <druid.version>1.1.22</druid.version>
+        <mysql-connector.version>8.0.28</mysql-connector.version>
+        <okhttp.version>3.14.9</okhttp.version>
+        <commons-lang3.version>3.9</commons-lang3.version>
     </properties>
 
     <!--dependencyManagement 只是声明依赖，子项目并不会默认依赖-->
@@ -37,15 +44,50 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- MyBatis -->
+            <dependency>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybatis-spring-boot.version}</version>
+            </dependency>
+
+            <!-- Druid -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+
+            <!-- MySQL -->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql-connector.version}</version>
+            </dependency>
+
+            <!-- OkHttp -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+
+            <!-- commons-lang3 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+
             <!-- Internal libs -->
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mawuya-core</artifactId>
+                <artifactId>mawuya-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mawuya-common</artifactId>
+                <artifactId>mawuya-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -58,28 +100,48 @@
                 <artifactId>mawuya-ams</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+
         </dependencies>
     </dependencyManagement>
 
 
     <build>
-        <resources>
-            <!--   配置文件默认的targetPath就是target/classes -->
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot-dependencies.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.22.2</version>
             </plugin>
         </plugins>
     </build>

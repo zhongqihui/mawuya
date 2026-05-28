@@ -1,0 +1,50 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion">
+<head>
+    <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
+</head>
+<body lang="zh-Hans">
+<div class="container one-collumn sidebar-position-left page-home">
+    <div class="headband"></div>
+    <th:block th:replace="~{fts/common/header :: header}"></th:block>
+
+    <main id="main" class="main">
+        <div class="main-inner">
+            <div class="content-wrap">
+                <div id="content" class="content">
+                    <section id="posts" class="posts-collapse" style="border: 4px #f5f5f5;border-left-style: solid;">
+                        <span class="archive-move-on"></span>
+                        <span class="archive-page-counter" th:text="|好! 目前共计 ${count} 篇日志。 继续努力。|"></span>
+
+                        <th:block th:each="entry : ${map}">
+                            <div class="collection-title">
+                                <h2 th:text="${entry.key}"></h2>
+                            </div>
+
+                            <article class="post post-type-normal" th:each="v : ${entry.value}">
+                                <header class="post-header">
+                                    <h1 class="post-title">
+                                        <a class="post-title-link" th:href="@{|/${v.sn}|}">
+                                            <span th:text="${v.articleTitle}"></span>
+                                        </a>
+                                    </h1>
+
+                                    <div class="post-meta">
+                                        <span th:if="${v.insertTime != null and #strings.length(v.insertTime) gt 10}"
+                                              th:text="${#strings.substring(v.insertTime, 5, 10)}"></span>
+                                    </div>
+                                </header>
+                            </article>
+                        </th:block>
+                    </section>
+                </div>
+            </div>
+
+            <th:block th:replace="~{fts/common/sidebar :: sidebar}"></th:block>
+        </div>
+    </main>
+
+    <th:block th:replace="~{fts/common/footer :: footer}"></th:block>
+</div>
+</body>
+</html>

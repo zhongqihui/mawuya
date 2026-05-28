@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="css-head">
+    <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta http-equiv="Cache-Control" content="no-transform"/>
+    <meta name="author" content="Zqh"/>
+    <meta name="keywords" content="Java, Spring Boot, MySQL, 博客"/>
+    <meta name="description" content="Mawuya Blog - 一个分享技术与生活的小站"/>
+    <title>Zqh's Blog</title>
+
+    <link rel="shortcut icon" th:href="@{/statics/images/myfavicon.ico}"/>
+    <link rel="stylesheet" type="text/css"
+          th:href="@{/statics/plugins/vendors/fancybox/source/jquery.fancybox8cbb.css(v=2.1.5)}"/>
+    <link rel="stylesheet" type="text/css"
+          th:href="@{/statics/plugins/vendors/font-awesome/css/font-awesome.min93e3.css(v=4.4.0)}"/>
+    <link rel="stylesheet" type="text/css"
+          th:href="@{/statics/css/main5174.css(v=0.5.0)}"/>
+    <link rel="stylesheet" th:href="@{/statics/plugins/editor.md/css/editormd.css}"/>
+    <link rel="stylesheet" th:href="@{/statics/plugins/editor.md/css/editormd.preview.min.css}"/>
+    <!-- 站点定制样式：响应式增强 + 新组件 -->
+    <link rel="stylesheet" th:href="@{/statics/css/blog-extra.css(v=1.0)}"/>
+
+    <script type="text/javascript" id="hexo.configuration">
+        var NexT = window.NexT || {};
+        var CONFIG = {
+            scheme: 'Mist',
+            sidebar: {"position": "left", "display": "post"},
+            fancybox: true,
+            motion: true
+        };
+    </script>
+</th:block>
+</body>
+</html>
