@@ -5,20 +5,23 @@
 package com.qihuizhong.mawuya.bms.controller;
 
 import com.qihuizhong.mawuya.core.entity.Category;
+import com.qihuizhong.mawuya.core.exception.BusinessException;
 import com.qihuizhong.mawuya.core.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.HashMap;
 import java.util.List;
 
 /**
- * 后台分类管理 controller
+ * 后台分类管理视图 controller。
+ *
+ * <p>JSON 操作（增删改）已迁移至
+ * {@link com.qihuizhong.mawuya.bms.controller.api.CategoryApiController}。</p>
  *
  * @author zqh
  */
@@ -41,14 +44,8 @@ public class CategoryController extends BaseController {
         return "bms/category/mod_category";
     }
 
-    @PostMapping("addSubmit.do")
-    @ResponseBody
-    public String addSubmit(Category category) {
-        return categoryService.insert(category) <= 0 ? "fail" : "success";
-    }
-
-    @RequestMapping("toUpdate.do")
-    public String toUpdate(String sn, Model model) {
+    @GetMapping("toUpdate.do")
+    public String toUpdate(@RequestParam("sn") String sn, Model model) {
         int id;
         try {
             id = Integer.parseInt(sn);
@@ -57,19 +54,10 @@ public class CategoryController extends BaseController {
         }
 
         Category category = categoryService.selectById(id);
+        if (category == null) {
+            throw new BusinessException("分类不存在");
+        }
         model.addAttribute("category", category);
         return "bms/category/mod_category";
-    }
-
-    @PostMapping("updateSubmit.do")
-    @ResponseBody
-    public String updateSubmit(Category category) {
-        return categoryService.update(category) <= 0 ? "fail" : "success";
-    }
-
-    @RequestMapping("delSubmit.do")
-    @ResponseBody
-    public String delSubmit(String sn) {
-        return categoryService.delCategory(sn);
     }
 }

@@ -18,6 +18,47 @@
     <script type="text/javascript" th:src="@{/statics/plugins/jquery.select2/select2.min.js}"></script>
     <script type="text/javascript" th:src="@{/statics/plugins/layer/layer.js}"></script>
 
+    <!--
+      ===== BMS 统一 API 客户端 =====
+      封装 BaseResponse 协议（{code, message, data}）的判定逻辑，
+      所有页面通过 Api.isOk(res) 判断成功，Api.data(res) 拿数据，Api.msg(res) 拿提示。
+      迁移完成后整个 BMS 前端只走 /bms/api/** 路径。
+    -->
+    <script type="text/javascript">
+        window.Api = (function () {
+            var SUCCESS = '000000';
+            return {
+                /** 判定 BaseResponse 是否成功 */
+                isOk: function (res) {
+                    return !!res && res.code === SUCCESS;
+                },
+                /** 取 data 字段（可能为 null/undefined） */
+                data: function (res) {
+                    return res && res.data;
+                },
+                /** 取人类可读 message；优先 res.message，其次 fallback */
+                msg: function (res, fallback) {
+                    if (res && typeof res.message === 'string' && res.message.length > 0) {
+                        return res.message;
+                    }
+                    return fallback || '';
+                },
+                /** 全局 401 兜底：登录态失效统一跳登录页（避免每个页面写） */
+                install: function () {
+                    if (!window.jQuery) return;
+                    $(document).ajaxError(function (event, jqXHR) {
+                        if (jqXHR && jqXHR.status === 401) {
+                            // 后端 entryPoint 已返回 BaseResponse(code=001401)
+                            // 仅 /bms/api/** 会触发；视图请求由 Spring Security 直接 302 到登录页
+                            window.location.href = '/bms/login.do?expired=1';
+                        }
+                    });
+                }
+            };
+        })();
+        if (window.jQuery) { Api.install(); }
+    </script>
+
     <script type="text/javascript">
         $(document).ready(function () {
             App.init();

@@ -60,13 +60,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
             // 禁用 CSRF：form-login 不依赖 token；JWT 接口本身在 header
             .csrf().disable()
-            // 接口统一 JSON 响应：未登录的 API 路径返回 401，而不是重定向到登录页
+            // 接口统一 JSON 响应：未登录的 API 路径返回 401 + BaseResponse，而不是重定向到登录页
             .exceptionHandling()
                 .defaultAuthenticationEntryPointFor(
                         (req, resp, ex) -> {
                             resp.setStatus(HttpStatus.UNAUTHORIZED.value());
                             resp.setContentType("application/json;charset=UTF-8");
-                            resp.getWriter().write("{\"success\":0,\"message\":\"未登录或 token 无效\"}");
+                            resp.getWriter().write(
+                                    "{\"code\":\"001401\",\"message\":\"未登录或 token 无效\"}");
                         },
                         new AntPathRequestMatcher("/bms/api/**"))
             .and()

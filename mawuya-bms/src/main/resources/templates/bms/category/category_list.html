@@ -66,14 +66,15 @@
                     var load = layer.load(0, {shade: [0.1, '#fff']});
                     $.ajax({
                         type: "post",
-                        url: _u('/bms/category/addSubmit.do'),
+                        url: _u('/bms/api/category/create'),
+                        dataType: 'json',
                         data: {
                             'categoryName': layero.find('input[name="categoryName"]').val()
                         },
-                        success: function (result) {
+                        success: function (res) {
                             layer.close(load);
-                            if (result === 'success') {
-                                layer.alert("添加成功", {
+                            if (Api.isOk(res)) {
+                                layer.alert(Api.msg(res, '添加成功'), {
                                     skin: 'layui-layer-lan',
                                     icon: 1,
                                     end: function () {
@@ -81,7 +82,8 @@
                                     }
                                 });
                             } else {
-                                layer.alert('添加失败', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                                layer.alert(Api.msg(res, '添加失败'),
+                                            {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
                             }
                         }
                     });
@@ -97,13 +99,15 @@
         }, function () {
             var load = layer.load(0, {shade: [0.1, '#fff']});
             $.ajax({
-                type: "get",
-                url: _u("/bms/category/delSubmit.do?sn=") + sn,
+                type: "post",
+                url: _u('/bms/api/category/delete'),
+                data: {sn: sn},
                 cache: false,
-                success: function (data) {
+                dataType: 'json',
+                success: function (res) {
                     layer.close(load);
-                    if (data === 'success') {
-                        layer.alert("删除成功", {
+                    if (Api.isOk(res)) {
+                        layer.alert(Api.msg(res, '删除成功'), {
                             skin: 'layui-layer-lan',
                             icon: 1,
                             end: function () {
@@ -111,7 +115,8 @@
                             }
                         });
                     } else {
-                        layer.alert('删除失败', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                        layer.alert(Api.msg(res, '删除失败'),
+                                    {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
                     }
                 }
             });
@@ -133,15 +138,16 @@
                     var load = layer.load(0, {shade: [0.1, '#fff']});
                     $.ajax({
                         type: "post",
-                        url: _u('/bms/category/updateSubmit.do'),
+                        url: _u('/bms/api/category/update'),
+                        dataType: 'json',
                         data: {
                             'sn': sn,
                             'categoryName': layero.find('input[name="categoryName"]').val()
                         },
-                        success: function (result) {
+                        success: function (res) {
                             layer.close(load);
-                            if (result === 'success') {
-                                layer.alert("修改成功", {
+                            if (Api.isOk(res)) {
+                                layer.alert(Api.msg(res, '修改成功'), {
                                     skin: 'layui-layer-lan',
                                     icon: 1,
                                     end: function () {
@@ -149,7 +155,8 @@
                                     }
                                 });
                             } else {
-                                layer.alert('修改失败', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                                layer.alert(Api.msg(res, '修改失败'),
+                                            {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
                             }
                         }
                     });

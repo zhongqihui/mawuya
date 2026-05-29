@@ -9,16 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
- * AMS 主题切换管理（一键换皮）。
+ * AMS 主题切换视图 controller。
  *
- * <p>读：list.do 渲染主题卡片页（4 套 + 当前 code）；
- *    写：apply.do 由前端 ajax 触发，落库 blog_info.theme_code 即生效（AMS 下次请求注入新值）。</p>
+ * <p>JSON 操作（apply）已迁移至
+ * {@link com.qihuizhong.mawuya.bms.controller.api.ThemeApiController}。</p>
  *
  * @author zqh
  */
@@ -38,11 +35,5 @@ public class ThemeController extends BaseController {
         model.addAttribute("themes", siteThemeService.listThemes());
         model.addAttribute("currentCode", siteThemeService.getCurrentTheme());
         return "bms/theme/theme_list";
-    }
-
-    @PostMapping("apply.do")
-    @ResponseBody
-    public String apply(@RequestParam("code") String code) {
-        return siteThemeService.applyTheme(code) ? "success" : "fail";
     }
 }

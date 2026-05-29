@@ -106,13 +106,14 @@
                 fd.append('file', f);
                 $.ajax({
                     type: 'post',
-                    url: _u('/bms/image/upload.do'),
+                    url: _u('/bms/api/image/upload'),
                     data: fd,
                     processData: false,
                     contentType: false,
+                    dataType: 'json',
                     success: function (res) {
-                        if (res && res.success === 1) done++;
-                        else { failed++; if (res && res.message) layer.msg(res.message, {icon: 2}); }
+                        if (Api.isOk(res)) done++;
+                        else { failed++; layer.msg(Api.msg(res, '上传失败'), {icon: 2}); }
                         afterOne();
                     },
                     error: function () { failed++; afterOne(); }
@@ -167,18 +168,20 @@
     function loadGrid() {
         $.ajax({
             type: 'get',
-            url: _u('/bms/image/list.do'),
+            url: _u('/bms/api/image/page'),
             // size=200 保持图片库主页"最近 200 张"的原观感；分页搜索由"从图片库选择"弹窗承担
             data: {size: 200, page: 1},
             cache: false,
+            dataType: 'json',
             success: function (res) {
                 var $grid = $('#img-lib-grid').empty();
-                if (!res || !res.list || res.list.length === 0) {
+                var page = Api.data(res) || {};
+                if (!Api.isOk(res) || !page.list || page.list.length === 0) {
                     $('#img-lib-empty').show();
                     return;
                 }
                 $('#img-lib-empty').hide();
-                res.list.forEach(function (it) {
+                page.list.forEach(function (it) {
                     var sizeKb = (it.size / 1024).toFixed(1) + ' KB';
                     var card =
                         '<div class="img-lib-card" data-sn="' + it.sn + '" data-url="' + it.url + '">' +
@@ -232,15 +235,16 @@
         layer.confirm('确认删除该图片？', {btn: ['是', '否'], skin: 'layui-layer-lan'}, function (idx) {
             $.ajax({
                 type: 'post',
-                url: _u('/bms/image/delete.do'),
+                url: _u('/bms/api/image/delete'),
                 data: {sn: sn},
+                dataType: 'json',
                 success: function (res) {
                     layer.close(idx);
-                    if (res && res.success === 1) {
-                        layer.msg('已删除', {icon: 1, time: 800});
+                    if (Api.isOk(res)) {
+                        layer.msg(Api.msg(res, '已删除'), {icon: 1, time: 800});
                         loadGrid();
                     } else {
-                        layer.alert(res && res.message ? res.message : '删除失败', {icon: 2});
+                        layer.alert(Api.msg(res, '删除失败'), {icon: 2});
                     }
                 }
             });

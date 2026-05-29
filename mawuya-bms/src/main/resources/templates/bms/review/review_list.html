@@ -181,36 +181,36 @@
         $(document).off('click.approve', '.review-approve-btn')
                    .on('click.approve', '.review-approve-btn', function () {
             var sn = $(this).data('sn');
-            doStatusChange(sn, 'approve.do', '确认通过这条评论？通过后将在前台公开展示。');
+            doStatusChange(sn, 'approve', '确认通过这条评论？通过后将在前台公开展示。');
         });
 
         // 拒绝
         $(document).off('click.reject', '.review-reject-btn')
                    .on('click.reject', '.review-reject-btn', function () {
             var sn = $(this).data('sn');
-            doStatusChange(sn, 'reject.do', '确认拒绝这条评论？拒绝后前台将不展示。');
+            doStatusChange(sn, 'reject', '确认拒绝这条评论？拒绝后前台将不展示。');
         });
     });
 
-    function doStatusChange(sn, endpoint, confirmText) {
+    function doStatusChange(sn, action, confirmText) {
         layer.confirm(confirmText, {btn: ['确定', '取消'], skin: 'layui-layer-lan'}, function (idx) {
             var load = layer.load(0, {shade: [0.1, '#fff']});
             $.ajax({
                 type: 'post',
-                url: _u('/bms/review/' + endpoint),
+                url: _u('/bms/api/review/' + action),
                 data: {sn: sn},
                 cache: false,
                 dataType: 'json',
                 success: function (res) {
                     layer.close(load);
                     layer.close(idx);
-                    if (res && res.success === 1) {
-                        layer.msg(res.message || '操作成功', {icon: 1, time: 1000});
+                    if (Api.isOk(res)) {
+                        layer.msg(Api.msg(res, '操作成功'), {icon: 1, time: 1000});
                         // 重新加载当前 tab 页：保持 status 上下文不变
                         var current = /*[[${currentStatus}]]*/ '0';
                         $('#content6').load(_u('/bms/review/list.do?status=') + current);
                     } else {
-                        layer.alert((res && res.message) || '操作失败',
+                        layer.alert(Api.msg(res, '操作失败'),
                                     {skin: 'layui-layer-lan', icon: 2});
                     }
                 },

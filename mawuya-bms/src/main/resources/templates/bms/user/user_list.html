@@ -126,9 +126,10 @@
     function loadRoles(cb) {
         if (allRolesCache) { cb && cb(); return; }
         $.ajax({
-            type: 'get', url: _u('/bms/user/roles.do'), cache: false, dataType: 'json',
+            type: 'get', url: _u('/bms/api/user/roles'), cache: false, dataType: 'json',
             success: function (res) {
-                allRolesCache = (res && res.list) ? res.list : [];
+                // BaseResponse.data 直接就是 List<RoleItemResponse>
+                allRolesCache = (Api.isOk(res) && Api.data(res)) ? Api.data(res) : [];
                 cb && cb();
             },
             error: function () { allRolesCache = []; cb && cb(); }
@@ -137,22 +138,23 @@
 
     function userQuery() {
         $.ajax({
-            type: 'get', url: _u('/bms/user/page.do'),
+            type: 'get', url: _u('/bms/api/user/page'),
             data: { keyword: userState.keyword, page: userState.page, size: userState.size },
             cache: false, dataType: 'json',
             success: function (res) {
-                if (!res || res.success !== 1) {
-                    renderEmpty('查询失败');
+                if (!Api.isOk(res)) {
+                    renderEmpty(Api.msg(res, '查询失败'));
                     return;
                 }
-                $('#user-total').text('共 ' + (res.total || 0) + ' 条');
-                if (!res.list || res.list.length === 0) {
+                var page = Api.data(res) || {};
+                $('#user-total').text('共 ' + (page.total || 0) + ' 条');
+                if (!page.list || page.list.length === 0) {
                     renderEmpty('未匹配到用户');
                     $('#user-pagination').empty();
                     return;
                 }
-                renderRows(res.list, (res.page - 1) * res.size);
-                renderPagination(res.page, res.pages);
+                renderRows(page.list, (page.page - 1) * page.size);
+                renderPagination(page.page, page.pages);
             },
             error: function () { renderEmpty('网络异常'); }
         });
@@ -277,13 +279,13 @@
                     enabled:  1,
                     roleCodes: getCheckedRoles('cf')
                 };
-                $.post(_u('/bms/user/create.do'), data, function (res) {
-                    if (res && res.success === 1) {
+                $.post(_u('/bms/api/user/create'), data, function (res) {
+                    if (Api.isOk(res)) {
                         layer.close(idx);
-                        layer.msg('创建成功', {icon: 1, time: 1000});
+                        layer.msg(Api.msg(res, '创建成功'), {icon: 1, time: 1000});
                         userQuery();
                     } else {
-                        layer.alert((res && res.message) || '创建失败', {icon: 2});
+                        layer.alert(Api.msg(res, '创建失败'), {icon: 2});
                     }
                 }).fail(function () { layer.alert('网络异常', {icon: 2}); });
             }
@@ -318,13 +320,13 @@
                     email:    $('#ef_email').val(),
                     roleCodes: getCheckedRoles('ef')
                 };
-                $.post(_u('/bms/user/update.do'), data, function (res) {
-                    if (res && res.success === 1) {
+                $.post(_u('/bms/api/user/update'), data, function (res) {
+                    if (Api.isOk(res)) {
                         layer.close(idx);
-                        layer.msg('已保存', {icon: 1, time: 1000});
+                        layer.msg(Api.msg(res, '已保存'), {icon: 1, time: 1000});
                         userQuery();
                     } else {
-                        layer.alert((res && res.message) || '保存失败', {icon: 2});
+                        layer.alert(Api.msg(res, '保存失败'), {icon: 2});
                     }
                 }).fail(function () { layer.alert('网络异常', {icon: 2}); });
             }
@@ -344,12 +346,12 @@
             yes: function (idx) {
                 var pwd = $('#rf_password').val();
                 if (!pwd || pwd.length < 6) { layer.msg('密码至少 6 位', {icon: 7}); return; }
-                $.post(_u('/bms/user/reset.do'), {sn: sn, password: pwd}, function (res) {
-                    if (res && res.success === 1) {
+                $.post(_u('/bms/api/user/reset'), {sn: sn, password: pwd}, function (res) {
+                    if (Api.isOk(res)) {
                         layer.close(idx);
-                        layer.msg('已重置', {icon: 1, time: 1000});
+                        layer.msg(Api.msg(res, '已重置'), {icon: 1, time: 1000});
                     } else {
-                        layer.alert((res && res.message) || '重置失败', {icon: 2});
+                        layer.alert(Api.msg(res, '重置失败'), {icon: 2});
                     }
                 }).fail(function () { layer.alert('网络异常', {icon: 2}); });
             }
@@ -360,13 +362,13 @@
         layer.confirm(enabled === 1 ? '确认启用该用户？' : '确认禁用该用户？',
                       {btn: ['确定', '取消'], skin: 'layui-layer-lan'},
         function (idx) {
-            $.post(_u('/bms/user/toggle.do'), {sn: sn, enabled: enabled}, function (res) {
+            $.post(_u('/bms/api/user/toggle'), {sn: sn, enabled: enabled}, function (res) {
                 layer.close(idx);
-                if (res && res.success === 1) {
-                    layer.msg(res.message || '操作成功', {icon: 1, time: 800});
+                if (Api.isOk(res)) {
+                    layer.msg(Api.msg(res, '操作成功'), {icon: 1, time: 800});
                     userQuery();
                 } else {
-                    layer.alert((res && res.message) || '操作失败', {icon: 2});
+                    layer.alert(Api.msg(res, '操作失败'), {icon: 2});
                 }
             });
         });
@@ -376,13 +378,13 @@
         layer.confirm('确认删除用户 <b>' + escHtml(uname) + '</b>？此操作不可恢复。',
                       {btn: ['是', '否'], skin: 'layui-layer-lan'},
         function (idx) {
-            $.post(_u('/bms/user/delete.do'), {sn: sn}, function (res) {
+            $.post(_u('/bms/api/user/delete'), {sn: sn}, function (res) {
                 layer.close(idx);
-                if (res && res.success === 1) {
-                    layer.msg('已删除', {icon: 1, time: 800});
+                if (Api.isOk(res)) {
+                    layer.msg(Api.msg(res, '已删除'), {icon: 1, time: 800});
                     userQuery();
                 } else {
-                    layer.alert((res && res.message) || '删除失败', {icon: 2});
+                    layer.alert(Api.msg(res, '删除失败'), {icon: 2});
                 }
             });
         });

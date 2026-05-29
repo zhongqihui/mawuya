@@ -192,16 +192,17 @@
                 var load = layer.load(0, {shade: [0.1, '#fff']});
                 $.ajax({
                     type: "post",
-                    url: _u("/bms/article/backgroundImgUpload.do"),
+                    url: _u("/bms/api/article/cover/upload"),
                     cache: false,
                     data: new FormData(form[0]),
                     processData: false,
                     contentType: false,
-                    success: function (result) {
+                    dataType: 'json',
+                    success: function (res) {
                         layer.close(load);
                         layer.close(index);
-                        if (result === 'success') {
-                            layer.alert("上传背景图片成功！", {
+                        if (Api.isOk(res)) {
+                            layer.alert(Api.msg(res, '上传背景图片成功！'), {
                                 skin: 'layui-layer-lan',
                                 icon: 1,
                                 end: function () {
@@ -209,7 +210,8 @@
                                 }
                             });
                         } else {
-                            layer.alert('上传背景图片失败！', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                            layer.alert(Api.msg(res, '上传背景图片失败！'),
+                                        {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
                         }
                     },
                     error: function () {
@@ -255,19 +257,21 @@
                 var load = layer.load(0, {shade: [0.1, '#fff']});
                 $.ajax({
                     type: 'post',
-                    url: _u('/bms/article/setBackgroundFromLibrary.do'),
+                    url: _u('/bms/api/article/cover/from-library'),
                     data: {sn: sn, imageSn: item.sn},
                     cache: false,
-                    success: function (result) {
+                    dataType: 'json',
+                    success: function (res) {
                         layer.close(load);
-                        if (result === 'success') {
+                        if (Api.isOk(res)) {
                             layer.close(pickerLayer);
                             // 关掉外层"设置背景图片"弹窗（找当前最外层 layer）
                             layer.closeAll('page');
-                            layer.msg('背景图设置成功', {icon: 1, time: 1000});
+                            layer.msg(Api.msg(res, '背景图设置成功'), {icon: 1, time: 1000});
                             $('#content3').load(_u('/bms/article/list.do'));
                         } else {
-                            layer.alert('设置背景图失败', {skin: 'layui-layer-lan', icon: 2});
+                            layer.alert(Api.msg(res, '设置背景图失败'),
+                                        {skin: 'layui-layer-lan', icon: 2});
                         }
                     },
                     error: function () {
@@ -366,13 +370,15 @@
         layer.confirm('确认删除？', {btn: ['是', '我后悔了'], skin: 'layui-layer-lan'}, function () {
             var load = layer.load(0, {shade: [0.1, '#fff']});
             $.ajax({
-                type: "get",
-                url: _u("/bms/article/delSubmit.do?sn=") + sn,
+                type: "post",
+                url: _u('/bms/api/article/delete'),
+                data: {sn: sn},
                 cache: false,
-                success: function (data) {
+                dataType: 'json',
+                success: function (res) {
                     layer.close(load);
-                    if (data === 'success') {
-                        layer.alert("删除成功", {
+                    if (Api.isOk(res)) {
+                        layer.alert(Api.msg(res, '删除成功'), {
                             skin: 'layui-layer-lan',
                             icon: 1,
                             end: function () {
@@ -380,7 +386,8 @@
                             }
                         });
                     } else {
-                        layer.alert('删除失败', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                        layer.alert(Api.msg(res, '删除失败'),
+                                    {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
                     }
                 }
             });

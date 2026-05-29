@@ -75,7 +75,7 @@
     var __ctx = /*[[@{/}]]*/ '/';
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
     var __libPath = /*[[@{/statics/plugins/editor.md/lib/}]]*/ '/statics/plugins/editor.md/lib/';
-    var __imgUploadUrl = /*[[@{/bms/article/imgUpload.do}]]*/ '/bms/article/imgUpload.do';
+    var __imgUploadUrl = /*[[@{/bms/api/article/editor/img-upload}]]*/ '/bms/api/article/editor/img-upload';
     /*]]>*/
 
     $(function () {
@@ -111,7 +111,7 @@
 
             $.ajax({
                 type: "post",
-                url: _u("/bms/article/addSubmit.do"),
+                url: _u("/bms/api/article/create"),
                 data: {
                     "articleTitle": title,
                     "categorySn": categorySn,
@@ -119,8 +119,9 @@
                     "articleContent": content
                 },
                 cache: false,
-                success: function (data) {
-                    if (data === "success") {
+                dataType: 'json',
+                success: function (res) {
+                    if (Api.isOk(res)) {
                         layer.confirm('发布成功！赶快去看看吧', {
                             btn: ['去看看', '懒，不去'],
                             skin: 'layui-layer-lan',
@@ -135,7 +136,8 @@
                             layer.close(index);
                         });
                     } else {
-                        layer.alert('发布失败', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                        layer.alert(Api.msg(res, '发布失败'),
+                                    {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
                     }
                 }
             });

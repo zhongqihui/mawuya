@@ -278,20 +278,21 @@
             $loading.show();
             $.ajax({
                 type: 'get',
-                url: _u('/bms/image/list.do'),
+                url: _u('/bms/api/image/page'),
                 data: { keyword: state.keyword, page: state.page, size: state.size },
                 cache: false,
                 dataType: 'json',
                 success: function (res) {
                     state.loading = false;
                     $loading.hide();
-                    if (!res || res.success !== 1) {
+                    var page = Api.data(res) || {};
+                    if (!Api.isOk(res)) {
                         renderEmpty(true);
                         return;
                     }
-                    state.total = res.total || 0;
-                    state.pages = res.pages || 0;
-                    state.page  = res.page  || 1;
+                    state.total = page.total || 0;
+                    state.pages = page.pages || 0;
+                    state.page  = page.page  || 1;
 
                     if (state.total === 0) {
                         renderEmpty(false);
@@ -301,7 +302,7 @@
                     $empty.hide();
                     $grid.show();
                     $pagi.show();
-                    renderGrid(res.list || []);
+                    renderGrid(page.list || []);
                     renderPagination();
                     $count.text('共 ' + state.total + ' 张'
                         + (state.keyword ? '（关键词：' + escHtml(state.keyword) + '）' : ''));

@@ -696,15 +696,16 @@
     function loadDashboard() {
         $.ajax({
             type: 'get',
-            url: _u('/bms/dashboard/data.do'),
+            url: _u('/bms/api/dashboard/data'),
             cache: false,
             dataType: 'json',
             success: function (res) {
-                if (!res || res.success !== 1) {
-                    $('#dash-hero-sub').text((res && res.message) || '看板数据加载失败');
+                if (!Api.isOk(res)) {
+                    $('#dash-hero-sub').text(Api.msg(res, '看板数据加载失败'));
                     return;
                 }
-                renderDashboard(res);
+                // BaseResponse.data 是真正的看板对象
+                renderDashboard(Api.data(res) || {});
             },
             error: function () {
                 $('#dash-hero-sub').text('网络异常，看板加载失败');

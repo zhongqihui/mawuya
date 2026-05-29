@@ -80,7 +80,7 @@
     var __ctx = /*[[@{/}]]*/ '/';
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
     var __libPath = /*[[@{/statics/plugins/editor.md/lib/}]]*/ '/statics/plugins/editor.md/lib/';
-    var __imgUploadUrl = /*[[@{/bms/article/imgUpload.do}]]*/ '/bms/article/imgUpload.do';
+    var __imgUploadUrl = /*[[@{/bms/api/article/editor/img-upload}]]*/ '/bms/api/article/editor/img-upload';
     /*]]>*/
 
     $(function () {
@@ -117,7 +117,7 @@
 
             $.ajax({
                 type: "post",
-                url: _u("/bms/article/updateSubmit.do"),
+                url: _u("/bms/api/article/update"),
                 data: {
                     "sn": sn,
                     "articleTitle": title,
@@ -126,8 +126,9 @@
                     "articleContent": content
                 },
                 cache: false,
-                success: function (data) {
-                    if (data === "success") {
+                dataType: 'json',
+                success: function (res) {
+                    if (Api.isOk(res)) {
                         layer.confirm('修改成功！赶快去看看吧', {
                             btn: ['去看看', '懒，不去'],
                             skin: 'layui-layer-lan',
@@ -142,7 +143,8 @@
                             retArticleList();
                         });
                     } else {
-                        layer.alert('修改失败', {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                        layer.alert(Api.msg(res, '修改失败'),
+                                    {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
                     }
                 }
             });

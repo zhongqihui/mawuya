@@ -332,23 +332,24 @@
 
         $.ajax({
             type: 'get',
-            url: _u('/bms/log/query.do'),
+            url: _u('/bms/api/log/page'),
             data: data,
             cache: false,
             dataType: 'json',
             success: function (res) {
-                if (!res || res.success !== 1) {
-                    renderEmpty('查询失败');
+                if (!Api.isOk(res)) {
+                    renderEmpty(Api.msg(res, '查询失败'));
                     return;
                 }
-                $('#log-total').text(res.total || 0);
-                if (!res.list || res.list.length === 0) {
+                var page = Api.data(res) || {};
+                $('#log-total').text(page.total || 0);
+                if (!page.list || page.list.length === 0) {
                     renderEmpty('未匹配到记录');
                     $('#log-pagination').empty();
                     return;
                 }
-                renderRows(res.list, (res.page - 1) * res.size);
-                renderPagination(res.page, res.pages);
+                renderRows(page.list, (page.page - 1) * page.size);
+                renderPagination(page.page, page.pages);
             },
             error: function () {
                 renderEmpty('网络异常');
@@ -433,17 +434,17 @@
         var load = layer.load(0, {shade: [0.1, '#fff']});
         $.ajax({
             type: 'get',
-            url: _u('/bms/log/detail.do'),
+            url: _u('/bms/api/log/detail'),
             data: {sn: sn},
             cache: false,
             dataType: 'json',
             success: function (res) {
                 layer.close(load);
-                if (!res || res.success !== 1 || !res.data) {
-                    layer.alert(res && res.message ? res.message : '记录不存在', {icon: 2});
+                var d = Api.data(res);
+                if (!Api.isOk(res) || !d) {
+                    layer.alert(Api.msg(res, '记录不存在'), {icon: 2});
                     return;
                 }
-                var d = res.data;
                 var rows = [
                     ['SN',          d.sn],
                     ['IP 地址',     d.ipAddr],

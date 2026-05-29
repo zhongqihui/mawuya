@@ -6,6 +6,7 @@ package com.qihuizhong.mawuya.ams.controller;
 
 import com.qihuizhong.mawuya.ams.seo.SeoProperties;
 import com.qihuizhong.mawuya.ams.seo.SeoUtils;
+import com.qihuizhong.mawuya.core.common.web.SkipApiResponseWrap;
 import com.qihuizhong.mawuya.core.entity.ArticleInfo;
 import com.qihuizhong.mawuya.core.entity.Category;
 import com.qihuizhong.mawuya.core.entity.Tag;
@@ -31,9 +32,13 @@ import java.util.List;
  *
  * <p>所有内容直接 String 返回，避免引入额外模板；遵守 sitemap.org 0.9 / RSS 2.0 规范。</p>
  *
+ * <p><strong>API 规范化说明</strong>：本类输出 XML / 纯文本，不能被 {@code BaseResponse}
+ * JSON 包装，故类级标记 {@link SkipApiResponseWrap}（双保险，即使日后改为 @RestController 也安全）。</p>
+ *
  * @author 钟启辉
  */
 @Controller
+@SkipApiResponseWrap
 public class SeoController {
 
     private static final int RSS_LIMIT = 20;
