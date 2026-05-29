@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  面包屑导航 fragment：
+    - 视觉部分：<nav aria-label="breadcrumb"> + 有序列表，符合 a11y 与 WAI-ARIA 规范
+    - 数据部分：BreadcrumbList JSON-LD 由 Controller 在 seo.addJsonLd 中追加，避免重复输出
+
+  使用：
+      <th:block th:replace="~{fts/common/breadcrumb :: breadcrumb}"></th:block>
+
+  数据：${seo.breadcrumbs} – LinkedHashMap<name, url>，最后一项 url 可为 null（当前页）
+-->
+<th:block th:fragment="breadcrumb">
+    <nav class="breadcrumb-nav" aria-label="breadcrumb"
+         th:if="${seo.breadcrumbs != null and not #maps.isEmpty(seo.breadcrumbs)}">
+        <ol class="breadcrumb-list" itemscope itemtype="https://schema.org/BreadcrumbList">
+            <li class="breadcrumb-item" th:each="entry, iter : ${seo.breadcrumbs}"
+                itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                <a th:if="${entry.value != null}" th:href="${entry.value}" itemprop="item">
+                    <span itemprop="name" th:text="${entry.key}">name</span>
+                </a>
+                <span th:unless="${entry.value != null}" itemprop="name" th:text="${entry.key}"
+                      aria-current="page">name</span>
+                <meta itemprop="position" th:attr="content=${iter.count}"/>
+                <span class="breadcrumb-sep" th:if="${!iter.last}" aria-hidden="true">›</span>
+            </li>
+        </ol>
+    </nav>
+</th:block>
+</body>
+</html>

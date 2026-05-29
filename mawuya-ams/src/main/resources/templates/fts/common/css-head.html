@@ -1,18 +1,35 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
+<!--
+  通用 head fragment：仅声明编码 / viewport / 主题色 / 静态资源；
+  TDK / Canonical / OG / JSON-LD 全部交由 fts/common/seo-meta 处理，避免重复。
+-->
 <th:block th:fragment="css-head">
-    <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
     <meta charset="UTF-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="Cache-Control" content="no-transform"/>
-    <meta name="author" content="Zqh"/>
-    <meta name="keywords" content="Java, Spring Boot, MySQL, 博客"/>
-    <meta name="description" content="Mawuya Blog - 一个分享技术与生活的小站"/>
-    <title>Zqh's Blog</title>
+    <meta name="theme-color" content="#222"/>
+    <meta name="referrer" content="no-referrer-when-downgrade"/>
 
     <link rel="shortcut icon" th:href="@{/statics/images/myfavicon.ico}"/>
+
+    <!-- 关键 CSS 内联：减少首屏阻塞，提升 LCP（背景 + 字体 + 容器底色） -->
+    <style>
+        html,body{margin:0;padding:0;background:#fff;color:#555;
+            font:14px/1.6 "PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,Roboto,sans-serif;
+            -webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;}
+        img{max-width:100%;height:auto;}
+        .post-thumb-fixed{aspect-ratio:16/9;object-fit:cover;width:100%;display:block;}
+        .breadcrumb-nav{padding:8px 0;font-size:12px;color:#999;}
+        .breadcrumb-list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
+        .breadcrumb-list a{color:#666;text-decoration:none;}
+        .breadcrumb-list a:hover{color:#222;text-decoration:underline;}
+        .breadcrumb-sep{color:#bbb;}
+    </style>
+
+    <!-- 字体 / 主样式：preload + 异步加载，关键路径只阻塞极小内联 CSS -->
     <link rel="stylesheet" type="text/css"
           th:href="@{/statics/plugins/vendors/fancybox/source/jquery.fancybox8cbb.css(v=2.1.5)}"/>
     <link rel="stylesheet" type="text/css"

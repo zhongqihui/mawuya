@@ -2,31 +2,37 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <th:block th:fragment="footer">
-    <footer id="footer" class="footer">
+    <footer id="footer" class="footer" role="contentinfo">
         <div class="footer-inner">
             <div class="copyright">
-                <span> &copy; 2013 - 2017</span>
+                <span> &copy; 2013 - 2026</span>
                 <span class="with-love"><i class="fa fa-heart"></i></span>
-                <span class="author">zqh</span>
+                <span class="author" th:text="${seoProperties.author}">zqh</span>
             </div>
-            <div class="powered-by">由 <a class="theme-link" href="http://hexo.io/">Hexo</a> 强力驱动</div>
-            <div class="theme-info">主题 -
-                <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a>
+            <!-- SEO 友好的内链：RSS 订阅 + Sitemap，搜索引擎抓取自发现 -->
+            <div class="footer-links">
+                <a th:href="@{/rss.xml}" title="RSS 订阅" rel="alternate">RSS</a>
+                <span aria-hidden="true">·</span>
+                <a th:href="@{/sitemap.xml}" title="站点地图">Sitemap</a>
             </div>
         </div>
     </footer>
 
-    <div class="back-to-top"></div>
+    <div class="back-to-top" role="button" aria-label="返回顶部" tabindex="0"></div>
 
+    <!--
+      JS defer：所有非关键脚本延后到 DOM 解析完成后执行，进一步降低 INP / TBT。
+      注意：jQuery 必须最先就绪（show_article inline JS 依赖 $），所以保留同步加载。
+    -->
     <script type="text/javascript" th:src="@{/statics/plugins/vendors/jquery/index62ba.js(v=2.1.3)}"></script>
-    <script type="text/javascript" th:src="@{/statics/plugins/vendors/fastclick/lib/fastclick.minc924.js(v=1.0.6)}"></script>
-    <script type="text/javascript" th:src="@{/statics/plugins/vendors/jquery_lazyload/jquery.lazyloada045.js(v=1.9.7)}"></script>
-    <script type="text/javascript" th:src="@{/statics/plugins/vendors/velocity/velocity.min.js}"></script>
-    <script type="text/javascript" th:src="@{/statics/plugins/vendors/velocity/velocity.ui.min.js}"></script>
-    <script type="text/javascript" th:src="@{/statics/plugins/vendors/fancybox/source/jquery.fancybox.pack.js}"></script>
-    <script type="text/javascript" th:src="@{/statics/js/utils5174.js(v=0.5.0)}"></script>
-    <script type="text/javascript" th:src="@{/statics/js/motion5174.js(v=0.5.0)}"></script>
-    <script type="text/javascript" th:src="@{/statics/js/bootstrap5174.js(v=0.5.0)}"></script>
+    <script defer type="text/javascript" th:src="@{/statics/plugins/vendors/fastclick/lib/fastclick.minc924.js(v=1.0.6)}"></script>
+    <script defer type="text/javascript" th:src="@{/statics/plugins/vendors/jquery_lazyload/jquery.lazyloada045.js(v=1.9.7)}"></script>
+    <script defer type="text/javascript" th:src="@{/statics/plugins/vendors/velocity/velocity.min.js}"></script>
+    <script defer type="text/javascript" th:src="@{/statics/plugins/vendors/velocity/velocity.ui.min.js}"></script>
+    <script defer type="text/javascript" th:src="@{/statics/plugins/vendors/fancybox/source/jquery.fancybox.pack.js}"></script>
+    <script defer type="text/javascript" th:src="@{/statics/js/utils5174.js(v=0.5.0)}"></script>
+    <script defer type="text/javascript" th:src="@{/statics/js/motion5174.js(v=0.5.0)}"></script>
+    <script defer type="text/javascript" th:src="@{/statics/js/bootstrap5174.js(v=0.5.0)}"></script>
 </th:block>
 </body>
 </html>

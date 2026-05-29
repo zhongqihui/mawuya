@@ -1,55 +1,66 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion" th:attr="data-theme=${currentTheme}">
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="theme-next mist use-motion"
+      th:attr="data-theme=${currentTheme}">
 <head>
+    <th:block th:replace="~{fts/common/seo-meta :: seo-meta}"></th:block>
     <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
-    <title>关于 - Zqh Blog</title>
 </head>
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-home">
     <div class="headband"></div>
     <th:block th:replace="~{fts/common/header :: header}"></th:block>
 
-    <main id="main" class="main">
+    <main id="main" class="main" role="main">
         <div class="main-inner">
             <div class="content-wrap">
                 <div id="content" class="content">
-                    <div class="about-page">
-                        <h1>👋 关于这里</h1>
-                        <p>这是 <strong>Mawuya Blog</strong>，一个分享技术与生活的小站。</p>
+                    <th:block th:replace="~{fts/common/breadcrumb :: breadcrumb}"></th:block>
 
-                        <h2>🛠️ 技术栈</h2>
-                        <div class="stack-grid">
-                            <div>Java 1.8</div>
-                            <div>Spring Boot 2.2</div>
-                            <div>MyBatis</div>
-                            <div>Druid</div>
-                            <div>MySQL 5.7+</div>
-                            <div>Thymeleaf</div>
-                            <div>Editor.md</div>
-                            <div>Maven 多模块</div>
-                        </div>
+                    <article class="about-page" itemscope itemtype="https://schema.org/AboutPage">
+                        <h1 itemprop="name">👋 关于这里</h1>
+                        <p itemprop="description">这是 <strong>Mawuya Blog</strong>，一个分享技术与生活的小站。</p>
 
-                        <h2>📚 你能在这里看到什么</h2>
-                        <ul>
-                            <li>Java / Spring Boot 后端实战经验</li>
-                            <li>MySQL / Redis / 中间件踩坑记录</li>
-                            <li>JVM 调优与系统设计思考</li>
-                            <li>读书笔记、旅行手记与生活随想</li>
-                        </ul>
+                        <section aria-labelledby="about-stack">
+                            <h2 id="about-stack">🛠️ 技术栈</h2>
+                            <div class="stack-grid">
+                                <div>Java 1.8</div>
+                                <div>Spring Boot 2.2</div>
+                                <div>MyBatis</div>
+                                <div>Druid</div>
+                                <div>MySQL 5.7+</div>
+                                <div>Thymeleaf</div>
+                                <div>Editor.md</div>
+                                <div>Maven 多模块</div>
+                            </div>
+                        </section>
 
-                        <h2>📨 联系作者</h2>
-                        <ul>
-                            <li>GitHub: <a href="https://github.com/" target="_blank" rel="noopener">@zqh</a></li>
-                            <li>Email: zqh#example.com</li>
-                        </ul>
+                        <section aria-labelledby="about-content">
+                            <h2 id="about-content">📚 你能在这里看到什么</h2>
+                            <ul>
+                                <li>Java / Spring Boot 后端实战经验</li>
+                                <li>MySQL / Redis / 中间件踩坑记录</li>
+                                <li>JVM 调优与系统设计思考</li>
+                                <li>读书笔记、旅行手记与生活随想</li>
+                            </ul>
+                        </section>
 
-                        <h2>💡 站点说明</h2>
-                        <ul>
-                            <li>所有文章均为原创或已注明转载来源</li>
-                            <li>评论遵循友善、克制原则</li>
-                            <li>欢迎在文章下方留言交流，会逐条回复 ✨</li>
-                        </ul>
-                    </div>
+                        <section aria-labelledby="about-contact">
+                            <h2 id="about-contact">📨 联系作者</h2>
+                            <ul>
+                                <li>GitHub: <a href="https://github.com/" target="_blank" rel="noopener noreferrer">@zqh</a></li>
+                                <li>Email: zqh#example.com</li>
+                            </ul>
+                        </section>
+
+                        <section aria-labelledby="about-notes">
+                            <h2 id="about-notes">💡 站点说明</h2>
+                            <ul>
+                                <li>所有文章均为原创或已注明转载来源</li>
+                                <li>评论遵循友善、克制原则</li>
+                                <li>欢迎在文章下方留言交流，会逐条回复 ✨</li>
+                            </ul>
+                        </section>
+                    </article>
                 </div>
             </div>
 

@@ -37,7 +37,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/statics/**",
                         "/upload/**",
                         "/favicon.ico",
-                        "/error"
+                        "/error",
+                        // SEO 资源 / 爬虫专用入口：排除以减少日志噪声并避免反复触发统计
+                        "/sitemap.xml",
+                        "/robots.txt",
+                        "/rss.xml"
                 );
     }
 

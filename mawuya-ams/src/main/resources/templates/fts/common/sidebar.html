@@ -10,31 +10,35 @@
         </div>
     </div>
 
-    <aside id="sidebar" class="sidebar">
+    <aside id="sidebar" class="sidebar" aria-label="侧边栏">
         <div class="sidebar-inner">
 
             <!-- 1. 站点统计 -->
-            <section class="site-overview sidebar-panel sidebar-panel-active">
+            <section class="site-overview sidebar-panel sidebar-panel-active" aria-labelledby="site-author">
                 <div class="site-author motion-element">
-                    <img class="site-author-image" th:src="@{/statics/images/avatars/avatar2.jpg}" alt="Zhongqihui"/>
-                    <p class="site-author-name">Zhongqihui</p>
+                    <img class="site-author-image"
+                         th:src="@{/statics/images/avatars/avatar2.jpg}"
+                         th:attr="alt=${seoProperties.author} + ' 头像'"
+                         width="100" height="100"
+                         decoding="async" loading="lazy"/>
+                    <p id="site-author" class="site-author-name" th:text="${seoProperties.author}">Zhongqihui</p>
                     <p class="site-description motion-element">分享技术 &amp; 生活，<br/>慢一点，做长远的事。</p>
                 </div>
-                <nav class="site-state motion-element">
+                <nav class="site-state motion-element" aria-label="站点统计">
                     <div class="site-state-item site-state-posts">
-                        <a th:href="@{/index}">
+                        <a th:href="@{/index}" title="所有文章">
                             <span class="site-state-item-count" th:text="${siteStats?.articleCount ?: 0}">0</span>
                             <span class="site-state-item-name">日志</span>
                         </a>
                     </div>
                     <div class="site-state-item site-state-categories">
-                        <a th:href="@{/categories}">
+                        <a th:href="@{/categories}" title="所有分类">
                             <span class="site-state-item-count" th:text="${siteStats?.categoryCount ?: 0}">0</span>
                             <span class="site-state-item-name">分类</span>
                         </a>
                     </div>
                     <div class="site-state-item site-state-tags">
-                        <a th:href="@{/tags}">
+                        <a th:href="@{/tags}" title="所有标签">
                             <span class="site-state-item-count" th:text="${siteStats?.tagCount ?: 0}">0</span>
                             <span class="site-state-item-name">标签</span>
                         </a>
@@ -42,20 +46,26 @@
                 </nav>
             </section>
 
-            <!-- 2. 热门文章 -->
-            <section class="sidebar-panel widget-hot" th:if="${hotArticles != null and not #lists.isEmpty(hotArticles)}">
-                <h3 class="widget-title"><i class="fa fa-fire"></i> 热门文章</h3>
+            <!-- 2. 热门文章：内链权重传递（高权重路径，锚文本=完整标题） -->
+            <section class="sidebar-panel widget-hot"
+                     th:if="${hotArticles != null and not #lists.isEmpty(hotArticles)}"
+                     aria-labelledby="widget-hot-title">
+                <h3 id="widget-hot-title" class="widget-title"><i class="fa fa-fire"></i> 热门文章</h3>
                 <ol class="widget-hot-list">
                     <li th:each="art : ${hotArticles}">
-                        <a th:href="@{|/${art.sn}|}" th:text="${art.articleTitle}">title</a>
+                        <a th:href="@{|/${art.sn}|}"
+                           th:title="${art.articleTitle}"
+                           th:text="${art.articleTitle}">title</a>
                         <span class="hot-meta" th:text="|${art.readNum} 阅读|">0</span>
                     </li>
                 </ol>
             </section>
 
             <!-- 3. 最新评论 -->
-            <section class="sidebar-panel widget-recent" th:if="${latestReviews != null and not #lists.isEmpty(latestReviews)}">
-                <h3 class="widget-title"><i class="fa fa-comments-o"></i> 最新评论</h3>
+            <section class="sidebar-panel widget-recent"
+                     th:if="${latestReviews != null and not #lists.isEmpty(latestReviews)}"
+                     aria-labelledby="widget-recent-title">
+                <h3 id="widget-recent-title" class="widget-title"><i class="fa fa-comments-o"></i> 最新评论</h3>
                 <ul class="widget-recent-list">
                     <li th:each="r : ${latestReviews}">
                         <div class="recent-name">
@@ -63,25 +73,29 @@
                             <strong th:text="${r.reviewName}">name</strong>
                         </div>
                         <div class="recent-content" th:text="${r.reviewContent}">content</div>
-                        <a class="recent-target" th:href="@{|/${r.articleSn}#comments|}"
+                        <a class="recent-target"
+                           th:href="@{|/${r.articleSn}#comments|}"
+                           th:title="|查看「${r.articleTitle}」全部评论|"
                            th:text="|@${r.articleTitle}|">@target</a>
                     </li>
                 </ul>
             </section>
 
             <!-- 4. 标签云 -->
-            <section class="sidebar-panel widget-tags" th:if="${tagCloud != null and not #lists.isEmpty(tagCloud)}">
-                <h3 class="widget-title"><i class="fa fa-tags"></i> 标签云</h3>
-                <div class="tag-cloud">
+            <section class="sidebar-panel widget-tags"
+                     th:if="${tagCloud != null and not #lists.isEmpty(tagCloud)}"
+                     aria-labelledby="widget-tags-title">
+                <h3 id="widget-tags-title" class="widget-title"><i class="fa fa-tags"></i> 标签云</h3>
+                <nav class="tag-cloud" aria-label="标签云">
                     <a th:each="t : ${tagCloud}"
                        th:href="@{|/tags/${t.sn}|}"
                        th:style="|color:${t.tagColor != null ? t.tagColor : '#666'};|"
-                       th:title="|${t.tagName} (${t.artSize ?: 0})|"
+                       th:title="|${t.tagName} (${t.artSize ?: 0} 篇)|"
                        class="tag-cloud-item">
                         <span th:text="${t.tagName}">tag</span>
                         <small th:text="${t.artSize ?: 0}">0</small>
                     </a>
-                </div>
+                </nav>
             </section>
         </div>
     </aside>

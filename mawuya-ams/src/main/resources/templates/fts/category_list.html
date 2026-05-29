@@ -1,6 +1,8 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion" th:attr="data-theme=${currentTheme}">
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="theme-next mist use-motion"
+      th:attr="data-theme=${currentTheme}">
 <head>
+    <th:block th:replace="~{fts/common/seo-meta :: seo-meta}"></th:block>
     <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
 </head>
 <body lang="zh-Hans">
@@ -8,27 +10,30 @@
     <div class="headband"></div>
     <th:block th:replace="~{fts/common/header :: header}"></th:block>
 
-    <main id="main" class="main">
+    <main id="main" class="main" role="main">
         <div class="main-inner">
             <div class="content-wrap">
                 <div id="content" class="content">
-                    <div id="posts" class="posts-expand">
-                        <div class="category-all-page">
-                            <div class="category-all-title"
-                                 th:text="|目前共计 ${#lists.size(categoryList)} 个分类|"></div>
+                    <th:block th:replace="~{fts/common/breadcrumb :: breadcrumb}"></th:block>
 
-                            <div class="category-all">
+                    <section id="posts" class="posts-expand" aria-label="所有分类">
+                        <div class="category-all-page">
+                            <h1 class="category-all-title"
+                                 th:text="|目前共计 ${#lists.size(categoryList)} 个分类|"></h1>
+
+                            <nav class="category-all" aria-label="分类导航">
                                 <ul class="category-list">
                                     <li class="category-list-item" th:each="item : ${categoryList}">
                                         <a class="category-list-link"
                                            th:href="@{|/categories/${item.sn}|}"
+                                           th:title="|查看「${item.categoryName}」分类下所有文章|"
                                            th:text="${item.categoryName}"></a>
                                         <span class="category-list-count" th:text="${item.artSize}"></span>
                                     </li>
                                 </ul>
-                            </div>
+                            </nav>
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
 

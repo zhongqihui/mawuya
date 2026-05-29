@@ -4,6 +4,9 @@
  */
 package com.qihuizhong.mawuya.ams.controller;
 
+import com.qihuizhong.mawuya.ams.seo.SeoModel;
+import com.qihuizhong.mawuya.ams.seo.SeoProperties;
+import com.qihuizhong.mawuya.ams.seo.SeoUtils;
 import com.qihuizhong.mawuya.core.entity.ArticleInfo;
 import com.qihuizhong.mawuya.core.service.ArticleService;
 import com.qihuizhong.mawuya.core.vo.Page;
@@ -17,16 +20,21 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * 全文搜索 controller。
  *
+ * <p>搜索结果页统一打 noindex —— 这是 SEO 最佳实践：搜索结果页对索引价值低、易被
+ * 判定为"thin content"，统一拒收避免参数化大量重复页污染索引。</p>
+ *
  * @author 钟启辉
  */
 @Controller
 public class SearchController extends BaseController {
 
     private final ArticleService articleService;
+    private final SeoProperties seoProperties;
 
     @Autowired
-    public SearchController(ArticleService articleService) {
+    public SearchController(ArticleService articleService, SeoProperties seoProperties) {
         this.articleService = articleService;
+        this.seoProperties = seoProperties;
     }
 
     @RequestMapping("search")
@@ -48,6 +56,17 @@ public class SearchController extends BaseController {
         page.setUrl("search");
         model.addAttribute("page", page)
                 .addAttribute("keyword", keyword);
+
+        String title = keyword.isEmpty() ? "搜索" : "搜索：" + keyword;
+        SeoModel seo = SeoModel.of(title, "站内搜索结果页面。")
+                .setKeywords(seoProperties.getDefaultKeywords())
+                .setOgType("website")
+                .setCanonical(seoProperties.getSiteUrl() + "/search")
+                .setImage(SeoUtils.toAbsoluteUrl(seoProperties.getSiteUrl(), seoProperties.getDefaultOgImage()))
+                .setNoindex(true);
+        seo.addBreadcrumb("首页", seoProperties.getSiteUrl() + "/")
+                .addBreadcrumb("搜索", null);
+        model.addAttribute("seo", seo);
         return "fts/search";
     }
 }

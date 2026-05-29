@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qihuizhong.mawuya.core.mapper.SysRoleMapper">
+
+    <resultMap id="roleMap" type="com.qihuizhong.mawuya.core.entity.SysRole">
+        <id     property="sn"          column="sn"/>
+        <result property="code"        column="code"/>
+        <result property="name"        column="name"/>
+        <result property="description" column="description"/>
+        <result property="createdAt"   column="created_at"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="roleMap">
+        SELECT sn, code, name, description, created_at FROM sys_role ORDER BY sn ASC
+    </select>
+
+    <select id="selectRoleCodesByUserSn" resultType="string">
+        SELECT r.code FROM sys_role r
+        INNER JOIN sys_user_role ur ON ur.role_sn = r.sn
+        WHERE ur.user_sn = #{userSn}
+    </select>
+
+    <select id="selectRolesByUserSn" resultMap="roleMap">
+        SELECT r.sn, r.code, r.name, r.description, r.created_at
+        FROM sys_role r
+        INNER JOIN sys_user_role ur ON ur.role_sn = r.sn
+        WHERE ur.user_sn = #{userSn}
+        ORDER BY r.sn ASC
+    </select>
+
+    <select id="selectByCodes" resultMap="roleMap">
+        SELECT sn, code, name, description, created_at FROM sys_role
+        WHERE code IN
+        <foreach collection="codes" item="c" open="(" separator="," close=")">
+            #{c}
+        </foreach>
+    </select>
+
+    <delete id="deleteUserRoles">
+        DELETE FROM sys_user_role WHERE user_sn = #{userSn}
+    </delete>
+
+    <insert id="insertUserRoles">
+        INSERT INTO sys_user_role (user_sn, role_sn) VALUES
+        <foreach collection="roleSns" item="rid" separator=",">
+            (#{userSn}, #{rid})
+        </foreach>
+    </insert>
+
+</mapper>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qihuizhong.mawuya.core.mapper.SysUserMapper">
+
+    <resultMap id="userMap" type="com.qihuizhong.mawuya.core.entity.SysUser">
+        <id     property="sn"           column="sn"/>
+        <result property="username"     column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="nickname"     column="nickname"/>
+        <result property="email"        column="email"/>
+        <result property="enabled"      column="enabled"/>
+        <result property="lastLoginAt"  column="last_login_at"/>
+        <result property="createdAt"    column="created_at"/>
+        <result property="updatedAt"    column="updated_at"/>
+    </resultMap>
+
+    <sql id="_columns">
+        sn, username, password_hash, nickname, email, enabled, last_login_at, created_at, updated_at
+    </sql>
+
+    <select id="selectByUsername" resultMap="userMap">
+        SELECT <include refid="_columns"/> FROM sys_user WHERE username = #{username} LIMIT 1
+    </select>
+
+    <select id="selectById" resultMap="userMap">
+        SELECT <include refid="_columns"/> FROM sys_user WHERE sn = #{sn}
+    </select>
+
+    <select id="selectPage" resultMap="userMap">
+        SELECT <include refid="_columns"/> FROM sys_user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (username  LIKE CONCAT('%', #{keyword}, '%')
+                  OR nickname  LIKE CONCAT('%', #{keyword}, '%')
+                  OR email     LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY sn DESC
+        <if test="limit != null">
+            LIMIT
+            <if test="offset != null">#{offset},</if>
+            #{limit}
+        </if>
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM sys_user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (username  LIKE CONCAT('%', #{keyword}, '%')
+                  OR nickname  LIKE CONCAT('%', #{keyword}, '%')
+                  OR email     LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.entity.SysUser"
+            useGeneratedKeys="true" keyProperty="sn">
+        INSERT INTO sys_user (username, password_hash, nickname, email, enabled)
+        VALUES (#{username}, #{passwordHash}, #{nickname}, #{email},
+                <choose>
+                    <when test="enabled != null">#{enabled}</when>
+                    <otherwise>1</otherwise>
+                </choose>)
+    </insert>
+
+    <update id="update" parameterType="com.qihuizhong.mawuya.core.entity.SysUser">
+        UPDATE sys_user
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="email    != null">email    = #{email},</if>
+            <if test="enabled  != null">enabled  = #{enabled},</if>
+        </set>
+        WHERE sn = #{sn}
+    </update>
+
+    <update id="updatePasswordHash">
+        UPDATE sys_user SET password_hash = #{hash} WHERE sn = #{sn}
+    </update>
+
+    <update id="updateEnabled">
+        UPDATE sys_user SET enabled = #{enabled} WHERE sn = #{sn}
+    </update>
+
+    <update id="updateLastLoginAt">
+        UPDATE sys_user SET last_login_at = NOW() WHERE sn = #{sn}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM sys_user WHERE sn = #{sn}
+    </delete>
+
+</mapper>

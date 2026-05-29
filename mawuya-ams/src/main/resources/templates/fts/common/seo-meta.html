@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  全站 SEO 头部 fragment：TDK + Canonical + Open Graph + Twitter Card + 全站级 JSON-LD。
+
+  使用：
+    <head>
+        <th:block th:replace="~{fts/common/seo-meta :: seo-meta}"></th:block>
+        <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
+    </head>
+
+  数据来源（由 SeoModelAdvice 兜底注入，Controller 可覆盖）：
+    ${seo}            – SeoModel：title / description / keywords / canonical / image / og* / breadcrumbs / jsonLdBlocks
+    ${seoProperties}  – SeoProperties：siteName / author / locale / siteUrl / twitterCard / twitterSite
+-->
+<th:block th:fragment="seo-meta">
+    <!-- 1. 标题 + Description + Keywords -->
+    <title th:text="|${seo.title} - ${seoProperties.siteName}|">Zqh's Blog</title>
+    <meta name="description" th:attr="content=${seo.description}"/>
+    <meta name="keywords" th:attr="content=${seo.keywords}"/>
+    <meta name="author" th:attr="content=${seoProperties.author}"/>
+
+    <!-- 2. 抓取策略：noindex 页 / 非可索引环境 自动输出 noindex,nofollow -->
+    <meta name="robots"
+          th:attr="content=${(seoProperties.robotsIndex and !seo.noindex) ? 'index,follow,max-image-preview:large' : 'noindex,nofollow'}"/>
+    <meta name="googlebot"
+          th:attr="content=${(seoProperties.robotsIndex and !seo.noindex) ? 'index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1' : 'noindex,nofollow'}"/>
+    <meta name="format-detection" content="telephone=no,email=no,address=no"/>
+
+    <!-- 3. Canonical：把所有变体（http/https/带参数）归一到唯一权威地址 -->
+    <link rel="canonical" th:if="${seo.canonical != null}" th:href="${seo.canonical}"/>
+
+    <!-- 4. RSS / Sitemap 自发现（Atom 链接给浏览器 / 抓取器 -->
+    <link rel="alternate" type="application/rss+xml"
+          th:attr="title=${seoProperties.siteName} + ' RSS Feed'"
+          th:href="${seoProperties.siteUrl} + '/rss.xml'"/>
+
+    <!-- 5. 性能：preconnect / dns-prefetch（站内 + 上传图片 + 关键 CDN） -->
+    <link rel="dns-prefetch" th:href="${seoProperties.siteUrl}"/>
+
+    <!-- 6. Open Graph (Facebook / 微信分享) -->
+    <meta property="og:type" th:attr="content=${seo.ogType ?: 'website'}"/>
+    <meta property="og:site_name" th:attr="content=${seoProperties.siteName}"/>
+    <meta property="og:locale" th:attr="content=${seoProperties.locale}"/>
+    <meta property="og:title" th:attr="content=${seo.title}"/>
+    <meta property="og:description" th:attr="content=${seo.description}"/>
+    <meta property="og:url" th:if="${seo.canonical != null}" th:attr="content=${seo.canonical}"/>
+    <meta property="og:image" th:if="${seo.image != null}" th:attr="content=${seo.image}"/>
+    <!-- 文章页特有 -->
+    <meta property="article:published_time" th:if="${seo.articlePublishedTime != null}"
+          th:attr="content=${seo.articlePublishedTime}"/>
+    <meta property="article:modified_time" th:if="${seo.articleModifiedTime != null}"
+          th:attr="content=${seo.articleModifiedTime}"/>
+    <meta property="article:author" th:if="${seo.articleAuthor != null}"
+          th:attr="content=${seo.articleAuthor}"/>
+    <meta property="article:section" th:if="${seo.articleSection != null}"
+          th:attr="content=${seo.articleSection}"/>
+    <th:block th:if="${seo.articleTags != null and not #lists.isEmpty(seo.articleTags)}">
+        <meta property="article:tag" th:each="t : ${seo.articleTags}" th:attr="content=${t}"/>
+    </th:block>
+
+    <!-- 7. Twitter Card -->
+    <meta name="twitter:card" th:attr="content=${seoProperties.twitterCard}"/>
+    <meta name="twitter:title" th:attr="content=${seo.title}"/>
+    <meta name="twitter:description" th:attr="content=${seo.description}"/>
+    <meta name="twitter:image" th:if="${seo.image != null}" th:attr="content=${seo.image}"/>
+    <meta name="twitter:site" th:if="${seoProperties.twitterSite != null and !#strings.isEmpty(seoProperties.twitterSite)}"
+          th:attr="content=${seoProperties.twitterSite}"/>
+
+    <!-- 8. 全站级 JSON-LD（WebSite + Organization） -->
+    <script type="application/ld+json" th:inline="text">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "[(${seoProperties.siteName})]",
+  "url": "[(${seoProperties.siteUrl})]/",
+  "description": "[(${seoProperties.defaultDescription})]",
+  "inLanguage": "zh-CN",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "[(${seoProperties.siteUrl})]/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  },
+  "publisher": {
+    "@type": "Person",
+    "name": "[(${seoProperties.author})]",
+    "url": "[(${seoProperties.siteUrl})]/about"
+  }
+}
+    </script>
+
+    <!-- 9. 页面级 JSON-LD（由 Controller 通过 seo.addJsonLd 注入：Article / BreadcrumbList / CollectionPage 等） -->
+    <th:block th:if="${seo.jsonLdBlocks != null and not #lists.isEmpty(seo.jsonLdBlocks)}">
+        <script type="application/ld+json" th:each="block : ${seo.jsonLdBlocks}" th:utext="${block}"></script>
+    </th:block>
+</th:block>
+</body>
+</html>

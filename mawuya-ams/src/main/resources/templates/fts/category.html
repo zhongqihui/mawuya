@@ -1,6 +1,8 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion" th:attr="data-theme=${currentTheme}">
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="theme-next mist use-motion"
+      th:attr="data-theme=${currentTheme}">
 <head>
+    <th:block th:replace="~{fts/common/seo-meta :: seo-meta}"></th:block>
     <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
 </head>
 <body lang="zh-Hans">
@@ -8,26 +10,31 @@
     <div class="headband"></div>
     <th:block th:replace="~{fts/common/header :: header}"></th:block>
 
-    <main id="main" class="main">
+    <main id="main" class="main" role="main">
         <div class="main-inner">
             <div class="content-wrap">
                 <div id="content" class="content">
-                    <section id="posts" class="posts-collapse">
+                    <th:block th:replace="~{fts/common/breadcrumb :: breadcrumb}"></th:block>
+
+                    <section id="posts" class="posts-collapse" aria-label="分类下的文章列表">
                         <div class="collection-title">
-                            <h2><span th:text="${category.categoryName}"></span><small> 分类</small></h2>
+                            <h1><span th:text="${category.categoryName}"></span><small> 分类</small></h1>
                         </div>
 
                         <article class="post post-type-normal" th:each="item : ${category.arts}">
                             <header class="post-header">
-                                <h1 class="post-title">
-                                    <a class="post-title-link" th:href="@{|/${item.sn}|}">
+                                <h2 class="post-title">
+                                    <a class="post-title-link"
+                                       th:href="@{|/${item.sn}|}"
+                                       th:title="${item.articleTitle}">
                                         <span th:text="${item.articleTitle}"></span>
                                     </a>
-                                </h1>
+                                </h2>
 
                                 <div class="post-meta">
-                                    <span th:if="${item.insertTime != null and #strings.length(item.insertTime) gt 10}"
-                                          th:text="${#strings.substring(item.insertTime, 5, 10)}"></span>
+                                    <time th:if="${item.insertTime != null and #strings.length(item.insertTime) gt 10}"
+                                          th:attr="datetime=${#strings.substring(item.insertTime, 0, 10)}"
+                                          th:text="${#strings.substring(item.insertTime, 5, 10)}"></time>
                                 </div>
                             </header>
                         </article>

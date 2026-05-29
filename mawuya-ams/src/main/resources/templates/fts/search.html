@@ -1,19 +1,23 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" class="theme-next mist use-motion" th:attr="data-theme=${currentTheme}">
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="theme-next mist use-motion"
+      th:attr="data-theme=${currentTheme}">
 <head>
+    <th:block th:replace="~{fts/common/seo-meta :: seo-meta}"></th:block>
     <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
-    <title>搜索结果 - Zqh Blog</title>
 </head>
 <body lang="zh-Hans">
 <div class="container one-collumn sidebar-position-left page-home">
     <div class="headband"></div>
     <th:block th:replace="~{fts/common/header :: header}"></th:block>
 
-    <main id="main" class="main">
+    <main id="main" class="main" role="main">
         <div class="main-inner">
             <div class="content-wrap">
                 <div id="content" class="content">
-                    <section id="posts" class="posts-expand">
+                    <th:block th:replace="~{fts/common/breadcrumb :: breadcrumb}"></th:block>
+
+                    <h1 class="visually-hidden">站内搜索</h1>
+                    <section id="posts" class="posts-expand" aria-label="搜索结果">
                         <div class="search-meta" th:if="${keyword != null and not #strings.isEmpty(keyword)}">
                             搜索 <strong th:text="|“${keyword}”|"></strong>
                             的结果，共 <strong th:text="${page != null ? #lists.size(page.lists) : 0}"></strong> 条（本页）
@@ -32,14 +36,17 @@
 
                         <th:block th:if="${page != null and not #lists.isEmpty(page.lists)}">
                             <article class="search-result-item" th:each="article : ${page.lists}">
-                                <div class="title">
-                                    <a th:href="@{|/${article.sn}|}" th:text="${article.articleTitle}"></a>
-                                </div>
+                                <h2 class="title">
+                                    <a th:href="@{|/${article.sn}|}"
+                                       th:title="${article.articleTitle}"
+                                       th:text="${article.articleTitle}"></a>
+                                </h2>
                                 <div class="summary" th:text="${article.articleSummary}"></div>
                                 <div class="meta">
                                     <i class="fa fa-calendar-o"></i>
-                                    <span th:if="${article.insertTime != null and #strings.length(article.insertTime) gt 10}"
-                                          th:text="${#strings.substring(article.insertTime, 0, 10)}"></span>
+                                    <time th:if="${article.insertTime != null and #strings.length(article.insertTime) gt 10}"
+                                          th:attr="datetime=${#strings.substring(article.insertTime, 0, 10)}"
+                                          th:text="${#strings.substring(article.insertTime, 0, 10)}"></time>
                                     &nbsp;|&nbsp;
                                     <i class="fa fa-eye"></i>
                                     <span th:text="|${article.readNum} 阅读|"></span>

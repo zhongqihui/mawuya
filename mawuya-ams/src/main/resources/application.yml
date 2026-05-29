@@ -50,3 +50,19 @@ mawuya:
   async:
     # ams 启用日志/阅读数异步入库线程
     enabled: true
+  # ============================== SEO 全站配置 ==============================
+  # 上线必须改 site-url 为真实域名（含 scheme，无尾斜杠），否则 canonical / sitemap / og:url 会指向 localhost。
+  # 预发 / 灰度环境务必把 robots-index 设为 false，避免不正式内容被搜索引擎收录。
+  seo:
+    site-url: http://localhost:8080
+    site-name: Zqh's Blog
+    default-title: Zqh's Blog - 分享技术与生活
+    default-description: Mawuya Blog - 一个分享 Java、Spring Boot、MySQL 等后端技术与生活随笔的小站。
+    default-keywords: Java,Spring Boot,MySQL,Mybatis,博客,技术分享
+    default-og-image: /statics/images/avatars/avatar2.jpg
+    author: Zhongqihui
+    locale: zh_CN
+    twitter-card: summary_large_image
+    twitter-site: ""
+    robots-index: true
+    sitemap-max-urls: 5000
