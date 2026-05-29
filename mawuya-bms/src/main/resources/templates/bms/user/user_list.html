@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div class="page-head">
+    <ol class="breadcrumb">
+        <li>系统管理</li>
+        <li class="active">用户管理</li>
+        <span style="float:right;">
+            <button type="button" class="btn btn-primary btn-sm" id="user-add-btn">
+                <i class="fa fa-plus"></i> 新增用户
+            </button>
+            <button type="button" class="btn btn-default btn-sm" id="user-refresh-btn" style="margin-left:6px;">
+                <i class="fa fa-refresh"></i> 刷新
+            </button>
+        </span>
+    </ol>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="block-flat">
+            <div class="content">
+                <!-- 搜索条 -->
+                <div style="margin-bottom:14px;">
+                    <input type="text" id="user-keyword" class="form-control input-sm"
+                           placeholder="按用户名 / 昵称 / 邮箱 模糊搜索（回车）"
+                           style="display:inline-block; width:300px; max-width:100%; vertical-align:middle;"/>
+                    <button type="button" class="btn btn-default btn-sm" id="user-search-btn">
+                        <i class="fa fa-search"></i> 查询
+                    </button>
+                    <span id="user-total" style="margin-left:14px; color:#888; font-size:13px;">共 0 条</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="user-table">
+                        <thead>
+                        <tr>
+                            <th style="width:60px;">#</th>
+                            <th style="width:120px;">用户名</th>
+                            <th style="width:120px;">昵称</th>
+                            <th>邮箱</th>
+                            <th style="width:160px;">角色</th>
+                            <th style="width:80px;">状态</th>
+                            <th style="width:160px;">最近登录</th>
+                            <th style="width:240px;">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="user-tbody">
+                        <tr><td colspan="8" style="text-align:center; padding:30px 0; color:#999;">加载中…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="user-pagination" class="user-pagination"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #user-table th { background: #f7f9fb; white-space: nowrap; }
+    #user-table td { vertical-align: middle; }
+    #user-table .role-tag {
+        display: inline-block; padding: 1px 8px; border-radius: 10px;
+        font-size: 11px; color: #fff; margin-right: 4px;
+    }
+    #user-table .role-ADMIN  { background: #d9534f; }
+    #user-table .role-EDITOR { background: #5cb85c; }
+    #user-table .role-OTHER  { background: #777; }
+    #user-table .label-status-1 { background: #5cb85c; padding: 2px 8px; border-radius: 3px; color: #fff; font-size: 11px; }
+    #user-table .label-status-0 { background: #d9534f; padding: 2px 8px; border-radius: 3px; color: #fff; font-size: 11px; }
+    .user-pagination { display:flex; justify-content:center; align-items:center; gap:6px; padding:14px 0 4px; flex-wrap:wrap; }
+    .user-pagination .pg-btn { min-width:32px; height:32px; padding:0 10px; line-height:30px; text-align:center;
+        border:1px solid #ddd; border-radius:4px; background:#fff; color:#555; cursor:pointer; font-size:13px; }
+    .user-pagination .pg-btn:hover { border-color:#5b9bd5; color:#5b9bd5; }
+    .user-pagination .pg-btn.active { background:#5b9bd5; border-color:#5b9bd5; color:#fff; cursor:default; }
+    .user-pagination .pg-btn[disabled] { opacity:.45; cursor:not-allowed; }
+    .user-pagination .pg-info { font-size:12px; color:#888; margin:0 8px; }
+
+    /* 用户表单 */
+    .user-form { padding: 14px 18px 4px; }
+    .user-form .form-group label { font-size: 12px; color: #666; }
+    .user-form .role-checks label {
+        display: inline-block; margin-right: 12px; font-weight: normal;
+        padding: 2px 6px; cursor: pointer;
+    }
+</style>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    /*]]>*/
+
+    var userState = { page: 1, size: 20, keyword: '' };
+    var allRolesCache = null;
+
+    $(function () {
+        loadRoles(function () { userQuery(); });
+
+        $('#user-search-btn').on('click', function () {
+            userState.keyword = $.trim($('#user-keyword').val());
+            userState.page = 1;
+            userQuery();
+        });
+        $('#user-keyword').on('keydown', function (e) { if (e.keyCode === 13) $('#user-search-btn').click(); });
+        $('#user-refresh-btn').on('click', userQuery);
+        $('#user-add-btn').on('click', openCreateForm);
+
+        $('#user-tbody').on('click', '.btn-edit',   function () { openEditForm($(this).data('sn')); });
+        $('#user-tbody').on('click', '.btn-toggle', function () {
+            var sn = $(this).data('sn'), enabled = $(this).data('enabled');
+            doToggle(sn, enabled === 1 ? 0 : 1);
+        });
+        $('#user-tbody').on('click', '.btn-reset',  function () { openResetForm($(this).data('sn'), $(this).data('uname')); });
+        $('#user-tbody').on('click', '.btn-delete', function () { doDelete($(this).data('sn'), $(this).data('uname')); });
+
+        $('#user-pagination').on('click', '.pg-btn', function () {
+            var p = parseInt($(this).data('page'), 10);
+            if (isNaN(p) || p < 1 || $(this).attr('disabled')) return;
+            userState.page = p;
+            userQuery();
+        });
+    });
+
+    function loadRoles(cb) {
+        if (allRolesCache) { cb && cb(); return; }
+        $.ajax({
+            type: 'get', url: _u('/bms/user/roles.do'), cache: false, dataType: 'json',
+            success: function (res) {
+                allRolesCache = (res && res.list) ? res.list : [];
+                cb && cb();
+            },
+            error: function () { allRolesCache = []; cb && cb(); }
+        });
+    }
+
+    function userQuery() {
+        $.ajax({
+            type: 'get', url: _u('/bms/user/page.do'),
+            data: { keyword: userState.keyword, page: userState.page, size: userState.size },
+            cache: false, dataType: 'json',
+            success: function (res) {
+                if (!res || res.success !== 1) {
+                    renderEmpty('查询失败');
+                    return;
+                }
+                $('#user-total').text('共 ' + (res.total || 0) + ' 条');
+                if (!res.list || res.list.length === 0) {
+                    renderEmpty('未匹配到用户');
+                    $('#user-pagination').empty();
+                    return;
+                }
+                renderRows(res.list, (res.page - 1) * res.size);
+                renderPagination(res.page, res.pages);
+            },
+            error: function () { renderEmpty('网络异常'); }
+        });
+    }
+
+    function renderEmpty(text) {
+        $('#user-tbody').html('<tr><td colspan="8" style="text-align:center; padding:40px 0; color:#999;">'
+            + '<i class="fa fa-inbox" style="font-size:24px; display:block; margin-bottom:6px;"></i>'
+            + text + '</td></tr>');
+    }
+    function escHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function renderRows(list, indexOffset) {
+        var html = '';
+        list.forEach(function (u, idx) {
+            var roleHtml = (u.roleCodes || []).map(function (c) {
+                var cls = c === 'ADMIN' ? 'role-ADMIN' : (c === 'EDITOR' ? 'role-EDITOR' : 'role-OTHER');
+                return '<span class="role-tag ' + cls + '">' + escHtml(c) + '</span>';
+            }).join(' ');
+            if (!roleHtml) roleHtml = '<span style="color:#bbb;">—</span>';
+
+            var statusLabel = u.enabled === 1
+                ? '<span class="label-status-1">启用</span>'
+                : '<span class="label-status-0">禁用</span>';
+            var lastLogin = u.lastLoginAt ? escHtml(u.lastLoginAt).substring(0, 19) : '<span style="color:#bbb;">从未登录</span>';
+
+            // 内置 admin (sn=1) 不能删除，只能改密改角色
+            var isBuiltIn = (u.sn === 1);
+
+            html += '<tr>'
+                +    '<td>' + (indexOffset + idx + 1) + '</td>'
+                +    '<td><b>' + escHtml(u.username) + '</b>'
+                +       (isBuiltIn ? ' <span style="font-size:11px; color:#fa8c16;">(内置)</span>' : '')
+                +       '</td>'
+                +    '<td>' + escHtml(u.nickname || '-') + '</td>'
+                +    '<td>' + escHtml(u.email || '-') + '</td>'
+                +    '<td>' + roleHtml + '</td>'
+                +    '<td>' + statusLabel + '</td>'
+                +    '<td>' + lastLogin + '</td>'
+                +    '<td>'
+                +      '<button class="btn btn-default btn-xs btn-edit" data-sn="' + u.sn + '">'
+                +      '<i class="fa fa-pencil"></i> 编辑</button> '
+                +      '<button class="btn btn-' + (u.enabled === 1 ? 'warning' : 'success') + ' btn-xs btn-toggle" '
+                +      ' data-sn="' + u.sn + '" data-enabled="' + u.enabled + '">'
+                +      '<i class="fa fa-' + (u.enabled === 1 ? 'pause' : 'play') + '"></i> '
+                +      (u.enabled === 1 ? '禁用' : '启用') + '</button> '
+                +      '<button class="btn btn-info btn-xs btn-reset" data-sn="' + u.sn + '" data-uname="' + escHtml(u.username) + '">'
+                +      '<i class="fa fa-key"></i> 重置密码</button> '
+                +      (isBuiltIn ? '' :
+                          '<button class="btn btn-danger btn-xs btn-delete" data-sn="' + u.sn + '" data-uname="' + escHtml(u.username) + '">'
+                        + '<i class="fa fa-trash-o"></i></button>')
+                +    '</td>'
+                +  '</tr>';
+        });
+        $('#user-tbody').html(html);
+    }
+
+    function renderPagination(page, pages) {
+        if (!pages || pages <= 1) { $('#user-pagination').empty(); return; }
+        var html = '';
+        html += '<button type="button" class="pg-btn" data-page="' + (page - 1) + '" '
+             +  (page <= 1 ? 'disabled' : '') + '><i class="fa fa-chevron-left"></i></button>';
+        var start = Math.max(1, page - 2), end = Math.min(pages, page + 2);
+        if (start > 1) {
+            html += '<button type="button" class="pg-btn" data-page="1">1</button>';
+            if (start > 2) html += '<span class="pg-info">…</span>';
+        }
+        for (var i = start; i <= end; i++) {
+            html += '<button type="button" class="pg-btn ' + (i === page ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
+        }
+        if (end < pages) {
+            if (end < pages - 1) html += '<span class="pg-info">…</span>';
+            html += '<button type="button" class="pg-btn" data-page="' + pages + '">' + pages + '</button>';
+        }
+        html += '<button type="button" class="pg-btn" data-page="' + (page + 1) + '" '
+             +  (page >= pages ? 'disabled' : '') + '><i class="fa fa-chevron-right"></i></button>';
+        html += '<span class="pg-info">第 ' + page + ' / ' + pages + ' 页</span>';
+        $('#user-pagination').html(html);
+    }
+
+    function buildRoleChecks(selectedCodes, prefix) {
+        var sel = selectedCodes || [];
+        var html = '';
+        (allRolesCache || []).forEach(function (r) {
+            var checked = sel.indexOf(r.code) >= 0 ? 'checked' : '';
+            html += '<label><input type="checkbox" name="' + prefix + '_role" value="' + escHtml(r.code) + '" ' + checked + '/> '
+                 +  escHtml(r.name) + ' (' + escHtml(r.code) + ')</label>';
+        });
+        return html || '<span style="color:#bbb;">暂无角色</span>';
+    }
+    function getCheckedRoles(prefix) {
+        return $('input[name="' + prefix + '_role"]:checked').map(function () { return this.value; }).get().join(',');
+    }
+
+    function openCreateForm() {
+        var html =
+            '<div class="user-form">'
+          + '  <div class="form-group"><label>用户名 *</label>'
+          + '    <input type="text" id="cf_username" class="form-control" maxlength="40" placeholder="登录账号"/></div>'
+          + '  <div class="form-group"><label>密码 *（≥6 位）</label>'
+          + '    <input type="password" id="cf_password" class="form-control" maxlength="64"/></div>'
+          + '  <div class="form-group"><label>昵称</label>'
+          + '    <input type="text" id="cf_nickname" class="form-control" maxlength="40"/></div>'
+          + '  <div class="form-group"><label>邮箱</label>'
+          + '    <input type="email" id="cf_email" class="form-control" maxlength="80"/></div>'
+          + '  <div class="form-group"><label>角色</label>'
+          + '    <div class="role-checks">' + buildRoleChecks([], 'cf') + '</div></div>'
+          + '</div>';
+        layer.open({
+            type: 1, title: '新增用户', skin: 'layui-layer-lan',
+            area: ['440px', 'auto'], content: html, btn: ['创建', '取消'],
+            yes: function (idx) {
+                var data = {
+                    username: $('#cf_username').val(),
+                    password: $('#cf_password').val(),
+                    nickname: $('#cf_nickname').val(),
+                    email:    $('#cf_email').val(),
+                    enabled:  1,
+                    roleCodes: getCheckedRoles('cf')
+                };
+                $.post(_u('/bms/user/create.do'), data, function (res) {
+                    if (res && res.success === 1) {
+                        layer.close(idx);
+                        layer.msg('创建成功', {icon: 1, time: 1000});
+                        userQuery();
+                    } else {
+                        layer.alert((res && res.message) || '创建失败', {icon: 2});
+                    }
+                }).fail(function () { layer.alert('网络异常', {icon: 2}); });
+            }
+        });
+    }
+
+    function openEditForm(sn) {
+        // 先取列表里那行的数据填表（避免再发一次详情请求）
+        var $row = $('#user-tbody').find('button.btn-edit[data-sn="' + sn + '"]').closest('tr');
+        // 简化：再发起 page 接口取一次也行；这里直接读列表 td 文本
+        var nickname = $row.find('td').eq(2).text().trim(); if (nickname === '-') nickname = '';
+        var email    = $row.find('td').eq(3).text().trim(); if (email === '-') email = '';
+        // 角色从 role-tag 提取
+        var roles = $row.find('.role-tag').map(function () { return $(this).text().trim(); }).get();
+
+        var html =
+            '<div class="user-form">'
+          + '  <div class="form-group"><label>昵称</label>'
+          + '    <input type="text" id="ef_nickname" class="form-control" maxlength="40" value="' + escHtml(nickname) + '"/></div>'
+          + '  <div class="form-group"><label>邮箱</label>'
+          + '    <input type="email" id="ef_email" class="form-control" maxlength="80" value="' + escHtml(email) + '"/></div>'
+          + '  <div class="form-group"><label>角色</label>'
+          + '    <div class="role-checks">' + buildRoleChecks(roles, 'ef') + '</div></div>'
+          + '</div>';
+        layer.open({
+            type: 1, title: '编辑用户 #' + sn, skin: 'layui-layer-lan',
+            area: ['440px', 'auto'], content: html, btn: ['保存', '取消'],
+            yes: function (idx) {
+                var data = {
+                    sn: sn,
+                    nickname: $('#ef_nickname').val(),
+                    email:    $('#ef_email').val(),
+                    roleCodes: getCheckedRoles('ef')
+                };
+                $.post(_u('/bms/user/update.do'), data, function (res) {
+                    if (res && res.success === 1) {
+                        layer.close(idx);
+                        layer.msg('已保存', {icon: 1, time: 1000});
+                        userQuery();
+                    } else {
+                        layer.alert((res && res.message) || '保存失败', {icon: 2});
+                    }
+                }).fail(function () { layer.alert('网络异常', {icon: 2}); });
+            }
+        });
+    }
+
+    function openResetForm(sn, uname) {
+        var html =
+            '<div class="user-form">'
+          + '  <div style="margin-bottom:10px; color:#666;">为用户 <b>' + escHtml(uname) + '</b> 设置新密码：</div>'
+          + '  <div class="form-group"><label>新密码（≥6 位）</label>'
+          + '    <input type="password" id="rf_password" class="form-control" maxlength="64"/></div>'
+          + '</div>';
+        layer.open({
+            type: 1, title: '重置密码', skin: 'layui-layer-lan',
+            area: ['380px', 'auto'], content: html, btn: ['确定', '取消'],
+            yes: function (idx) {
+                var pwd = $('#rf_password').val();
+                if (!pwd || pwd.length < 6) { layer.msg('密码至少 6 位', {icon: 7}); return; }
+                $.post(_u('/bms/user/reset.do'), {sn: sn, password: pwd}, function (res) {
+                    if (res && res.success === 1) {
+                        layer.close(idx);
+                        layer.msg('已重置', {icon: 1, time: 1000});
+                    } else {
+                        layer.alert((res && res.message) || '重置失败', {icon: 2});
+                    }
+                }).fail(function () { layer.alert('网络异常', {icon: 2}); });
+            }
+        });
+    }
+
+    function doToggle(sn, enabled) {
+        layer.confirm(enabled === 1 ? '确认启用该用户？' : '确认禁用该用户？',
+                      {btn: ['确定', '取消'], skin: 'layui-layer-lan'},
+        function (idx) {
+            $.post(_u('/bms/user/toggle.do'), {sn: sn, enabled: enabled}, function (res) {
+                layer.close(idx);
+                if (res && res.success === 1) {
+                    layer.msg(res.message || '操作成功', {icon: 1, time: 800});
+                    userQuery();
+                } else {
+                    layer.alert((res && res.message) || '操作失败', {icon: 2});
+                }
+            });
+        });
+    }
+
+    function doDelete(sn, uname) {
+        layer.confirm('确认删除用户 <b>' + escHtml(uname) + '</b>？此操作不可恢复。',
+                      {btn: ['是', '否'], skin: 'layui-layer-lan'},
+        function (idx) {
+            $.post(_u('/bms/user/delete.do'), {sn: sn}, function (res) {
+                layer.close(idx);
+                if (res && res.success === 1) {
+                    layer.msg('已删除', {icon: 1, time: 800});
+                    userQuery();
+                } else {
+                    layer.alert((res && res.message) || '删除失败', {icon: 2});
+                }
+            });
+        });
+    }
+</script>
+</body>
+</html>

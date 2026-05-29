@@ -135,6 +135,19 @@
                   th:action="@{/bms/login.do}">
                 <div class="content">
                     <h4 class="title">用户登录</h4>
+                    <!-- 登录提示：失败 / 退出 / 会话过期 -->
+                    <div th:if="${loginError}"
+                         style="color:#d9534f; font-size:13px; margin-bottom:10px;">
+                        <i class="fa fa-times-circle"></i> 用户名或密码错误，或账号已被禁用
+                    </div>
+                    <div th:if="${loginLogout}"
+                         style="color:#5cb85c; font-size:13px; margin-bottom:10px;">
+                        <i class="fa fa-check-circle"></i> 您已成功退出登录
+                    </div>
+                    <div th:if="${loginExpired}"
+                         style="color:#f0ad4e; font-size:13px; margin-bottom:10px;">
+                        <i class="fa fa-clock-o"></i> 登录已过期，请重新登录
+                    </div>
                     <div class="form-group">
                         <div class="col-sm-12">
                             <div class="input-group">

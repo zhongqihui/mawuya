@@ -111,3 +111,60 @@ INSERT INTO `category_info` (`category_name`) VALUES
     ('技术'),
     ('生活')
     ON DUPLICATE KEY UPDATE `category_name` = VALUES(`category_name`);
+
+-- =====================================================================
+-- 8. 用户与角色（RBAC）
+-- 仅 BMS 模块会启用 Spring Security；AMS 不依赖这些表
+-- =====================================================================
+DROP TABLE IF EXISTS `sys_user`;
+CREATE TABLE `sys_user` (
+    `sn`             INT(11)      NOT NULL AUTO_INCREMENT       COMMENT '主键sn',
+    `username`       VARCHAR(40)  NOT NULL                      COMMENT '登录账号',
+    `password_hash`  VARCHAR(80)  NOT NULL                      COMMENT 'BCrypt 加密后密码',
+    `nickname`       VARCHAR(40)  DEFAULT NULL                  COMMENT '展示昵称',
+    `email`          VARCHAR(80)  DEFAULT NULL                  COMMENT '邮箱',
+    `enabled`        TINYINT(1)   NOT NULL DEFAULT 1            COMMENT '是否启用：1=启用,0=禁用',
+    `last_login_at`  DATETIME     DEFAULT NULL                  COMMENT '最近登录时间',
+    `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP   COMMENT '创建时间',
+    `updated_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                  ON UPDATE CURRENT_TIMESTAMP        COMMENT '更新时间',
+    PRIMARY KEY (`sn`),
+    UNIQUE KEY `uk_user_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统用户表';
+
+DROP TABLE IF EXISTS `sys_role`;
+CREATE TABLE `sys_role` (
+    `sn`         INT(11)      NOT NULL AUTO_INCREMENT  COMMENT '主键sn',
+    `code`       VARCHAR(40)  NOT NULL                 COMMENT '角色 code，例如 ADMIN/EDITOR',
+    `name`       VARCHAR(60)  NOT NULL                 COMMENT '角色显示名',
+    `description` VARCHAR(200) DEFAULT NULL            COMMENT '描述',
+    `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP    COMMENT '创建时间',
+    PRIMARY KEY (`sn`),
+    UNIQUE KEY `uk_role_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统角色表';
+
+DROP TABLE IF EXISTS `sys_user_role`;
+CREATE TABLE `sys_user_role` (
+    `user_sn` INT(11) NOT NULL COMMENT 'sys_user.sn',
+    `role_sn` INT(11) NOT NULL COMMENT 'sys_role.sn',
+    PRIMARY KEY (`user_sn`, `role_sn`),
+    KEY `idx_ur_role_sn` (`role_sn`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户-角色关联';
+
+-- 种子角色：ADMIN（全权）+ EDITOR（除用户管理外都可）
+INSERT INTO `sys_role` (`code`, `name`, `description`) VALUES
+    ('ADMIN',  '超级管理员', '拥有全部权限，包含用户与角色管理'),
+    ('EDITOR', '内容编辑',   '可管理博客、评论、图片等内容，无用户管理权限')
+    ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+
+-- 种子用户：admin / 123456（迁移既有硬编码登录）
+-- BCrypt strength=10 的 "123456" 哈希（用 spring-security 5.2.2 BCrypt.hashpw 真实生成 + 校验通过）
+INSERT INTO `sys_user` (`username`, `password_hash`, `nickname`, `enabled`) VALUES
+    ('admin', '$2a$10$c81uRtr1MkvT3qSgIpKZOuiw94vXF26sdwyt/vcQMihN1vIYMsWCW', '管理员', 1)
+    ON DUPLICATE KEY UPDATE `username` = `username`;
+
+-- 给 admin 绑定 ADMIN 角色
+INSERT INTO `sys_user_role` (`user_sn`, `role_sn`)
+SELECT u.sn, r.sn FROM `sys_user` u, `sys_role` r
+WHERE u.username = 'admin' AND r.code = 'ADMIN'
+    ON DUPLICATE KEY UPDATE `user_sn` = `user_sn`;

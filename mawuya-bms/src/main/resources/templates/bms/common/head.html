@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <div th:fragment="head" id="head-nav" class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
@@ -13,13 +14,22 @@
             <ul class="nav navbar-nav navbar-right user-nav">
                 <li class="dropdown profile_menu">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <img alt="Avatar" th:src="@{/statics/images/avatar2.jpg}"/>钟启辉<b class="caret"></b>
+                        <img alt="Avatar" th:src="@{/statics/images/avatar2.jpg}"/>
+                        <!-- 优先展示登录用户名；未登录时回退默认 -->
+                        <span sec:authentication="name">钟启辉</span>
+                        <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
                         <li><a href="#">我的账户</a></li>
                         <li><a href="#">消息</a></li>
                         <li class="divider"></li>
-                        <li><a th:href="@{/bms/login.do}">退出</a></li>
+                        <li>
+                            <!-- Spring Security 默认 logout 必须 POST -->
+                            <a href="javascript:void(0)" onclick="document.getElementById('bms-logout-form').submit();">
+                                <i class="fa fa-sign-out"></i> 退出
+                            </a>
+                            <form id="bms-logout-form" th:action="@{/bms/logout}" method="post" style="display:none;"></form>
+                        </li>
                     </ul>
                 </li>
             </ul>

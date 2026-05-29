@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <div th:fragment="left" id="cl-wrapper">
     <div class="cl-sidebar">
@@ -47,6 +48,15 @@
                             <ul class="sub-menu">
                                 <li>
                                     <a th:attr="link-url=@{/bms/review/list.do}" class="link-li" id="6">&nbsp;&nbsp;留言审批</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <!-- 系统管理：仅 ADMIN 可见 -->
+                        <li sec:authorize="hasRole('ADMIN')">
+                            <a href="#"><i class="fa fa-users"></i><span>系统管理</span></a>
+                            <ul class="sub-menu">
+                                <li>
+                                    <a th:attr="link-url=@{/bms/user/list.do}" class="link-li" id="8">&nbsp;&nbsp;用户管理</a>
                                 </li>
                             </ul>
                         </li>

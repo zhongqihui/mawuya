@@ -49,3 +49,9 @@ mawuya:
   async:
     # bms 不启用前台异步入库线程
     enabled: false
+  security:
+    jwt:
+      # 生产部署务必覆盖（≥32 字节随机字符串），可在配置中心或环境变量注入
+      secret: dev-only-PLEASE-CHANGE-this-32-byte-secret-string-9527-okxx
+      # 默认 8 小时（28800 秒）
+      expires-seconds: 28800
