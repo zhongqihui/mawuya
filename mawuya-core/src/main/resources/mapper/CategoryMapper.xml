@@ -6,7 +6,7 @@
         sn,category_name
     </sql>
 
-    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.entity.Category">
+    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.dataobject.CategoryDO">
         INSERT INTO category_info (category_name) VALUES (#{categoryName})
     </insert>
 
@@ -14,19 +14,19 @@
         DELETE FROM category_info WHERE sn = #{value}
     </delete>
 
-    <update id="update" parameterType="com.qihuizhong.mawuya.core.entity.Category">
+    <update id="update" parameterType="com.qihuizhong.mawuya.core.dataobject.CategoryDO">
         UPDATE category_info SET category_name = #{categoryName} WHERE sn = #{sn}
     </update>
 
-    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.entity.Category">
+    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.dataobject.CategoryDO">
         SELECT <include refid="_columns"/> FROM category_info WHERE sn = #{value}
     </select>
 
-    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.Category">
+    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.CategoryDO">
         SELECT <include refid="_columns"/> FROM category_info ORDER BY sn DESC
     </select>
 
-    <select id="selectByPage" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.Category">
+    <select id="selectByPage" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.CategoryDO">
         SELECT <include refid="_columns"/> FROM category_info
         <if test="@com.qihuizhong.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
             LIMIT #{start},#{limit}

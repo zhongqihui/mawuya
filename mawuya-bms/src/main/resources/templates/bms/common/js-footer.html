@@ -26,7 +26,8 @@
     -->
     <script type="text/javascript">
         window.Api = (function () {
-            var SUCCESS = '000000';
+            // 与后端 ResultCodeEnum.SUCCESS 保持一致（阿里规约 5 位字符串：成功 = "00000"）
+            var SUCCESS = '00000';
             return {
                 /** 判定 BaseResponse 是否成功 */
                 isOk: function (res) {

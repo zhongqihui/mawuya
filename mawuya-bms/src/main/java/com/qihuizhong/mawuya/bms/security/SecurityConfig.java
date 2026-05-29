@@ -66,8 +66,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         (req, resp, ex) -> {
                             resp.setStatus(HttpStatus.UNAUTHORIZED.value());
                             resp.setContentType("application/json;charset=UTF-8");
+                            // 与 ResultCodeEnum.UNAUTHORIZED 保持一致（阿里 A0230：未登录或登录已过期）
                             resp.getWriter().write(
-                                    "{\"code\":\"001401\",\"message\":\"未登录或 token 无效\"}");
+                                    "{\"code\":\"A0230\",\"message\":\"未登录或 token 无效\"}");
                         },
                         new AntPathRequestMatcher("/bms/api/**"))
             .and()

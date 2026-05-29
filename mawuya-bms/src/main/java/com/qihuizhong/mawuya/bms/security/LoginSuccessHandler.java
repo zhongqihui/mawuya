@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms.security;
 
-import com.qihuizhong.mawuya.core.entity.SysUser;
+import com.qihuizhong.mawuya.core.dataobject.UserDO;
 import com.qihuizhong.mawuya.core.service.SysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -38,9 +38,9 @@ public class LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
             throws IOException, ServletException {
         try {
             if (auth != null && auth.getName() != null) {
-                SysUser u = sysUserService.loadByUsername(auth.getName());
+                UserDO u = sysUserService.getByUsername(auth.getName());
                 if (u != null) {
-                    sysUserService.touchLastLogin(u.getSn());
+                    sysUserService.updateLastLoginAt(u.getSn());
                 }
             }
         } catch (Exception ignore) { /* 失败不阻断登录 */ }

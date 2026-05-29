@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms;
 
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
 import com.qihuizhong.mawuya.core.mapper.ArticleInfoMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,13 +27,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Transactional
 @Rollback
-@DisplayName("E2E-7：ArticleInfo 搜索与批量查询")
+@DisplayName("E2E-7：ArticleDO 搜索与批量查询")
 class ArticleSearchE2ETest {
 
     @Autowired private ArticleInfoMapper articleMapper;
 
-    private ArticleInfo build(String title, String content) {
-        return new ArticleInfo()
+    private ArticleDO build(String title, String content) {
+        return new ArticleDO()
                 .setCategorySn(0).setReadNum(0).setReviewNum(0)
                 .setPraiseNum(0).setTeaseNum(0)
                 .setArticleTitle(title).setArticleSummary(title + " summary")
@@ -49,7 +49,7 @@ class ArticleSearchE2ETest {
         articleMapper.insert(build("ut-search-3 normal",                      "summary " + tag + " here"));
         articleMapper.insert(build("ut-search-4 noise",                       "无关正文"));
 
-        List<ArticleInfo> hits = articleMapper.searchByKeyword(tag, 0, 10);
+        List<ArticleDO> hits = articleMapper.searchByKeyword(tag, 0, 10);
         // 4 条中有 3 条命中（任一字段含 tag）
         assertThat(hits).hasSize(3);
 
@@ -63,14 +63,14 @@ class ArticleSearchE2ETest {
         articleMapper.insert(build("ut-batch-A " + UUID.randomUUID(), "ca"));
         articleMapper.insert(build("ut-batch-B " + UUID.randomUUID(), "cb"));
 
-        List<ArticleInfo> two = articleMapper.selectAllNoContent(new java.util.HashMap<>()).stream()
+        List<ArticleDO> two = articleMapper.selectAllNoContent(new java.util.HashMap<>()).stream()
                 .filter(a -> a.getArticleTitle().startsWith("ut-batch-"))
                 .collect(java.util.stream.Collectors.toList());
         assertThat(two).hasSizeGreaterThanOrEqualTo(2);
 
         List<Integer> sns = Arrays.asList(two.get(0).getSn(), two.get(1).getSn());
-        List<ArticleInfo> picked = articleMapper.selectListBySnList(sns);
-        assertThat(picked).extracting(ArticleInfo::getSn).containsAll(sns);
+        List<ArticleDO> picked = articleMapper.selectListBySnList(sns);
+        assertThat(picked).extracting(ArticleDO::getSn).containsAll(sns);
         // _columns_no_content 不包含 articleContent
         assertThat(picked).allSatisfy(a -> assertThat(a.getArticleContent()).isNull());
     }
@@ -82,7 +82,7 @@ class ArticleSearchE2ETest {
         articleMapper.insert(build("ut-hot-mid " + UUID.randomUUID(),  "x").setReadNum(99));
         articleMapper.insert(build("ut-hot-high " + UUID.randomUUID(), "x").setReadNum(9999));
 
-        List<ArticleInfo> top = articleMapper.selectHotTopN(3);
+        List<ArticleDO> top = articleMapper.selectHotTopN(3);
         assertThat(top).hasSize(3);
         // 严格递减
         assertThat(top.get(0).getReadNum()).isGreaterThanOrEqualTo(top.get(1).getReadNum());

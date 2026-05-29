@@ -5,7 +5,7 @@
 package com.qihuizhong.mawuya.core.thread;
 
 import com.qihuizhong.mawuya.core.cache.DataCenter;
-import com.qihuizhong.mawuya.core.entity.LogInfo;
+import com.qihuizhong.mawuya.core.dataobject.LogDO;
 import com.qihuizhong.mawuya.core.mapper.LogInfoMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +61,9 @@ public class LogToDBThread implements Runnable {
     }
 
     private void insert2DB(int limit) {
-        List<LogInfo> infos = new ArrayList<>();
+        List<LogDO> infos = new ArrayList<>(limit);
         for (int i = 0; i < limit; i++) {
-            LogInfo info = DataCenter.getLogInfoToDBQueue().poll();
+            LogDO info = DataCenter.getLogInfoToDBQueue().poll();
             if (info != null) {
                 infos.add(info);
             }

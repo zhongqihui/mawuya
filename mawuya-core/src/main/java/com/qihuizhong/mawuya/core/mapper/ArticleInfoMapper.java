@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.core.mapper;
 
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -17,13 +17,13 @@ import java.util.Map;
  * @author 钟启辉
  */
 @Mapper
-public interface ArticleInfoMapper extends BaseMapper<ArticleInfo, Integer> {
+public interface ArticleInfoMapper extends BaseMapper<ArticleDO, Integer> {
 
-    List<ArticleInfo> selectAllNoContent(Map<String, ?> map);
+    List<ArticleDO> selectAllNoContent(Map<String, ?> map);
 
-    ArticleInfo selectNextById(Integer id);
+    ArticleDO selectNextById(Integer id);
 
-    ArticleInfo selectPrevById(Integer id);
+    ArticleDO selectPrevById(Integer id);
 
     /**
      * 批量将 sns 的 readNum + 1。
@@ -34,13 +34,13 @@ public interface ArticleInfoMapper extends BaseMapper<ArticleInfo, Integer> {
 
     int updateBatchCategorySn(@Param("value") String sns);
 
-    int updatePictureUrl(ArticleInfo a);
+    int updatePictureUrl(ArticleDO a);
 
     /**
      * 关键字搜索：在标题、摘要、正文中模糊匹配（不返回正文以减小流量）。
      * 入参 keyword 已经在 Service 层做了 SQL 通配符转义。
      */
-    List<ArticleInfo> searchByKeyword(@Param("keyword") String keyword,
+    List<ArticleDO> searchByKeyword(@Param("keyword") String keyword,
                                       @Param("start") Integer start,
                                       @Param("limit") Integer limit);
 
@@ -49,10 +49,10 @@ public interface ArticleInfoMapper extends BaseMapper<ArticleInfo, Integer> {
     /**
      * 按 sn 列表批量查询（不带正文）
      */
-    List<ArticleInfo> selectListBySnList(@Param("sns") List<Integer> sns);
+    List<ArticleDO> selectListBySnList(@Param("sns") List<Integer> sns);
 
     /**
      * 热门文章 Top N（按阅读数倒序）
      */
-    List<ArticleInfo> selectHotTopN(@Param("limit") int limit);
+    List<ArticleDO> selectHotTopN(@Param("limit") int limit);
 }

@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms;
 
-import com.qihuizhong.mawuya.core.entity.LogInfo;
+import com.qihuizhong.mawuya.core.dataobject.LogDO;
 import com.qihuizhong.mawuya.core.mapper.LogInfoMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,8 +34,8 @@ class LogInfoMapperE2ETest {
     @Autowired
     private LogInfoMapper logInfoMapper;
 
-    private LogInfo build(String ip) {
-        return new LogInfo()
+    private LogDO build(String ip) {
+        return new LogDO()
                 .setIpAddr(ip)
                 .setCountry("CN")
                 .setProvince("Guangdong")
@@ -69,7 +69,7 @@ class LogInfoMapperE2ETest {
     @DisplayName("insertBatch 批量插入访客日志")
     void shouldInsertBatch() {
         Integer before = logInfoMapper.selectCount(new HashMap<>());
-        List<LogInfo> batch = Arrays.asList(
+        List<LogDO> batch = Arrays.asList(
                 build("10.0.0.2"), build("10.0.0.3"), build("10.0.0.4"));
         int rows = logInfoMapper.insertBatch(batch);
         assertThat(rows).isEqualTo(3);
@@ -89,7 +89,7 @@ class LogInfoMapperE2ETest {
         Map<String, Object> p = new HashMap<>();
         p.put("start", 0);
         p.put("limit", 2);
-        List<LogInfo> page = logInfoMapper.selectByPage(p);
+        List<LogDO> page = logInfoMapper.selectByPage(p);
         assertThat(page).hasSize(2);
     }
 }

@@ -8,7 +8,7 @@ import com.qihuizhong.mawuya.bms.dto.request.CategoryCreateRequest;
 import com.qihuizhong.mawuya.bms.dto.request.CategoryUpdateRequest;
 import com.qihuizhong.mawuya.bms.dto.request.SnRequest;
 import com.qihuizhong.mawuya.core.common.BaseResponse;
-import com.qihuizhong.mawuya.core.entity.Category;
+import com.qihuizhong.mawuya.core.dataobject.CategoryDO;
 import com.qihuizhong.mawuya.core.exception.BusinessException;
 import com.qihuizhong.mawuya.core.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +38,8 @@ public class CategoryApiController {
 
     @PostMapping("create")
     public BaseResponse<Void> create(@Valid CategoryCreateRequest req) {
-        Category c = new Category().setCategoryName(req.getCategoryName().trim());
-        if (categoryService.insert(c) <= 0) {
+        CategoryDO c = new CategoryDO().setCategoryName(req.getCategoryName().trim());
+        if (categoryService.save(c) <= 0) {
             throw new BusinessException("创建失败");
         }
         return BaseResponse.success("创建成功", null);
@@ -47,10 +47,10 @@ public class CategoryApiController {
 
     @PostMapping("update")
     public BaseResponse<Void> update(@Valid CategoryUpdateRequest req) {
-        Category c = new Category()
+        CategoryDO c = new CategoryDO()
                 .setSn(req.getSn())
                 .setCategoryName(req.getCategoryName().trim());
-        if (categoryService.update(c) <= 0) {
+        if (categoryService.updateById(c) <= 0) {
             throw new BusinessException("更新失败：分类不存在");
         }
         return BaseResponse.success("更新成功", null);
@@ -58,7 +58,7 @@ public class CategoryApiController {
 
     @PostMapping("delete")
     public BaseResponse<Void> delete(@Valid SnRequest req) {
-        String result = categoryService.delCategory(String.valueOf(req.getSn()));
+        String result = categoryService.removeAndOrphanArticles(String.valueOf(req.getSn()));
         if (!"success".equals(result)) {
             throw new BusinessException("删除失败");
         }

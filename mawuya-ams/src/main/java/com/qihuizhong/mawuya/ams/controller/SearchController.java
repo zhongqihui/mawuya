@@ -7,7 +7,7 @@ package com.qihuizhong.mawuya.ams.controller;
 import com.qihuizhong.mawuya.ams.seo.SeoModel;
 import com.qihuizhong.mawuya.ams.seo.SeoProperties;
 import com.qihuizhong.mawuya.ams.seo.SeoUtils;
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
 import com.qihuizhong.mawuya.core.service.ArticleService;
 import com.qihuizhong.mawuya.core.vo.Page;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,13 +45,13 @@ public class SearchController extends BaseController {
         // 限制最长 60，避免过长查询拖垮 DB
         String keyword = q.length() > 60 ? q.substring(0, 60) : q;
 
-        Page<ArticleInfo> page;
+        Page<ArticleDO> page;
         if (keyword.trim().isEmpty()) {
             page = new Page<>();
             page.setLists(java.util.Collections.emptyList())
                     .setCurr(1).setSize(10).setPageSize(0);
         } else {
-            page = articleService.search(keyword.trim(), request);
+            page = articleService.searchByKeyword(keyword.trim(), request);
         }
         page.setUrl("search");
         model.addAttribute("page", page)

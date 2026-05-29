@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms;
 
-import com.qihuizhong.mawuya.core.entity.Category;
+import com.qihuizhong.mawuya.core.dataobject.CategoryDO;
 import com.qihuizhong.mawuya.core.mapper.CategoryMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -46,20 +46,20 @@ class CategoryMapperE2ETest {
     void shouldRunFullCrud() {
         // 1. insert
         String name = "ut-cat-" + UUID.randomUUID().toString().substring(0, 8);
-        Category c = new Category().setCategoryName(name);
+        CategoryDO c = new CategoryDO().setCategoryName(name);
         int rows = categoryMapper.insert(c);
         assertThat(rows).isEqualTo(1);
 
         // 2. 通过 selectList 反查（insert 没有返回主键）
-        List<Category> all = categoryMapper.selectList(new HashMap<>());
-        Category saved = all.stream()
+        List<CategoryDO> all = categoryMapper.selectList(new HashMap<>());
+        CategoryDO saved = all.stream()
                 .filter(x -> name.equals(x.getCategoryName()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("新增分类未被查询到"));
         assertThat(saved.getSn()).isNotNull().isPositive();
 
         // 3. selectById
-        Category got = categoryMapper.selectById(saved.getSn());
+        CategoryDO got = categoryMapper.selectById(saved.getSn());
         assertThat(got).isNotNull();
         assertThat(got.getCategoryName()).isEqualTo(name);
 
@@ -82,14 +82,14 @@ class CategoryMapperE2ETest {
     void shouldPaginate() {
         // 准备 5 条记录
         for (int i = 0; i < 5; i++) {
-            categoryMapper.insert(new Category()
+            categoryMapper.insert(new CategoryDO()
                     .setCategoryName("page-cat-" + UUID.randomUUID().toString().substring(0, 6)));
         }
 
         Map<String, Object> p = new HashMap<>();
         p.put("start", 0);
         p.put("limit", 3);
-        List<Category> page = categoryMapper.selectByPage(p);
+        List<CategoryDO> page = categoryMapper.selectByPage(p);
         assertThat(page).hasSize(3);
 
         Integer count = categoryMapper.selectCount(new HashMap<>());

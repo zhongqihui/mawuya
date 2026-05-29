@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms.security;
 
-import com.qihuizhong.mawuya.core.entity.SysUser;
+import com.qihuizhong.mawuya.core.dataobject.UserDO;
 import com.qihuizhong.mawuya.core.service.SysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -33,22 +33,29 @@ import java.util.List;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
+    /** Spring Security 默认角色前缀 */
+    private static final String ROLE_PREFIX = "ROLE_";
+    /** UserDO.enabled 启用值 */
+    private static final int ENABLED_VALUE = 1;
+
     @Autowired
     private SysUserService sysUserService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        SysUser u = sysUserService.loadByUsername(username);
+        UserDO u = sysUserService.getByUsername(username);
         if (u == null) {
             throw new UsernameNotFoundException("用户不存在：" + username);
         }
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         List<String> codes = u.getRoleCodes() == null ? Collections.emptyList() : u.getRoleCodes();
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>(codes.size());
         for (String c : codes) {
-            if (c == null || c.isEmpty()) continue;
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + c.toUpperCase()));
+            if (c == null || c.isEmpty()) {
+                continue;
+            }
+            authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + c.toUpperCase()));
         }
-        boolean enabled = u.getEnabled() != null && u.getEnabled() == 1;
+        boolean enabled = u.getEnabled() != null && u.getEnabled() == ENABLED_VALUE;
         return User.builder()
                 .username(u.getUsername())
                 .password(u.getPasswordHash())

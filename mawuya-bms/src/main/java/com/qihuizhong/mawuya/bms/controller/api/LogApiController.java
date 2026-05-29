@@ -8,7 +8,7 @@ import com.qihuizhong.mawuya.bms.dto.request.LogQueryRequest;
 import com.qihuizhong.mawuya.bms.dto.request.SnRequest;
 import com.qihuizhong.mawuya.core.common.BaseResponse;
 import com.qihuizhong.mawuya.core.common.PageResponse;
-import com.qihuizhong.mawuya.core.entity.LogInfo;
+import com.qihuizhong.mawuya.core.dataobject.LogDO;
 import com.qihuizhong.mawuya.core.enums.ResultCodeEnum;
 import com.qihuizhong.mawuya.core.exception.BusinessException;
 import com.qihuizhong.mawuya.core.service.LogInfoService;
@@ -39,7 +39,7 @@ public class LogApiController {
     private LogInfoService logInfoService;
 
     @GetMapping("page")
-    public BaseResponse<PageResponse<LogInfo>> page(@Valid LogQueryRequest req) {
+    public BaseResponse<PageResponse<LogDO>> page(@Valid LogQueryRequest req) {
         LogInfoQuery q = new LogInfoQuery()
                 .setIpAddr(req.getIpAddr())
                 .setReqUrl(req.getReqUrl())
@@ -53,13 +53,13 @@ public class LogApiController {
                 .setOrderDir(req.getOrderDir());
 
         int total = logInfoService.count(q);
-        List<LogInfo> list = logInfoService.queryPage(q, req.getPage(), req.getSize());
+        List<LogDO> list = logInfoService.listByPage(q, req.getPage(), req.getSize());
         return BaseResponse.success(PageResponse.of(list, total, req.getPage(), req.getSize()));
     }
 
     @GetMapping("detail")
-    public BaseResponse<LogInfo> detail(@Valid SnRequest req) {
-        LogInfo info = logInfoService.getById(req.getSn());
+    public BaseResponse<LogDO> detail(@Valid SnRequest req) {
+        LogDO info = logInfoService.getById(req.getSn());
         if (info == null) {
             throw new BusinessException(ResultCodeEnum.NOT_FOUND, "记录不存在");
         }

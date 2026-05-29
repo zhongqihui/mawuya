@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.core.mapper;
 
-import com.qihuizhong.mawuya.core.entity.BlogInfo;
+import com.qihuizhong.mawuya.core.dataobject.BlogDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -20,7 +20,7 @@ public interface BlogInfoMapper {
     /**
      * 读取单例行（id = 1）。若初始化脚本未执行可能返回 null，调用方需做兜底。
      */
-    BlogInfo selectSingleton();
+    BlogDO selectSingleton();
 
     /**
      * 更新当前 AMS 主题 code。

@@ -2,29 +2,28 @@
  * www.qihuizhong.com Inc.
  * Copyright (c) 2026 钟启辉. All Rights Reserved.
  */
-
 package com.qihuizhong.mawuya.core.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qihuizhong.mawuya.core.enums.ResultCodeEnum;
 
 /**
- * 统一公共响应体。
+ * 全站统一公共响应体（遵循《阿里巴巴 Java 开发手册》接口返回值规约）。
  *
  * <p>结构：</p>
  * <pre>
  *   {
- *     "code":    "000000",      // ResultCodeEnum.resultCode
- *     "message": "成功",         // 人类可读
- *     "data":    {...} | null   // 业务数据；空时省略（NON_NULL 序列化）
+ *     "code":    "00000",          // ResultCodeEnum.code（5 位字符串：成功 00000，错误 A/B/C 段）
+ *     "message": "成功",            // 人类可读
+ *     "data":    {...} | (省略)     // 业务数据；为 null 时通过 NON_NULL 序列化省略字段
  *   }
  * </pre>
  *
- * <p>所有标了 {@code @RestController} 或 {@code @ResponseBody} 且未被
- * {@code @SkipApiResponseWrap} 排除的 JSON 接口，由 {@code ApiResponseAdvice}
- * 自动包装，业务代码直接 return 业务对象 / DTO 即可。</p>
+ * <p>所有标了 {@code @RestController} 且未被 {@code @SkipApiResponseWrap} 排除的 JSON 接口，
+ * 由 {@code ApiResponseAdvice} 自动包装；业务代码直接 return 业务对象 / DTO 即可。</p>
  *
  * @author 钟启辉
+ * @param <T> data 数据载体类型
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseResponse<T> {
@@ -48,12 +47,14 @@ public class BaseResponse<T> {
     }
 
     public BaseResponse(ResultCodeEnum codeEnum, T data) {
-        this.code = codeEnum.getResultCode();
-        this.message = codeEnum.getResultMessage();
+        this.code = codeEnum.getCode();
+        this.message = codeEnum.getMessage();
         this.data = data;
     }
 
-    // ---------------- 工厂：成功 ----------------
+    // ============================================================
+    // 工厂：成功
+    // ============================================================
 
     public static <T> BaseResponse<T> success() {
         return new BaseResponse<>(ResultCodeEnum.SUCCESS, null);
@@ -63,20 +64,22 @@ public class BaseResponse<T> {
         return new BaseResponse<>(ResultCodeEnum.SUCCESS, data);
     }
 
-    /** 自定义 message 的成功（如"已通过"/"已删除"） */
+    /** 自定义 message 的成功（如「已通过」「已删除」） */
     public static <T> BaseResponse<T> success(String message, T data) {
-        return new BaseResponse<>(ResultCodeEnum.SUCCESS.getResultCode(), message, data);
+        return new BaseResponse<>(ResultCodeEnum.SUCCESS.getCode(), message, data);
     }
 
-    // ---------------- 工厂：失败 ----------------
+    // ============================================================
+    // 工厂：失败
+    // ============================================================
 
     public static <T> BaseResponse<T> error(ResultCodeEnum codeEnum) {
         return new BaseResponse<>(codeEnum, null);
     }
 
     public static <T> BaseResponse<T> error(ResultCodeEnum codeEnum, String message) {
-        return new BaseResponse<>(codeEnum.getResultCode(),
-                message != null && !message.isEmpty() ? message : codeEnum.getResultMessage(),
+        return new BaseResponse<>(codeEnum.getCode(),
+                message != null && !message.isEmpty() ? message : codeEnum.getMessage(),
                 null);
     }
 
@@ -86,22 +89,28 @@ public class BaseResponse<T> {
 
     /** 系统级未知异常 */
     public static <T> BaseResponse<T> systemError() {
-        return new BaseResponse<>(ResultCodeEnum.SYSTEM_ERR, null);
+        return new BaseResponse<>(ResultCodeEnum.SYSTEM_ERROR, null);
     }
 
     public static <T> BaseResponse<T> systemError(String message) {
-        return new BaseResponse<>(ResultCodeEnum.SYSTEM_ERR.getResultCode(),
-                message != null && !message.isEmpty() ? message : ResultCodeEnum.SYSTEM_ERR.getResultMessage(),
+        return new BaseResponse<>(ResultCodeEnum.SYSTEM_ERROR.getCode(),
+                message != null && !message.isEmpty()
+                        ? message
+                        : ResultCodeEnum.SYSTEM_ERROR.getMessage(),
                 null);
     }
 
-    // ---------------- 判定 ----------------
+    // ============================================================
+    // 判定
+    // ============================================================
 
     public boolean isSuccess() {
-        return ResultCodeEnum.SUCCESS.getResultCode().equals(this.code);
+        return ResultCodeEnum.SUCCESS.getCode().equals(this.code);
     }
 
-    // ---------------- getter / setter ----------------
+    // ============================================================
+    // getter / setter
+    // ============================================================
 
     public String getCode() {
         return code;
@@ -125,5 +134,10 @@ public class BaseResponse<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        return "BaseResponse{code='" + code + "', message='" + message + "', data=" + data + '}';
     }
 }

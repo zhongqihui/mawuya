@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms;
 
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
 import com.qihuizhong.mawuya.core.mapper.ArticleInfoMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -40,8 +40,8 @@ class ArticleInfoMapperE2ETest {
     @Autowired
     private ArticleInfoMapper articleMapper;
 
-    private ArticleInfo newArticle(String title, int categorySn) {
-        return new ArticleInfo()
+    private ArticleDO newArticle(String title, int categorySn) {
+        return new ArticleDO()
                 .setCategorySn(categorySn)
                 .setReadNum(0)
                 .setReviewNum(0)
@@ -55,11 +55,11 @@ class ArticleInfoMapperE2ETest {
 
     /** 通过标题反查最新插入的文章主键。insert 语句没有 useGeneratedKeys，故只能这样回查。 */
     private Integer findIdByTitle(String title) {
-        List<ArticleInfo> list = articleMapper.selectList(new HashMap<>());
+        List<ArticleDO> list = articleMapper.selectList(new HashMap<>());
         return list.stream()
                 .filter(a -> title.equals(a.getArticleTitle()))
                 .findFirst()
-                .map(ArticleInfo::getSn)
+                .map(ArticleDO::getSn)
                 .orElseThrow(() -> new AssertionError("未找到刚插入的文章: " + title));
     }
 
@@ -75,7 +75,7 @@ class ArticleInfoMapperE2ETest {
         assertThat(sn).isPositive();
 
         // selectById：内容字段也要被读出来
-        ArticleInfo got = articleMapper.selectById(sn);
+        ArticleDO got = articleMapper.selectById(sn);
         assertThat(got).isNotNull();
         assertThat(got.getArticleTitle()).isEqualTo(title);
         assertThat(got.getArticleContent()).isEqualTo("content-" + title);
@@ -87,13 +87,13 @@ class ArticleInfoMapperE2ETest {
            .setReadNum(10);
         assertThat(articleMapper.update(got)).isEqualTo(1);
 
-        ArticleInfo updated = articleMapper.selectById(sn);
+        ArticleDO updated = articleMapper.selectById(sn);
         assertThat(updated.getArticleTitle()).isEqualTo(title + "-U");
         assertThat(updated.getArticleContent()).isEqualTo("content-updated");
         assertThat(updated.getReadNum()).isEqualTo(10);
 
         // updatePictureUrl：仅更新背景图字段
-        ArticleInfo patch = new ArticleInfo().setSn(sn).setPictureUrl("/upload/new.png");
+        ArticleDO patch = new ArticleDO().setSn(sn).setPictureUrl("/upload/new.png");
         assertThat(articleMapper.updatePictureUrl(patch)).isEqualTo(1);
         assertThat(articleMapper.selectById(sn).getPictureUrl()).isEqualTo("/upload/new.png");
 
@@ -118,14 +118,14 @@ class ArticleInfoMapperE2ETest {
         Map<String, Object> p = new HashMap<>();
         p.put("categorySn", String.valueOf(cat));
 
-        List<ArticleInfo> noContent = articleMapper.selectAllNoContent(p);
+        List<ArticleDO> noContent = articleMapper.selectAllNoContent(p);
         assertThat(noContent).hasSize(4);
         // 摘要列表不应携带正文
         assertThat(noContent).allSatisfy(a -> assertThat(a.getArticleContent()).isNull());
 
         p.put("start", 0);
         p.put("limit", 2);
-        List<ArticleInfo> page = articleMapper.selectByPage(p);
+        List<ArticleDO> page = articleMapper.selectByPage(p);
         assertThat(page).hasSize(2);
 
         p.remove("start");
@@ -152,11 +152,11 @@ class ArticleInfoMapperE2ETest {
         assertThat(sn1).isLessThan(sn2);
         assertThat(sn2).isLessThan(sn3);
 
-        ArticleInfo next = articleMapper.selectNextById(sn1);
+        ArticleDO next = articleMapper.selectNextById(sn1);
         assertThat(next).isNotNull();
         assertThat(next.getSn()).isEqualTo(sn2);
 
-        ArticleInfo prev = articleMapper.selectPrevById(sn3);
+        ArticleDO prev = articleMapper.selectPrevById(sn3);
         assertThat(prev).isNotNull();
         assertThat(prev.getSn()).isEqualTo(sn2);
     }

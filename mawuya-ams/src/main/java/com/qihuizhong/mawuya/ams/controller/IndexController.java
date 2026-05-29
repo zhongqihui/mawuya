@@ -7,10 +7,10 @@ package com.qihuizhong.mawuya.ams.controller;
 import com.qihuizhong.mawuya.ams.seo.SeoModel;
 import com.qihuizhong.mawuya.ams.seo.SeoProperties;
 import com.qihuizhong.mawuya.ams.seo.SeoUtils;
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
-import com.qihuizhong.mawuya.core.entity.Category;
-import com.qihuizhong.mawuya.core.entity.ReviewInfo;
-import com.qihuizhong.mawuya.core.entity.Tag;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
+import com.qihuizhong.mawuya.core.dataobject.CategoryDO;
+import com.qihuizhong.mawuya.core.dataobject.ReviewDO;
+import com.qihuizhong.mawuya.core.dataobject.TagDO;
 import com.qihuizhong.mawuya.core.listener.MySessionContext;
 import com.qihuizhong.mawuya.core.service.ArticleService;
 import com.qihuizhong.mawuya.core.service.CategoryService;
@@ -80,10 +80,10 @@ public class IndexController extends BaseController {
      */
     @RequestMapping(value = {"/", "index.html", "index", "index.jsp"})
     public String toHomePage(Model model, HttpServletRequest request) {
-        Page<ArticleInfo> page = articleService.getPage(request);
+        Page<ArticleDO> page = articleService.listByPageFromRequest(request);
         page.setUrl("index");
 
-        List<Category> categoryList = categoryService.selectList(new HashMap<>());
+        List<CategoryDO> categoryList = categoryService.list(new HashMap<>(4));
         model.addAttribute("page", page)
                 .addAttribute("categoryList", categoryList);
 
@@ -121,17 +121,17 @@ public class IndexController extends BaseController {
 
         MySessionContext.getInstance().addArticleSn2Session(request.getSession(), aid);
 
-        ArticleInfo info = articleService.selectById(sn);
+        ArticleDO info = articleService.getById(sn);
         if (info == null) {
             return ret404Page();
         }
 
-        ArticleInfo next = articleService.getNext(sn);
-        ArticleInfo prev = articleService.getPrev(sn);
-        Category c = categoryService.selectById(info.getCategorySn());
-        List<Tag> tags = tagService.getByArticleSn(sn);
-        List<ReviewInfo> reviews = reviewService.listByArticle(sn);
-        List<ArticleInfo> related = buildRelated(info, c, tags);
+        ArticleDO next = articleService.getNextById(sn);
+        ArticleDO prev = articleService.getPrevById(sn);
+        CategoryDO c = categoryService.getById(info.getCategorySn());
+        List<TagDO> tags = tagService.listByArticleSn(sn);
+        List<ReviewDO> reviews = reviewService.listByArticle(sn);
+        List<ArticleDO> related = buildRelated(info, c, tags);
 
         model.addAttribute("article", info)
                 .addAttribute("next", next)
@@ -150,8 +150,8 @@ public class IndexController extends BaseController {
      */
     @GetMapping("archive")
     public String toArchive(Model model) {
-        Map<String, List<ArticleInfo>> map = articleService.getYearMap();
-        int count = articleService.getCount(new HashMap<>());
+        Map<String, List<ArticleDO>> map = articleService.listGroupByYear();
+        int count = articleService.count(new HashMap<>(4));
         model.addAttribute("map", map).addAttribute("count", count);
 
         SeoModel seo = SeoModel.of("文章归档",
@@ -171,7 +171,7 @@ public class IndexController extends BaseController {
      */
     @GetMapping("categories")
     public String categoryList(Model model) {
-        List<Category> categoryList = categoryService.getCategoryList();
+        List<CategoryDO> categoryList = categoryService.listAllWithArtSize();
         model.addAttribute("categoryList", categoryList);
 
         SeoModel seo = SeoModel.of("分类导航",
@@ -198,7 +198,7 @@ public class IndexController extends BaseController {
             return ret404Page();
         }
 
-        Category category = categoryService.getCategoryBySn(sn);
+        CategoryDO category = categoryService.getDetailWithArtsBySn(sn);
         if (category == null) {
             return ret404Page();
         }
@@ -225,10 +225,10 @@ public class IndexController extends BaseController {
      * 推荐"相关文章"：先按相同分类填充，不足再用任一标签命中的文章补齐，最后去重 / 去自身。
      * 这种内链结构对 SEO 价值很大：把权重从详情页传递给同主题的其他详情页。
      */
-    private List<ArticleInfo> buildRelated(ArticleInfo current, Category c, List<Tag> tags) {
-        Map<Integer, ArticleInfo> picked = new LinkedHashMap<>();
+    private List<ArticleDO> buildRelated(ArticleDO current, CategoryDO c, List<TagDO> tags) {
+        Map<Integer, ArticleDO> picked = new LinkedHashMap<>(RELATED_LIMIT * 2);
         if (c != null && c.getArts() != null) {
-            for (ArticleInfo a : c.getArts()) {
+            for (ArticleDO a : c.getArts()) {
                 if (a.getSn() != null && !a.getSn().equals(current.getSn())) {
                     picked.put(a.getSn(), a);
                     if (picked.size() >= RELATED_LIMIT) {
@@ -238,12 +238,12 @@ public class IndexController extends BaseController {
             }
         }
         if (picked.size() < RELATED_LIMIT && tags != null) {
-            for (Tag t : tags) {
+            for (TagDO t : tags) {
                 if (picked.size() >= RELATED_LIMIT) break;
-                List<Integer> sns = tagService.getArticleSnByTag(t.getSn());
-                List<ArticleInfo> list = articleService.listBySnList(sns);
+                List<Integer> sns = tagService.listArticleSnByTag(t.getSn());
+                List<ArticleDO> list = articleService.listBySnList(sns);
                 if (list == null) continue;
-                for (ArticleInfo a : list) {
+                for (ArticleDO a : list) {
                     if (picked.size() >= RELATED_LIMIT) break;
                     if (a.getSn() == null || a.getSn().equals(current.getSn())) continue;
                     picked.putIfAbsent(a.getSn(), a);
@@ -256,7 +256,7 @@ public class IndexController extends BaseController {
     /**
      * 构造文章页 SeoModel：含 article:* og 元字段、Article + BreadcrumbList JSON-LD。
      */
-    private SeoModel buildArticleSeo(ArticleInfo info, Category c, List<Tag> tags) {
+    private SeoModel buildArticleSeo(ArticleDO info, CategoryDO c, List<TagDO> tags) {
         String desc = SeoUtils.buildDescription(info.getArticleContent(), info.getArticleSummary(), DESC_MAX);
         if (desc.isEmpty()) {
             desc = info.getArticleTitle();
@@ -282,15 +282,17 @@ public class IndexController extends BaseController {
         StringBuilder kw = new StringBuilder(64);
         if (c != null) kw.append(c.getCategoryName()).append(',');
         if (tags != null) {
-            for (Tag t : tags) {
+            for (TagDO t : tags) {
                 kw.append(t.getTagName()).append(',');
             }
         }
         kw.append(seoProperties.getDefaultKeywords());
 
-        List<String> tagNames = new ArrayList<>();
+        List<String> tagNames = new ArrayList<>(tags == null ? 0 : tags.size());
         if (tags != null) {
-            for (Tag t : tags) tagNames.add(t.getTagName());
+            for (TagDO t : tags) {
+                tagNames.add(t.getTagName());
+            }
         }
 
         SeoModel seo = SeoModel.of(info.getArticleTitle(), desc)
@@ -317,7 +319,7 @@ public class IndexController extends BaseController {
     /**
      * Article + BlogPosting 双类型 JSON-LD（Google 主流推荐）。
      */
-    private String buildArticleJsonLd(ArticleInfo a, Category c, List<String> tagNames,
+    private String buildArticleJsonLd(ArticleDO a, CategoryDO c, List<String> tagNames,
                                       String desc, String image) {
         StringBuilder sb = new StringBuilder(512);
         sb.append("{");
@@ -357,7 +359,7 @@ public class IndexController extends BaseController {
     /**
      * 分类详情页：CollectionPage 结构化数据，描述本页是文章集合。
      */
-    private String buildCollectionJsonLd(Category c, Integer sn) {
+    private String buildCollectionJsonLd(CategoryDO c, Integer sn) {
         return "{"
                 + "\"@context\":\"https://schema.org\","
                 + "\"@type\":\"CollectionPage\","

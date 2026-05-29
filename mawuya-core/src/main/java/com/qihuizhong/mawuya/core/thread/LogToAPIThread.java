@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qihuizhong.mawuya.common.utils.OkHttpUtil;
 import com.qihuizhong.mawuya.core.cache.DataCenter;
-import com.qihuizhong.mawuya.core.entity.LogInfo;
+import com.qihuizhong.mawuya.core.dataobject.LogDO;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
@@ -68,7 +68,7 @@ public class LogToAPIThread implements Runnable {
     public void run() {
         while (running.get()) {
             if (!DataCenter.getLogInfoToAPIQueue().isEmpty()) {
-                LogInfo logInfo = DataCenter.getLogInfoToAPIQueue().poll();
+                LogDO logInfo = DataCenter.getLogInfoToAPIQueue().poll();
                 if (logInfo != null) {
                     queryGeo(logInfo);
                 }
@@ -86,7 +86,7 @@ public class LogToAPIThread implements Runnable {
     /**
      * 入口：先查主源，主源失败时由 callback 自动 fallback；都失败则回退入队/入库。
      */
-    private void queryGeo(LogInfo info) {
+    private void queryGeo(LogDO info) {
         if (StringUtils.isEmpty(info.getIpAddr())) {
             // 没拿到访客 IP 直接入库，不浪费一次外呼
             enqueueDb(info);
@@ -96,7 +96,7 @@ public class LogToAPIThread implements Runnable {
     }
 
     /** 调用主源 ip-api.com */
-    private void callPrimary(LogInfo info) {
+    private void callPrimary(LogDO info) {
         String url = String.format(IPAPI_PRIMARY, info.getIpAddr());
         Request request = new Request.Builder()
                 .url(url)
@@ -108,7 +108,7 @@ public class LogToAPIThread implements Runnable {
     }
 
     /** 调用兜底源 ipapi.co */
-    private void callFallback(LogInfo info) {
+    private void callFallback(LogDO info) {
         String url = String.format(IPAPI_FALLBACK, info.getIpAddr());
         Request request = new Request.Builder()
                 .url(url)
@@ -120,7 +120,7 @@ public class LogToAPIThread implements Runnable {
     }
 
     /** 把 logInfo 推入 DB 入库队列；中断异常正确传播。 */
-    private static void enqueueDb(LogInfo info) {
+    private static void enqueueDb(LogDO info) {
         try {
             DataCenter.getLogInfoToDBQueue().put(info);
         } catch (InterruptedException ie) {
@@ -133,11 +133,11 @@ public class LogToAPIThread implements Runnable {
      * 主源失败 → 自动尝试兜底；兜底也失败 → 走重试或最终入库。
      */
     private class GeoCallback implements Callback {
-        private final LogInfo logInfo;
+        private final LogDO logInfo;
         private final boolean isFallback;
 
-        GeoCallback(LogInfo logInfo, boolean isFallback) {
-            this.logInfo = logInfo == null ? new LogInfo() : logInfo;
+        GeoCallback(LogDO logInfo, boolean isFallback) {
+            this.logInfo = logInfo == null ? new LogDO() : logInfo;
             this.isFallback = isFallback;
         }
 
@@ -232,7 +232,7 @@ public class LogToAPIThread implements Runnable {
      * </pre>
      * @return true 表示成功提取了地理信息；false 表示需要走兜底。
      */
-    private static boolean parseIpApiCom(JsonNode root, LogInfo info) {
+    private static boolean parseIpApiCom(JsonNode root, LogDO info) {
         JsonNode status = root.get("status");
         if (status == null || !"success".equals(status.asText())) {
             return false;
@@ -251,7 +251,7 @@ public class LogToAPIThread implements Runnable {
      * 失败：{"error":true,"reason":"RateLimited"}
      * </pre>
      */
-    private static boolean parseIpapiCo(JsonNode root, LogInfo info) {
+    private static boolean parseIpapiCo(JsonNode root, LogDO info) {
         JsonNode err = root.get("error");
         if (err != null && err.asBoolean(false)) {
             return false;

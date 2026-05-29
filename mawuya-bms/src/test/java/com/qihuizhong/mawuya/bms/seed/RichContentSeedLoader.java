@@ -4,10 +4,10 @@
  */
 package com.qihuizhong.mawuya.bms.seed;
 
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
-import com.qihuizhong.mawuya.core.entity.Category;
-import com.qihuizhong.mawuya.core.entity.ReviewInfo;
-import com.qihuizhong.mawuya.core.entity.Tag;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
+import com.qihuizhong.mawuya.core.dataobject.CategoryDO;
+import com.qihuizhong.mawuya.core.dataobject.ReviewDO;
+import com.qihuizhong.mawuya.core.dataobject.TagDO;
 import com.qihuizhong.mawuya.core.mapper.ArticleInfoMapper;
 import com.qihuizhong.mawuya.core.mapper.CategoryMapper;
 import com.qihuizhong.mawuya.core.mapper.ReviewInfoMapper;
@@ -244,18 +244,18 @@ class RichContentSeedLoader {
 
     /** 清理所有历史 [SEED] / [RICH] 前缀的旧文章 + 关联标签 + 评论 */
     private void cleanLegacyTestArticles() {
-        List<ArticleInfo> all = articleMapper.selectAllNoContent(new HashMap<>());
+        List<ArticleDO> all = articleMapper.selectAllNoContent(new HashMap<>());
         List<Integer> snList = all.stream()
                 .filter(a -> {
                     String t = a.getArticleTitle();
                     return t != null && (t.startsWith("[SEED]") || t.startsWith("[RICH]"));
                 })
-                .map(ArticleInfo::getSn)
+                .map(ArticleDO::getSn)
                 .collect(Collectors.toList());
         System.out.println("[seed] clean legacy articles count = " + snList.size());
         for (Integer sn : snList) {
             tagMapper.unbindByArticle(sn);
-            for (ReviewInfo r : reviewMapper.selectByArticleSn(sn)) {
+            for (ReviewDO r : reviewMapper.selectByArticleSn(sn)) {
                 reviewMapper.deleteById(r.getSn());
             }
             articleMapper.deleteById(sn);
@@ -265,13 +265,13 @@ class RichContentSeedLoader {
     private Map<String, Integer> ensureCategories() {
         String[] names = {"技术", "生活", "随笔", "读书", "未分类"};
         Map<String, Integer> map = new LinkedHashMap<>();
-        for (Category c : categoryMapper.selectList(new HashMap<>())) {
+        for (CategoryDO c : categoryMapper.selectList(new HashMap<>())) {
             map.put(c.getCategoryName(), c.getSn());
         }
         for (String name : names) {
             if (!map.containsKey(name)) {
-                categoryMapper.insert(new Category(name));
-                Category c = categoryMapper.selectList(new HashMap<>()).stream()
+                categoryMapper.insert(new CategoryDO(name));
+                CategoryDO c = categoryMapper.selectList(new HashMap<>()).stream()
                         .filter(x -> name.equals(x.getCategoryName()))
                         .findFirst().orElseThrow(IllegalStateException::new);
                 map.put(name, c.getSn());
@@ -282,7 +282,7 @@ class RichContentSeedLoader {
 
     private Map<String, Integer> ensureTags() {
         Map<String, Integer> map = new LinkedHashMap<>();
-        for (Tag t : tagMapper.selectList(new HashMap<>())) {
+        for (TagDO t : tagMapper.selectList(new HashMap<>())) {
             map.put(t.getTagName(), t.getSn());
         }
         return map;
@@ -302,18 +302,18 @@ class RichContentSeedLoader {
                                      List<Integer> tagSns) {
 
         // 防止重复运行同一份种子时 title 冲突，先清掉同名旧文
-        ArticleInfo dup = articleMapper.selectAllNoContent(new HashMap<>()).stream()
+        ArticleDO dup = articleMapper.selectAllNoContent(new HashMap<>()).stream()
                 .filter(x -> title.equals(x.getArticleTitle()))
                 .findFirst().orElse(null);
         if (dup != null) {
             tagMapper.unbindByArticle(dup.getSn());
-            for (ReviewInfo r : reviewMapper.selectByArticleSn(dup.getSn())) {
+            for (ReviewDO r : reviewMapper.selectByArticleSn(dup.getSn())) {
                 reviewMapper.deleteById(r.getSn());
             }
             articleMapper.deleteById(dup.getSn());
         }
 
-        ArticleInfo a = new ArticleInfo()
+        ArticleDO a = new ArticleDO()
                 .setCategorySn(categorySn == null ? 0 : categorySn)
                 .setReadNum(readNum)
                 .setReviewNum(reviewNum)
@@ -328,7 +328,7 @@ class RichContentSeedLoader {
         articleMapper.insert(a);
 
         // 通过 title 反查 sn 后修正 insertTime（INSERT SQL 用了 NOW()，这里强制覆盖）
-        ArticleInfo saved = articleMapper.selectAllNoContent(new HashMap<>()).stream()
+        ArticleDO saved = articleMapper.selectAllNoContent(new HashMap<>()).stream()
                 .filter(x -> title.equals(x.getArticleTitle()))
                 .findFirst().orElseThrow(IllegalStateException::new);
 
@@ -352,7 +352,7 @@ class RichContentSeedLoader {
 
     /** 给热门文章追加一些评论，让前台「最新评论」widget 有真实数据展示 */
     private void seedReviews() {
-        List<ArticleInfo> arts = articleMapper.selectAllNoContent(new HashMap<>()).stream()
+        List<ArticleDO> arts = articleMapper.selectAllNoContent(new HashMap<>()).stream()
                 .sorted((x, y) -> Integer.compare(y.getReadNum(), x.getReadNum()))
                 .limit(6)
                 .collect(Collectors.toList());
@@ -366,10 +366,10 @@ class RichContentSeedLoader {
                 {"Tony.W",   "关于 trade-off 那一节写得最好，工程没有银弹这句话我贴墙上了。"}
         };
 
-        for (ArticleInfo a : arts) {
+        for (ArticleDO a : arts) {
             int n = 2 + Math.floorMod(a.getSn(), 3); // 2~4 条
             for (int i = 0; i < n && i < sample.length; i++) {
-                ReviewInfo r = new ReviewInfo()
+                ReviewDO r = new ReviewDO()
                         .setArticleSn(a.getSn())
                         .setPsn(0)
                         .setReviewName(sample[i][0])

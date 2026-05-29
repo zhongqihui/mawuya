@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms;
 
-import com.qihuizhong.mawuya.core.entity.ReviewInfo;
+import com.qihuizhong.mawuya.core.dataobject.ReviewDO;
 import com.qihuizhong.mawuya.core.mapper.ReviewInfoMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,8 +31,8 @@ class ReviewInfoMapperE2ETest {
 
     @Autowired private ReviewInfoMapper reviewMapper;
 
-    private ReviewInfo build(Integer articleSn, String name) {
-        return new ReviewInfo()
+    private ReviewDO build(Integer articleSn, String name) {
+        return new ReviewDO()
                 .setArticleSn(articleSn)
                 .setPsn(0)
                 .setReviewName(name)
@@ -46,7 +46,7 @@ class ReviewInfoMapperE2ETest {
         for (int i = 0; i < 3; i++) {
             assertThat(reviewMapper.insert(build(aid, "user-" + i))).isEqualTo(1);
         }
-        List<ReviewInfo> list = reviewMapper.selectByArticleSn(aid);
+        List<ReviewDO> list = reviewMapper.selectByArticleSn(aid);
         assertThat(list).hasSize(3);
         // 时间倒序：第一条评论是最近插入的（last id）
         assertThat(list.get(0).getSn()).isGreaterThan(list.get(2).getSn());
@@ -56,9 +56,9 @@ class ReviewInfoMapperE2ETest {
     @DisplayName("selectLatestWithTitle 带文章标题")
     void shouldListLatestWithTitle() {
         // 用已存在的种子文章 sn 查（这里直接用 latestN，不验证特定文章）
-        List<ReviewInfo> latest = reviewMapper.selectLatestWithTitle(5);
+        List<ReviewDO> latest = reviewMapper.selectLatestWithTitle(5);
         // 数据库中可能有也可能没有评论，只校验字段结构正确
-        for (ReviewInfo r : latest) {
+        for (ReviewDO r : latest) {
             assertThat(r.getArticleSn()).isNotNull();
             assertThat(r.getArticleTitle()).isNotBlank();
             assertThat(r.getReviewName()).isNotBlank();

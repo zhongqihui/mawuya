@@ -6,7 +6,7 @@ package com.qihuizhong.mawuya.core.controller;
 
 import com.qihuizhong.mawuya.core.common.web.SkipApiResponseWrap;
 import com.qihuizhong.mawuya.core.dto.request.ImageFetchRequest;
-import com.qihuizhong.mawuya.core.entity.ImageBlob;
+import com.qihuizhong.mawuya.core.dataobject.ImageDO;
 import com.qihuizhong.mawuya.core.service.ImageBlobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -63,7 +63,7 @@ public class DbImageController {
         }
 
         // 2) 业务查询
-        ImageBlob blob = imageBlobService.loadFull(req.snAsLong());
+        ImageDO blob = imageBlobService.getFullById(req.snAsLong());
         if (blob == null || blob.getData() == null) {
             return ResponseEntity.notFound().build();
         }

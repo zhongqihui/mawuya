@@ -7,9 +7,9 @@ package com.qihuizhong.mawuya.ams.controller;
 import com.qihuizhong.mawuya.ams.seo.SeoProperties;
 import com.qihuizhong.mawuya.ams.seo.SeoUtils;
 import com.qihuizhong.mawuya.core.common.web.SkipApiResponseWrap;
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
-import com.qihuizhong.mawuya.core.entity.Category;
-import com.qihuizhong.mawuya.core.entity.Tag;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
+import com.qihuizhong.mawuya.core.dataobject.CategoryDO;
+import com.qihuizhong.mawuya.core.dataobject.TagDO;
 import com.qihuizhong.mawuya.core.service.ArticleService;
 import com.qihuizhong.mawuya.core.service.CategoryService;
 import com.qihuizhong.mawuya.core.service.TagService;
@@ -83,9 +83,9 @@ public class SeoController {
         int count = 5;
 
         // 3) 所有文章
-        List<ArticleInfo> articles = articleService.getAllNoContent(new HashMap<>());
+        List<ArticleDO> articles = articleService.listAllNoContent(new HashMap<>(4));
         if (articles != null) {
-            for (ArticleInfo a : articles) {
+            for (ArticleDO a : articles) {
                 if (count++ >= max) break;
                 String last = a.getUpdateTime() != null ? a.getUpdateTime() : a.getInsertTime();
                 appendUrl(sb, base + "/" + a.getSn(), SeoUtils.toIso8601(last), "monthly", "0.9");
@@ -93,18 +93,18 @@ public class SeoController {
         }
 
         // 4) 分类详情
-        List<Category> cats = categoryService.selectList(new HashMap<>());
+        List<CategoryDO> cats = categoryService.list(new HashMap<>(4));
         if (cats != null) {
-            for (Category c : cats) {
+            for (CategoryDO c : cats) {
                 if (count++ >= max) break;
                 appendUrl(sb, base + "/categories/" + c.getSn(), null, "weekly", "0.6");
             }
         }
 
         // 5) 标签详情
-        List<Tag> tags = tagService.getCloud();
+        List<TagDO> tags = tagService.listTagCloud();
         if (tags != null) {
-            for (Tag t : tags) {
+            for (TagDO t : tags) {
                 if (count++ >= max) break;
                 appendUrl(sb, base + "/tags/" + t.getSn(), null, "weekly", "0.6");
             }
@@ -162,10 +162,10 @@ public class SeoController {
         sb.append("<language>zh-cn</language>\n");
         sb.append("<atom:link href=\"").append(base).append("/rss.xml\" rel=\"self\" type=\"application/rss+xml\"/>\n");
 
-        List<ArticleInfo> articles = articleService.getAllNoContent(new HashMap<>());
+        List<ArticleDO> articles = articleService.listAllNoContent(new HashMap<>(4));
         if (articles != null) {
             int n = 0;
-            for (ArticleInfo a : articles) {
+            for (ArticleDO a : articles) {
                 if (n++ >= RSS_LIMIT) break;
                 String url = base + "/" + a.getSn();
                 sb.append("<item>\n");

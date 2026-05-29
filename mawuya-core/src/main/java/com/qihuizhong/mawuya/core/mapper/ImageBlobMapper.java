@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.core.mapper;
 
-import com.qihuizhong.mawuya.core.entity.ImageBlob;
+import com.qihuizhong.mawuya.core.dataobject.ImageDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -19,22 +19,22 @@ import java.util.List;
 public interface ImageBlobMapper {
 
     /** 插入图片，返回主键写回 entity.sn */
-    int insert(ImageBlob blob);
+    int insert(ImageDO blob);
 
     /** 按 sn 查图片 metadata（不带二进制，便于列表展示） */
-    ImageBlob selectMetaById(@Param("sn") Long sn);
+    ImageDO selectMetaById(@Param("sn") Long sn);
 
     /** 按 sn 查完整图片（含二进制） */
-    ImageBlob selectFullById(@Param("sn") Long sn);
+    ImageDO selectFullById(@Param("sn") Long sn);
 
     /** 按 sha256 去重查询 */
-    ImageBlob selectBySha256(@Param("sha256") String sha256);
+    ImageDO selectBySha256(@Param("sha256") String sha256);
 
     /** 按 sourceUrl 查 sn（迁移时去重用） */
     Long selectSnBySourceUrl(@Param("sourceUrl") String sourceUrl);
 
     /** 列出所有 metadata（不含二进制） */
-    List<ImageBlob> listMeta(@Param("limit") Integer limit, @Param("offset") Integer offset);
+    List<ImageDO> listMeta(@Param("limit") Integer limit, @Param("offset") Integer offset);
 
     int countAll();
 
@@ -44,7 +44,7 @@ public interface ImageBlobMapper {
      * <p>注意：keyword 由 mapper 中通过 #{keyword} 参数化绑定，xml 内部仅做 CONCAT('%', #{keyword}, '%')，
      * 不存在 SQL 字符串拼接，已防注入。</p>
      */
-    List<ImageBlob> listMetaByKeyword(@Param("keyword") String keyword,
+    List<ImageDO> listMetaByKeyword(@Param("keyword") String keyword,
                                       @Param("limit") Integer limit,
                                       @Param("offset") Integer offset);
 

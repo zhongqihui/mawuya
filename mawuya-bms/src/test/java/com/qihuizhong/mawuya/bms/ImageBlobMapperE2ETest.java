@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms;
 
-import com.qihuizhong.mawuya.core.entity.ImageBlob;
+import com.qihuizhong.mawuya.core.dataobject.ImageDO;
 import com.qihuizhong.mawuya.core.mapper.ImageBlobMapper;
 import com.qihuizhong.mawuya.core.service.ImageBlobService;
 import org.junit.jupiter.api.DisplayName;
@@ -48,7 +48,7 @@ class ImageBlobMapperE2ETest {
         long sn = service.save(TINY_PNG, "tiny.png", "image/png", null);
         assertThat(sn).isPositive();
 
-        ImageBlob meta = mapper.selectMetaById(sn);
+        ImageDO meta = mapper.selectMetaById(sn);
         assertThat(meta).isNotNull();
         assertThat(meta.getFileName()).isEqualTo("tiny.png");
         assertThat(meta.getContentType()).isEqualTo("image/png");
@@ -56,7 +56,7 @@ class ImageBlobMapperE2ETest {
         assertThat(meta.getData()).isNull(); // metaMap 不带 data
         assertThat(meta.getSha256()).hasSize(64);
 
-        ImageBlob full = mapper.selectFullById(sn);
+        ImageDO full = mapper.selectFullById(sn);
         assertThat(full.getData()).isEqualTo(TINY_PNG);
     }
 
@@ -72,7 +72,7 @@ class ImageBlobMapperE2ETest {
     @DisplayName("通过 sourceUrl 反查 sn：迁移工具用")
     void findBySourceUrl() {
         long sn = service.save(TINY_PNG, "u.png", "image/png", "https://example.com/u.png");
-        Long found = service.findSnBySourceUrl("https://example.com/u.png");
+        Long found = service.getSnBySourceUrl("https://example.com/u.png");
         assertThat(found).isEqualTo(sn);
     }
 
@@ -80,7 +80,7 @@ class ImageBlobMapperE2ETest {
     @DisplayName("删除按 sn")
     void delete() {
         long sn = service.save(TINY_PNG, "del.png", "image/png", null);
-        boolean ok = service.deleteById(sn);
+        boolean ok = service.removeById(sn);
         assertThat(ok).isTrue();
         assertThat(mapper.selectMetaById(sn)).isNull();
     }

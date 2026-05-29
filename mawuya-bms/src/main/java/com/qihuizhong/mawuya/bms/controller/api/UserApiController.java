@@ -15,8 +15,8 @@ import com.qihuizhong.mawuya.bms.dto.response.UserCreateResponse;
 import com.qihuizhong.mawuya.bms.dto.response.UserItemResponse;
 import com.qihuizhong.mawuya.core.common.BaseResponse;
 import com.qihuizhong.mawuya.core.common.PageResponse;
-import com.qihuizhong.mawuya.core.entity.SysRole;
-import com.qihuizhong.mawuya.core.entity.SysUser;
+import com.qihuizhong.mawuya.core.dataobject.RoleDO;
+import com.qihuizhong.mawuya.core.dataobject.UserDO;
 import com.qihuizhong.mawuya.core.exception.BusinessException;
 import com.qihuizhong.mawuya.core.service.SysUserService;
 import org.apache.commons.lang3.StringUtils;
@@ -63,7 +63,7 @@ public class UserApiController {
     @GetMapping("page")
     public BaseResponse<PageResponse<UserItemResponse>> page(@Valid UserQueryRequest req) {
         int total = sysUserService.count(req.getKeyword());
-        List<SysUser> list = sysUserService.page(req.getKeyword(), req.getPage(), req.getSize());
+        List<UserDO> list = sysUserService.listByPage(req.getKeyword(), req.getPage(), req.getSize());
         List<UserItemResponse> dtos = list == null ? Collections.emptyList()
                 : list.stream().map(UserApiController::toUserItem).collect(Collectors.toList());
         return BaseResponse.success(PageResponse.of(dtos, total, req.getPage(), req.getSize()));
@@ -71,7 +71,7 @@ public class UserApiController {
 
     @GetMapping("roles")
     public BaseResponse<List<RoleItemResponse>> roles() {
-        List<SysRole> roles = sysUserService.listAllRoles();
+        List<RoleDO> roles = sysUserService.listAllRoles();
         List<RoleItemResponse> dtos = roles == null ? Collections.emptyList()
                 : roles.stream().map(UserApiController::toRoleItem).collect(Collectors.toList());
         return BaseResponse.success(dtos);
@@ -79,36 +79,36 @@ public class UserApiController {
 
     @PostMapping("create")
     public BaseResponse<UserCreateResponse> create(@Valid UserCreateRequest req) {
-        SysUser u = new SysUser()
+        UserDO u = new UserDO()
                 .setUsername(req.getUsername().trim())
                 .setPasswordHash(passwordEncoder.encode(req.getPassword()))
                 .setNickname(StringUtils.isBlank(req.getNickname()) ? null : req.getNickname().trim())
                 .setEmail(StringUtils.isBlank(req.getEmail()) ? null : req.getEmail().trim())
                 .setEnabled(req.getEnabled() == null || req.getEnabled() != 0 ? 1 : 0);
-        int sn = sysUserService.create(u, parseCodes(req.getRoleCodes()));
+        int sn = sysUserService.save(u, parseCodes(req.getRoleCodes()));
         return BaseResponse.success("创建成功", new UserCreateResponse(sn));
     }
 
     @PostMapping("update")
     public BaseResponse<Void> update(@Valid UserUpdateRequest req) {
-        SysUser u = new SysUser()
+        UserDO u = new UserDO()
                 .setSn(req.getSn())
                 .setNickname(StringUtils.isBlank(req.getNickname()) ? null : req.getNickname().trim())
                 .setEmail(StringUtils.isBlank(req.getEmail()) ? null : req.getEmail().trim())
                 .setEnabled(req.getEnabled());
-        sysUserService.update(u, parseCodes(req.getRoleCodes()));
+        sysUserService.updateById(u, parseCodes(req.getRoleCodes()));
         return BaseResponse.success("更新成功", null);
     }
 
     @PostMapping("toggle")
     public BaseResponse<Void> toggle(@Valid UserToggleRequest req) {
-        sysUserService.setEnabled(req.getSn(), req.getEnabled() != null && req.getEnabled() == 1);
+        sysUserService.updateEnabledById(req.getSn(), req.getEnabled() != null && req.getEnabled() == 1);
         return BaseResponse.success(req.getEnabled() == 1 ? "已启用" : "已禁用", null);
     }
 
     @PostMapping("reset")
     public BaseResponse<Void> reset(@Valid UserResetPasswordRequest req) {
-        sysUserService.resetPasswordHash(req.getSn(), passwordEncoder.encode(req.getPassword()));
+        sysUserService.updatePasswordHashById(req.getSn(), passwordEncoder.encode(req.getPassword()));
         return BaseResponse.success("密码已重置", null);
     }
 
@@ -118,13 +118,13 @@ public class UserApiController {
         if (req.getSn() != null && req.getSn() == 1) {
             throw new BusinessException("不允许删除内置管理员");
         }
-        sysUserService.delete(req.getSn());
+        sysUserService.removeById(req.getSn());
         return BaseResponse.success("已删除", null);
     }
 
     // ---------------- helpers ----------------
 
-    private static UserItemResponse toUserItem(SysUser u) {
+    private static UserItemResponse toUserItem(UserDO u) {
         return new UserItemResponse()
                 .setSn(u.getSn())
                 .setUsername(u.getUsername())
@@ -136,7 +136,7 @@ public class UserApiController {
                 .setLastLoginAt(u.getLastLoginAt());
     }
 
-    private static RoleItemResponse toRoleItem(SysRole r) {
+    private static RoleItemResponse toRoleItem(RoleDO r) {
         return new RoleItemResponse()
                 .setSn(r.getSn())
                 .setCode(r.getCode())

@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.core.mapper;
 
-import com.qihuizhong.mawuya.core.entity.SysRole;
+import com.qihuizhong.mawuya.core.dataobject.RoleDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -18,16 +18,16 @@ import java.util.List;
 @Mapper
 public interface SysRoleMapper {
 
-    List<SysRole> selectAll();
+    List<RoleDO> selectAll();
 
     /** 列出某用户的所有角色 code（小写不敏感，但表里都按大写存） */
     List<String> selectRoleCodesByUserSn(@Param("userSn") Integer userSn);
 
     /** 列出某用户的角色明细对象 */
-    List<SysRole> selectRolesByUserSn(@Param("userSn") Integer userSn);
+    List<RoleDO> selectRolesByUserSn(@Param("userSn") Integer userSn);
 
     /** 按 code 列表批量查 sn（用于绑定） */
-    List<SysRole> selectByCodes(@Param("codes") List<String> codes);
+    List<RoleDO> selectByCodes(@Param("codes") List<String> codes);
 
     /** 全量重置某用户的角色绑定：先 delete 再 insert，事务由 service 层控制 */
     int deleteUserRoles(@Param("userSn") Integer userSn);

@@ -6,7 +6,7 @@ package com.qihuizhong.mawuya.core.interceptor;
 
 import com.qihuizhong.mawuya.common.utils.DateUtil;
 import com.qihuizhong.mawuya.core.cache.DataCenter;
-import com.qihuizhong.mawuya.core.entity.LogInfo;
+import com.qihuizhong.mawuya.core.dataobject.LogDO;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class LogInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        LogInfo logInfo = new LogInfo()
+        LogDO logInfo = new LogDO()
                 .setIpAddr(getIpAddr(request))
                 .setBrowser(getOsAndBrowserInfo(request))
                 .setReqTime(String.valueOf(System.currentTimeMillis()))
@@ -49,10 +49,10 @@ public class LogInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception e) {
         Object attr = request.getAttribute("logInfo");
-        if (!(attr instanceof LogInfo)) {
+        if (!(attr instanceof LogDO)) {
             return;
         }
-        LogInfo logInfo = (LogInfo) attr;
+        LogDO logInfo = (LogDO) attr;
         long start = 0L;
         try {
             start = Long.parseLong(logInfo.getReqTime());

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.qihuizhong.mawuya.core.mapper.SysRoleMapper">
 
-    <resultMap id="roleMap" type="com.qihuizhong.mawuya.core.entity.SysRole">
+    <resultMap id="roleMap" type="com.qihuizhong.mawuya.core.dataobject.RoleDO">
         <id     property="sn"          column="sn"/>
         <result property="code"        column="code"/>
         <result property="name"        column="name"/>

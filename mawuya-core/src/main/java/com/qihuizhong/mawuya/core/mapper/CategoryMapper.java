@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.core.mapper;
 
-import com.qihuizhong.mawuya.core.entity.Category;
+import com.qihuizhong.mawuya.core.dataobject.CategoryDO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -13,5 +13,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author zqh
  */
 @Mapper
-public interface CategoryMapper extends BaseMapper<Category, Integer> {
+public interface CategoryMapper extends BaseMapper<CategoryDO, Integer> {
 }

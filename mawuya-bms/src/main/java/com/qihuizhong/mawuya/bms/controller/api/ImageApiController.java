@@ -10,7 +10,7 @@ import com.qihuizhong.mawuya.bms.dto.response.ImageMetaResponse;
 import com.qihuizhong.mawuya.bms.dto.response.ImageUploadResponse;
 import com.qihuizhong.mawuya.core.common.BaseResponse;
 import com.qihuizhong.mawuya.core.common.PageResponse;
-import com.qihuizhong.mawuya.core.entity.ImageBlob;
+import com.qihuizhong.mawuya.core.dataobject.ImageDO;
 import com.qihuizhong.mawuya.core.enums.ResultCodeEnum;
 import com.qihuizhong.mawuya.core.exception.BusinessException;
 import com.qihuizhong.mawuya.core.service.ImageBlobService;
@@ -84,7 +84,7 @@ public class ImageApiController {
         int offset = (req.getPage() - 1) * safeSize;
 
         int total = imageBlobService.countByKeyword(req.getKeyword());
-        List<ImageBlob> metas = imageBlobService.listMetaByKeyword(req.getKeyword(), safeSize, offset);
+        List<ImageDO> metas = imageBlobService.listMetaByKeyword(req.getKeyword(), safeSize, offset);
         List<ImageMetaResponse> list = metas.stream()
                 .map(b -> new ImageMetaResponse(
                         b.getSn(),
@@ -102,7 +102,7 @@ public class ImageApiController {
         if (req.getSn() <= 0) {
             throw new BusinessException(ResultCodeEnum.PARAM_INVALID, "非法 sn");
         }
-        if (!imageBlobService.deleteById(req.getSn().longValue())) {
+        if (!imageBlobService.removeById(req.getSn().longValue())) {
             throw new BusinessException(ResultCodeEnum.NOT_FOUND, "图片不存在或删除失败");
         }
         return BaseResponse.success("已删除", null);

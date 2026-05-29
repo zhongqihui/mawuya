@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.core.mapper;
 
-import com.qihuizhong.mawuya.core.entity.Tag;
+import com.qihuizhong.mawuya.core.dataobject.TagDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -16,17 +16,17 @@ import java.util.List;
  * @author 钟启辉
  */
 @Mapper
-public interface TagMapper extends BaseMapper<Tag, Integer> {
+public interface TagMapper extends BaseMapper<TagDO, Integer> {
 
     /**
      * 查询带文章计数的标签云（artSize 自动填充）
      */
-    List<Tag> selectAllWithArtSize();
+    List<TagDO> selectAllWithArtSize();
 
     /**
      * 查询某文章的所有标签
      */
-    List<Tag> selectByArticleSn(@Param("articleSn") Integer articleSn);
+    List<TagDO> selectByArticleSn(@Param("articleSn") Integer articleSn);
 
     /**
      * 关联绑定：将一篇文章绑定到多个标签（先解绑、再绑定）

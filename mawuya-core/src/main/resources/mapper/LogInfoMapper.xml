@@ -6,7 +6,7 @@
         sn,ip_addr,country,province,city,area,detail_position,isp,try_times,req_time,resp_time,consume_time,req_url,req_method,params,browser,resp_status,except_message
     </sql>
 
-    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.entity.LogInfo">
+    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.dataobject.LogDO">
         INSERT INTO log_info (ip_addr,country,province,city,area,detail_position,isp,try_times,req_time,resp_time,consume_time,req_url,req_method,params,browser,resp_status,except_message)
         VALUES (#{ipAddr},#{country},#{province},#{city},#{area},#{detailPosition},#{isp},#{tryTimes},#{reqTime},#{respTime},#{consumeTime},#{reqUrl},#{reqMethod},#{params},#{browser},#{respStatus},#{exceptMessage})
     </insert>
@@ -41,19 +41,19 @@
         DELETE FROM log_info WHERE sn = #{value}
     </delete>
 
-    <update id="update" parameterType="com.qihuizhong.mawuya.core.entity.LogInfo">
+    <update id="update" parameterType="com.qihuizhong.mawuya.core.dataobject.LogDO">
         UPDATE log_info SET 1 = 1 WHERE sn = #{sn}
     </update>
 
-    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.entity.LogInfo">
+    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.dataobject.LogDO">
         SELECT <include refid="_columns"/> FROM log_info WHERE sn = #{value}
     </select>
 
-    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.LogInfo">
+    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.LogDO">
         SELECT <include refid="_columns"/> FROM log_info
     </select>
 
-    <select id="selectByPage" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.LogInfo">
+    <select id="selectByPage" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.LogDO">
         SELECT <include refid="_columns"/> FROM log_info
         <if test="@com.qihuizhong.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
             LIMIT #{start},#{limit}
@@ -71,7 +71,7 @@
         2) order by 用 ${q.orderField} ${q.orderDir}，但这两个字段已由 service 层
            做白名单收敛（仅允许下表枚举），不存在 SQL 注入空间；若空则走默认排序。
     -->
-    <select id="selectByConditionPage" resultType="com.qihuizhong.mawuya.core.entity.LogInfo">
+    <select id="selectByConditionPage" resultType="com.qihuizhong.mawuya.core.dataobject.LogDO">
         SELECT <include refid="_columns"/> FROM log_info
         <where>
             <if test="q.ipAddr != null and q.ipAddr != ''">

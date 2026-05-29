@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms.controller;
 
-import com.qihuizhong.mawuya.core.entity.Category;
+import com.qihuizhong.mawuya.core.dataobject.CategoryDO;
 import com.qihuizhong.mawuya.core.exception.BusinessException;
 import com.qihuizhong.mawuya.core.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ public class CategoryController extends BaseController {
 
     @GetMapping("categoryList.do")
     public String categoryList(Model model) {
-        List<Category> categoryList = categoryService.selectList(new HashMap<>());
+        List<CategoryDO> categoryList = categoryService.list(new HashMap<>(4));
         model.addAttribute("categoryList", categoryList);
         return "bms/category/category_list";
     }
@@ -53,7 +53,7 @@ public class CategoryController extends BaseController {
             return ret404Page();
         }
 
-        Category category = categoryService.selectById(id);
+        CategoryDO category = categoryService.getById(id);
         if (category == null) {
             throw new BusinessException("分类不存在");
         }

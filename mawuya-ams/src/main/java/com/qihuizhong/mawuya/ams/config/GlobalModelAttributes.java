@@ -4,9 +4,9 @@
  */
 package com.qihuizhong.mawuya.ams.config;
 
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
-import com.qihuizhong.mawuya.core.entity.ReviewInfo;
-import com.qihuizhong.mawuya.core.entity.Tag;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
+import com.qihuizhong.mawuya.core.dataobject.ReviewDO;
+import com.qihuizhong.mawuya.core.dataobject.TagDO;
 import com.qihuizhong.mawuya.core.service.BlogStatsService;
 import com.qihuizhong.mawuya.core.service.SiteThemeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,26 +57,26 @@ public class GlobalModelAttributes {
     @ModelAttribute("siteStats")
     public Map<String, Object> siteStats() {
         Map<String, Object> stats = new HashMap<>(8);
-        stats.put("articleCount", blogStatsService.getArticleCount());
-        stats.put("categoryCount", blogStatsService.getCategoryCount());
-        stats.put("tagCount", blogStatsService.getTagCount());
-        stats.put("reviewCount", blogStatsService.getReviewCount());
+        stats.put("articleCount", blogStatsService.countArticles());
+        stats.put("categoryCount", blogStatsService.countCategories());
+        stats.put("tagCount", blogStatsService.countTags());
+        stats.put("reviewCount", blogStatsService.countApprovedReviews());
         return stats;
     }
 
     @ModelAttribute("hotArticles")
-    public List<ArticleInfo> hotArticles() {
-        return blogStatsService.getHotArticles(HOT_LIMIT);
+    public List<ArticleDO> hotArticles() {
+        return blogStatsService.listHotArticles(HOT_LIMIT);
     }
 
     @ModelAttribute("latestReviews")
-    public List<ReviewInfo> latestReviews() {
-        return blogStatsService.getLatestReviews(RECENT_REVIEW_LIMIT);
+    public List<ReviewDO> latestReviews() {
+        return blogStatsService.listLatestReviews(RECENT_REVIEW_LIMIT);
     }
 
     @ModelAttribute("tagCloud")
-    public List<Tag> tagCloud() {
-        List<Tag> tags = blogStatsService.getTagCloud();
+    public List<TagDO> tagCloud() {
+        List<TagDO> tags = blogStatsService.listTagCloud();
         if (tags.size() > TAG_CLOUD_LIMIT) {
             return tags.subList(0, TAG_CLOUD_LIMIT);
         }

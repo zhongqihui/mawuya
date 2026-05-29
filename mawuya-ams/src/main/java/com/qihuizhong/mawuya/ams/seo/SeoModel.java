@@ -15,9 +15,16 @@ import java.util.Map;
  * <p>视图层只依赖此对象暴露的 getter，Controller 通过 {@link #of} 系列工厂方法快速构造，
  * 也可由 {@link SeoModelAdvice} 在请求处理后兜底填充缺失字段。</p>
  *
+ * <p>遵循阿里 POJO 规约：字段不在声明处赋值，集合在构造方法中初始化（视图渲染期空集合避免 NPE）。</p>
+ *
  * @author 钟启辉
  */
 public class SeoModel {
+
+    /** 默认面包屑容量（首页/分类/详情通常 ≤ 4 项） */
+    private static final int DEFAULT_BREADCRUMB_CAPACITY = 4;
+    /** 默认标签 / JSON-LD 块容量 */
+    private static final int DEFAULT_LIST_CAPACITY = 4;
 
     /** 页面 title（不带站名后缀，由模板拼接） */
     private String title;
@@ -32,7 +39,7 @@ public class SeoModel {
     /** OG type：website / article / profile */
     private String ogType;
     /** 是否允许 noindex（true 表示禁止索引，例如搜索结果空页、参数页） */
-    private boolean noindex;
+    private Boolean noindex;
     /** 文章页特有：发布时间 ISO8601 */
     private String articlePublishedTime;
     /** 文章页特有：修改时间 ISO8601 */
@@ -41,11 +48,20 @@ public class SeoModel {
     private String articleAuthor;
     /** 文章页特有：分类 / 标签（充当 og:article:section / tag） */
     private String articleSection;
-    private List<String> articleTags = new ArrayList<>();
+    /** 文章页特有：标签名列表 */
+    private List<String> articleTags;
     /** 面包屑：保持插入顺序，key=文字，value=URL（最后一项 URL 可为 null 表示当前页） */
-    private Map<String, String> breadcrumbs = new LinkedHashMap<>();
+    private Map<String, String> breadcrumbs;
     /** 额外 JSON-LD（已序列化为 JSON 字符串），可叠加多块 */
-    private List<String> jsonLdBlocks = new ArrayList<>();
+    private List<String> jsonLdBlocks;
+
+    public SeoModel() {
+        // 集合在构造时一次性初始化，避免视图渲染期 NPE
+        this.articleTags = new ArrayList<>(DEFAULT_LIST_CAPACITY);
+        this.breadcrumbs = new LinkedHashMap<>(DEFAULT_BREADCRUMB_CAPACITY);
+        this.jsonLdBlocks = new ArrayList<>(DEFAULT_LIST_CAPACITY);
+        this.noindex = Boolean.FALSE;
+    }
 
     public static SeoModel of(String title, String description) {
         SeoModel m = new SeoModel();
@@ -85,8 +101,14 @@ public class SeoModel {
     public String getOgType() { return ogType; }
     public SeoModel setOgType(String ogType) { this.ogType = ogType; return this; }
 
-    public boolean isNoindex() { return noindex; }
-    public SeoModel setNoindex(boolean noindex) { this.noindex = noindex; return this; }
+    /**
+     * 模板里允许写 {@code th:if="${seo.noindex}"} 直接判定，所以保留 isXxx 形式的访问器。
+     * Bean 规约下基本类型 boolean 才有 isXxx，包装 Boolean 则只能用 getXxx；为兼顾两种调用，
+     * 同时提供 {@code isNoindex()} 与 {@code getNoindex()}。
+     */
+    public Boolean getNoindex() { return noindex; }
+    public boolean isNoindex() { return Boolean.TRUE.equals(noindex); }
+    public SeoModel setNoindex(Boolean noindex) { this.noindex = noindex; return this; }
 
     public String getArticlePublishedTime() { return articlePublishedTime; }
     public SeoModel setArticlePublishedTime(String t) { this.articlePublishedTime = t; return this; }
@@ -102,19 +124,25 @@ public class SeoModel {
 
     public List<String> getArticleTags() { return articleTags; }
     public SeoModel setArticleTags(List<String> articleTags) {
-        this.articleTags = articleTags == null ? new ArrayList<>() : articleTags;
+        this.articleTags = articleTags == null ? new ArrayList<>(DEFAULT_LIST_CAPACITY) : articleTags;
         return this;
     }
 
     public Map<String, String> getBreadcrumbs() { return breadcrumbs; }
     public SeoModel setBreadcrumbs(Map<String, String> breadcrumbs) {
-        this.breadcrumbs = breadcrumbs == null ? new LinkedHashMap<>() : breadcrumbs;
+        this.breadcrumbs = breadcrumbs == null ? new LinkedHashMap<>(DEFAULT_BREADCRUMB_CAPACITY) : breadcrumbs;
         return this;
     }
 
     public List<String> getJsonLdBlocks() { return jsonLdBlocks; }
     public SeoModel setJsonLdBlocks(List<String> jsonLdBlocks) {
-        this.jsonLdBlocks = jsonLdBlocks == null ? new ArrayList<>() : jsonLdBlocks;
+        this.jsonLdBlocks = jsonLdBlocks == null ? new ArrayList<>(DEFAULT_LIST_CAPACITY) : jsonLdBlocks;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "SeoModel{title='" + title + "', canonical='" + canonical + "', ogType='" + ogType
+                + "', noindex=" + noindex + '}';
     }
 }

@@ -4,8 +4,8 @@
  */
 package com.qihuizhong.mawuya.bms.controller;
 
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
-import com.qihuizhong.mawuya.core.entity.Category;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
+import com.qihuizhong.mawuya.core.dataobject.CategoryDO;
 import com.qihuizhong.mawuya.core.exception.BusinessException;
 import com.qihuizhong.mawuya.core.service.ArticleService;
 import com.qihuizhong.mawuya.core.service.CategoryService;
@@ -40,7 +40,7 @@ public class ArticleController extends BaseController {
     /** 写文章页 */
     @GetMapping("toAdd.do")
     public String toWriteArticle(Model model) {
-        List<Category> categories = categoryService.selectList(new HashMap<>());
+        List<CategoryDO> categories = categoryService.list(new HashMap<>(4));
         model.addAttribute("categoryList", categories);
         return "bms/article/write_article";
     }
@@ -48,9 +48,9 @@ public class ArticleController extends BaseController {
     /** 文章列表页（数据由 model 直出，本身不分页） */
     @GetMapping("list.do")
     public String articleList(Model model) {
-        Map<String, String> map = new HashMap<>();
-        List<ArticleInfo> articleList = articleService.getAllNoContent(map);
-        List<Category> categoryList = categoryService.selectList(map);
+        Map<String, String> map = new HashMap<>(4);
+        List<ArticleDO> articleList = articleService.listAllNoContent(map);
+        List<CategoryDO> categoryList = categoryService.list(map);
 
         model.addAttribute("articleList", articleList)
                 .addAttribute("categoryList", categoryList);
@@ -67,11 +67,11 @@ public class ArticleController extends BaseController {
             return ret404Page();
         }
 
-        ArticleInfo articleInfo = articleService.selectById(id);
+        ArticleDO articleInfo = articleService.getById(id);
         if (articleInfo == null) {
             throw new BusinessException("文章不存在");
         }
-        List<Category> categories = categoryService.selectList(new HashMap<>());
+        List<CategoryDO> categories = categoryService.list(new HashMap<>(4));
         model.addAttribute("categoryList", categories)
                 .addAttribute("article", articleInfo);
         return "bms/article/mod_article";

@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.core.service;
 
-import com.qihuizhong.mawuya.core.entity.BlogInfo;
+import com.qihuizhong.mawuya.core.dataobject.BlogDO;
 import com.qihuizhong.mawuya.core.mapper.BlogInfoMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ public class SiteThemeService {
      */
     public String getCurrentTheme() {
         try {
-            BlogInfo info = blogInfoMapper.selectSingleton();
+            BlogDO info = blogInfoMapper.selectSingleton();
             if (info == null) {
                 return DEFAULT_CODE;
             }

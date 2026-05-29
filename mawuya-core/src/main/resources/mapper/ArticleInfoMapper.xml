@@ -10,11 +10,11 @@
         sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,insert_time,update_time
     </sql>
 
-    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns"/> FROM article_info WHERE sn = #{value}
     </select>
 
-    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns"/> FROM article_info
         <where>
             <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
@@ -33,7 +33,7 @@
         </where>
     </select>
 
-    <select id="selectByPage" parameterType="java.util.Map" resultType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <select id="selectByPage" parameterType="java.util.Map" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns"/> FROM article_info
         <where>
             <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
@@ -46,7 +46,7 @@
         </if>
     </select>
 
-    <select id="selectAllNoContent" parameterType="map" resultType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <select id="selectAllNoContent" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/> FROM article_info
         <where>
             <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
@@ -56,15 +56,15 @@
         ORDER BY sn DESC
     </select>
 
-    <select id="selectNextById" parameterType="int" resultType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <select id="selectNextById" parameterType="int" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/> FROM article_info WHERE <![CDATA[ sn > #{value} ]]> ORDER BY sn ASC LIMIT 1
     </select>
 
-    <select id="selectPrevById" parameterType="int" resultType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <select id="selectPrevById" parameterType="int" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/> FROM article_info WHERE <![CDATA[ sn < #{value} ]]> ORDER BY sn DESC LIMIT 1
     </select>
 
-    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         INSERT IGNORE INTO article_info (category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,article_content,insert_time,update_time)
         VALUES (#{categorySn},#{readNum},#{reviewNum},#{praiseNum},#{teaseNum},#{pictureUrl},#{articleTitle},#{articleSummary},#{articleContent},NOW(),NOW())
     </insert>
@@ -73,7 +73,7 @@
         DELETE FROM article_info WHERE sn = #{value}
     </delete>
 
-    <update id="update" parameterType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <update id="update" parameterType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         UPDATE article_info SET
             category_sn     = #{categorySn},
             read_num        = #{readNum},
@@ -97,12 +97,12 @@
         UPDATE article_info a SET a.category_sn = 0 WHERE sn IN (${value})
     </update>
 
-    <update id="updatePictureUrl" parameterType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <update id="updatePictureUrl" parameterType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         UPDATE article_info a SET a.picture_url = #{pictureUrl} WHERE a.sn = #{sn}
     </update>
 
     <!-- 全文搜索（标题/摘要/正文 LIKE） -->
-    <select id="searchByKeyword" resultType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <select id="searchByKeyword" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/>
         FROM article_info
         WHERE article_title LIKE CONCAT('%', #{keyword}, '%')
@@ -122,7 +122,7 @@
     </select>
 
     <!-- 按 sn 列表批量查（标签详情页用） -->
-    <select id="selectListBySnList" resultType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <select id="selectListBySnList" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/>
         FROM article_info
         WHERE sn IN
@@ -133,7 +133,7 @@
     </select>
 
     <!-- 热门文章 Top N -->
-    <select id="selectHotTopN" resultType="com.qihuizhong.mawuya.core.entity.ArticleInfo">
+    <select id="selectHotTopN" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/>
         FROM article_info
         ORDER BY read_num DESC, sn DESC

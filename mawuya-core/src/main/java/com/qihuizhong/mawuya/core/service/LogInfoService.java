@@ -4,9 +4,11 @@
  */
 package com.qihuizhong.mawuya.core.service;
 
-import com.qihuizhong.mawuya.core.entity.LogInfo;
+import com.qihuizhong.mawuya.core.dataobject.LogDO;
 import com.qihuizhong.mawuya.core.mapper.LogInfoMapper;
 import com.qihuizhong.mawuya.core.vo.LogInfoQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,10 +29,25 @@ import java.util.regex.Pattern;
  *   <li>时间字符串简单格式校验，避免把垃圾串塞入 req_time 比较</li>
  * </ul>
  *
+ * <p>遵循阿里 Service 命名规约：方法前缀 {@code get/list/count}。</p>
+ *
  * @author 钟启辉
  */
 @Service
 public class LogInfoService {
+
+    private static final Logger log = LoggerFactory.getLogger(LogInfoService.class);
+
+    /** 默认每页条数 */
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    /** 单页最大条数（防止前端误传 size=10000 拖垮 DB） */
+    private static final int MAX_PAGE_SIZE = 200;
+    /** 默认排序列 */
+    private static final String DEFAULT_ORDER_FIELD = "sn";
+    /** 默认排序方向 */
+    private static final String DEFAULT_ORDER_DIR = "DESC";
+    /** 升序常量 */
+    private static final String ORDER_ASC = "ASC";
 
     /** 允许的排序列（白名单），与表字段一致；其他列拒绝排序 */
     private static final Set<String> ALLOWED_ORDER_FIELDS = new HashSet<>(Arrays.asList(
@@ -59,31 +76,36 @@ public class LogInfoService {
         this.logInfoMapper = logInfoMapper;
     }
 
-    /** 查询：返回当前页数据 */
-    public List<LogInfo> queryPage(LogInfoQuery raw, int page, int size) {
+    /** 分页查询当前页数据。 */
+    public List<LogDO> listByPage(LogInfoQuery raw, int page, int size) {
         LogInfoQuery q = sanitize(raw);
         int safePage = page < 1 ? 1 : page;
-        int safeSize = (size < 1 || size > 200) ? 20 : size;
+        int safeSize = (size < 1 || size > MAX_PAGE_SIZE) ? DEFAULT_PAGE_SIZE : size;
         q.setOffset((safePage - 1) * safeSize).setLimit(safeSize);
         try {
             return logInfoMapper.selectByConditionPage(q);
         } catch (Exception e) {
-            // 任何 mapper 异常都不应让管理后台 500，给个空列表 + controller 兜个错误码
+            // 任何 mapper 异常都不应让管理后台 500，给个空列表 + 留日志便于排查
+            log.warn("[log] listByPage failed: {}", e.getMessage());
             return Collections.emptyList();
         }
     }
 
-    /** 计数：与 queryPage 共享同一个 sanitized query */
+    /** 计数：与 listByPage 共享同一个 sanitized query。 */
     public int count(LogInfoQuery raw) {
         try {
             return logInfoMapper.countByCondition(sanitize(raw));
         } catch (Exception e) {
+            log.warn("[log] count failed: {}", e.getMessage());
             return 0;
         }
     }
 
-    public LogInfo getById(Integer sn) {
-        if (sn == null || sn <= 0) return null;
+    /** 按主键取详情。 */
+    public LogDO getById(Integer sn) {
+        if (sn == null || sn <= 0) {
+            return null;
+        }
         return logInfoMapper.selectById(sn);
     }
 
@@ -117,13 +139,13 @@ public class LogInfoService {
         // 排序白名单
         String orderField = blankToNull(in.getOrderField());
         if (orderField == null || !ALLOWED_ORDER_FIELDS.contains(orderField)) {
-            orderField = "sn";
+            orderField = DEFAULT_ORDER_FIELD;
         }
         q.setOrderField(orderField);
 
         String orderDir = upperOrNull(in.getOrderDir());
-        if (!"ASC".equals(orderDir) && !"DESC".equals(orderDir)) {
-            orderDir = "DESC";
+        if (!ORDER_ASC.equals(orderDir) && !DEFAULT_ORDER_DIR.equals(orderDir)) {
+            orderDir = DEFAULT_ORDER_DIR;
         }
         q.setOrderDir(orderDir);
 

@@ -7,8 +7,8 @@ package com.qihuizhong.mawuya.ams.controller;
 import com.qihuizhong.mawuya.ams.seo.SeoModel;
 import com.qihuizhong.mawuya.ams.seo.SeoProperties;
 import com.qihuizhong.mawuya.ams.seo.SeoUtils;
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
-import com.qihuizhong.mawuya.core.entity.Tag;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
+import com.qihuizhong.mawuya.core.dataobject.TagDO;
 import com.qihuizhong.mawuya.core.service.ArticleService;
 import com.qihuizhong.mawuya.core.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ public class TagController extends BaseController {
 
     @GetMapping("tags")
     public String tagCloud(Model model) {
-        List<Tag> tags = tagService.getCloud();
+        List<TagDO> tags = tagService.listTagCloud();
         model.addAttribute("tags", tags);
 
         SeoModel seo = SeoModel.of("标签云",
@@ -65,13 +65,13 @@ public class TagController extends BaseController {
         } catch (NumberFormatException e) {
             return ret404Page();
         }
-        Tag tag = tagService.selectById(sn);
+        TagDO tag = tagService.getById(sn);
         if (tag == null) {
             return ret404Page();
         }
 
-        List<Integer> articleSns = tagService.getArticleSnByTag(sn);
-        List<ArticleInfo> articles = articleService.listBySnList(articleSns);
+        List<Integer> articleSns = tagService.listArticleSnByTag(sn);
+        List<ArticleDO> articles = articleService.listBySnList(articleSns);
         model.addAttribute("tag", tag)
                 .addAttribute("articles", articles);
 

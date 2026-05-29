@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.core.service;
 
-import com.qihuizhong.mawuya.core.entity.ReviewInfo;
+import com.qihuizhong.mawuya.core.dataobject.ReviewDO;
 import com.qihuizhong.mawuya.core.mapper.ReviewInfoMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ import java.util.List;
  * @author 钟启辉
  */
 @Service
-public class ReviewService extends BaseService<ReviewInfo, Integer> {
+public class ReviewService extends BaseService<ReviewDO, Integer> {
 
     /** 评论内容最大长度（与表字段保持一致） */
     public static final int MAX_CONTENT_LENGTH = 500;
@@ -50,7 +50,7 @@ public class ReviewService extends BaseService<ReviewInfo, Integer> {
     }
 
     /** AMS 文章详情页：仅展示已通过评论（mapper 已带 status=1 过滤） */
-    public List<ReviewInfo> listByArticle(Integer articleSn) {
+    public List<ReviewDO> listByArticle(Integer articleSn) {
         if (articleSn == null) {
             return Collections.emptyList();
         }
@@ -58,7 +58,7 @@ public class ReviewService extends BaseService<ReviewInfo, Integer> {
     }
 
     /** 侧边栏：最新已通过评论（mapper 已带 status=1 过滤） */
-    public List<ReviewInfo> listLatest(int n) {
+    public List<ReviewDO> listLatest(int n) {
         if (n <= 0) {
             return Collections.emptyList();
         }
@@ -88,7 +88,7 @@ public class ReviewService extends BaseService<ReviewInfo, Integer> {
             return "评论内容过长（最多 " + MAX_CONTENT_LENGTH + " 字符）";
         }
 
-        ReviewInfo r = new ReviewInfo()
+        ReviewDO r = new ReviewDO()
                 .setArticleSn(articleSn)
                 .setPsn(0)
                 .setReviewName(name.trim())
@@ -104,7 +104,7 @@ public class ReviewService extends BaseService<ReviewInfo, Integer> {
     // ----------------- BMS 审批 -----------------
 
     /** 按状态分页查（带文章标题），status=null 表示全部 */
-    public List<ReviewInfo> listByStatus(Integer status, int page, int size) {
+    public List<ReviewDO> listByStatus(Integer status, int page, int size) {
         int safePage = Math.max(1, page);
         int safeSize = (size < 1 || size > 200) ? 20 : size;
         int offset = (safePage - 1) * safeSize;
@@ -120,7 +120,7 @@ public class ReviewService extends BaseService<ReviewInfo, Integer> {
     @Transactional
     public boolean approve(Integer sn) {
         if (sn == null) return false;
-        ReviewInfo r = reviewInfoMapper.selectById(sn);
+        ReviewDO r = reviewInfoMapper.selectById(sn);
         if (r == null) return false;
         if (reviewInfoMapper.updateStatus(sn, STATUS_APPROVED) <= 0) {
             return false;
@@ -138,7 +138,7 @@ public class ReviewService extends BaseService<ReviewInfo, Integer> {
     @Transactional
     public boolean reject(Integer sn) {
         if (sn == null) return false;
-        ReviewInfo r = reviewInfoMapper.selectById(sn);
+        ReviewDO r = reviewInfoMapper.selectById(sn);
         if (r == null) return false;
         if (reviewInfoMapper.updateStatus(sn, STATUS_REJECTED) <= 0) {
             return false;

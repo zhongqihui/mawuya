@@ -34,6 +34,15 @@ import java.util.List;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    /** 仅介入此前缀的请求 */
+    private static final String API_URI_PREFIX = "/bms/api/";
+    /** Spring Security 默认角色前缀 */
+    private static final String ROLE_PREFIX = "ROLE_";
+    /** 匿名占位 principal */
+    private static final String ANONYMOUS_USER = "anonymousUser";
+    /** Authorization Header */
+    private static final String AUTH_HEADER = "Authorization";
+
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -42,18 +51,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         // 仅对 /bms/api/** 介入；页面路径完全交给 form-login + session
         String uri = req.getRequestURI();
-        if (uri == null || !uri.startsWith("/bms/api/")) {
+        if (uri == null || !uri.startsWith(API_URI_PREFIX)) {
             chain.doFilter(req, resp);
             return;
         }
         // 已登录（form-login 的 session）则不要二次覆盖
         if (SecurityContextHolder.getContext().getAuthentication() != null
                 && SecurityContextHolder.getContext().getAuthentication().isAuthenticated()
-                && !"anonymousUser".equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
+                && !ANONYMOUS_USER.equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
             chain.doFilter(req, resp);
             return;
         }
-        String header = req.getHeader("Authorization");
+        String header = req.getHeader(AUTH_HEADER);
         if (header == null || header.isEmpty()) {
             chain.doFilter(req, resp);
             return;
@@ -64,11 +73,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
         // 转换 roles → ROLE_xxx GrantedAuthority
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        if (payload.roles != null) {
-            for (String r : payload.roles) {
-                if (r == null || r.isEmpty()) continue;
-                String upper = r.startsWith("ROLE_") ? r : ("ROLE_" + r.toUpperCase());
+        List<String> roles = payload.roles;
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>(roles == null ? 0 : roles.size());
+        if (roles != null) {
+            for (String r : roles) {
+                if (r == null || r.isEmpty()) {
+                    continue;
+                }
+                String upper = r.startsWith(ROLE_PREFIX) ? r : (ROLE_PREFIX + r.toUpperCase());
                 authorities.add(new SimpleGrantedAuthority(upper));
             }
         }

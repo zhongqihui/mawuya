@@ -62,7 +62,8 @@ public class MySessionContext {
         @SuppressWarnings("unchecked")
         Set<String> aSnSet = (Set<String>) s.getAttribute(CommonUtil.ASNSET);
         if (aSnSet == null) {
-            aSnSet = new HashSet<>();
+            // 单 session 阅读文章数通常 < 8，初始容量给 8 足够
+            aSnSet = new HashSet<>(8);
             session.setAttribute(CommonUtil.ASNSET, aSnSet);
         }
 

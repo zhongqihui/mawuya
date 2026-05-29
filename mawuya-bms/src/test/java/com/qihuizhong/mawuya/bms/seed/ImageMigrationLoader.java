@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms.seed;
 
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
 import com.qihuizhong.mawuya.core.mapper.ArticleInfoMapper;
 import com.qihuizhong.mawuya.core.service.ImageBlobService;
 import org.junit.jupiter.api.Test;
@@ -67,20 +67,20 @@ public class ImageMigrationLoader {
     @Test
     public void migrate() {
         Map<String, String> empty = new HashMap<>();
-        List<ArticleInfo> all = articleInfoMapper.selectList(empty);
+        List<ArticleDO> all = articleInfoMapper.selectList(empty);
         System.out.println("[migrate] articles total = " + all.size());
 
         int picUrlChanged = 0;
         int contentChanged = 0;
 
-        for (ArticleInfo a : all) {
+        for (ArticleDO a : all) {
             // 1) picture_url（用分号分隔多张）
             String oldPic = a.getPictureUrl();
             String newPic = rewriteSemicolonList(oldPic);
             boolean picChanged = newPic != null && !Objects.equals(newPic, oldPic);
 
             // 2) article_content
-            ArticleInfo full = articleInfoMapper.selectById(a.getSn());
+            ArticleDO full = articleInfoMapper.selectById(a.getSn());
             String oldContent = full == null ? null : full.getArticleContent();
             String newContent = rewriteMarkdown(oldContent);
             boolean conChanged = newContent != null && !Objects.equals(newContent, oldContent);
@@ -88,7 +88,7 @@ public class ImageMigrationLoader {
             if (picChanged || conChanged) {
                 if (conChanged && full != null) {
                     // update 是全字段覆盖，必须把读数/点赞数等也带上，避免被清零
-                    ArticleInfo upd = new ArticleInfo()
+                    ArticleDO upd = new ArticleDO()
                             .setSn(full.getSn())
                             .setCategorySn(full.getCategorySn())
                             .setReadNum(full.getReadNum())
@@ -103,7 +103,7 @@ public class ImageMigrationLoader {
                     articleInfoMapper.update(upd);
                 } else if (picChanged) {
                     // 只动了图片字段，走轻量更新
-                    ArticleInfo upd = new ArticleInfo().setSn(a.getSn()).setPictureUrl(newPic);
+                    ArticleDO upd = new ArticleDO().setSn(a.getSn()).setPictureUrl(newPic);
                     articleInfoMapper.updatePictureUrl(upd);
                 }
                 if (picChanged) picUrlChanged++;
@@ -181,7 +181,7 @@ public class ImageMigrationLoader {
             return "/image/db/" + sessionCache.get(url);
         }
         // 1) 库内已有同 sourceUrl 记录？复用
-        Long existSn = imageBlobService.findSnBySourceUrl(url);
+        Long existSn = imageBlobService.getSnBySourceUrl(url);
         if (existSn != null) {
             sessionCache.put(url, existSn);
             return "/image/db/" + existSn;

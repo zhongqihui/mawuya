@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.core.cache;
 
-import com.qihuizhong.mawuya.core.entity.LogInfo;
+import com.qihuizhong.mawuya.core.dataobject.LogDO;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -17,10 +17,10 @@ import java.util.concurrent.BlockingQueue;
 public class DataCenter {
 
     /** 访客信息：调用 IP 接口前的队列 */
-    private static final BlockingQueue<LogInfo> LOG_INFO_TO_API_QUEUE = new ArrayBlockingQueue<>(50000);
+    private static final BlockingQueue<LogDO> LOG_INFO_TO_API_QUEUE = new ArrayBlockingQueue<>(50000);
 
     /** 访客信息：等待入库的队列 */
-    private static final BlockingQueue<LogInfo> LOG_INFO_TO_DB_QUEUE = new ArrayBlockingQueue<>(50000);
+    private static final BlockingQueue<LogDO> LOG_INFO_TO_DB_QUEUE = new ArrayBlockingQueue<>(50000);
 
     /** 文章 sn 队列：等待将 read_num + 1 入库 */
     private static final BlockingQueue<String> READ_NUM_TO_DB_QUEUE = new ArrayBlockingQueue<>(50000);
@@ -28,11 +28,11 @@ public class DataCenter {
     private DataCenter() {
     }
 
-    public static BlockingQueue<LogInfo> getLogInfoToAPIQueue() {
+    public static BlockingQueue<LogDO> getLogInfoToAPIQueue() {
         return LOG_INFO_TO_API_QUEUE;
     }
 
-    public static BlockingQueue<LogInfo> getLogInfoToDBQueue() {
+    public static BlockingQueue<LogDO> getLogInfoToDBQueue() {
         return LOG_INFO_TO_DB_QUEUE;
     }
 

@@ -8,7 +8,7 @@ import com.qihuizhong.mawuya.bms.dto.request.LoginRequest;
 import com.qihuizhong.mawuya.bms.dto.response.LoginResponse;
 import com.qihuizhong.mawuya.bms.security.JwtUtil;
 import com.qihuizhong.mawuya.core.common.BaseResponse;
-import com.qihuizhong.mawuya.core.entity.SysUser;
+import com.qihuizhong.mawuya.core.dataobject.UserDO;
 import com.qihuizhong.mawuya.core.enums.ResultCodeEnum;
 import com.qihuizhong.mawuya.core.exception.BusinessException;
 import com.qihuizhong.mawuya.core.service.SysUserService;
@@ -51,7 +51,7 @@ public class AuthApiController {
 
     @PostMapping("login")
     public BaseResponse<LoginResponse> login(@Valid LoginRequest req) {
-        SysUser u = sysUserService.loadByUsername(req.getUsername().trim());
+        UserDO u = sysUserService.getByUsername(req.getUsername().trim());
         if (u == null || u.getPasswordHash() == null
                 || !passwordEncoder.matches(req.getPassword(), u.getPasswordHash())) {
             throw new BusinessException(ResultCodeEnum.LOGIN_FAILED);
@@ -59,7 +59,7 @@ public class AuthApiController {
         if (u.getEnabled() == null || u.getEnabled() != 1) {
             throw new BusinessException(ResultCodeEnum.ACCOUNT_DISABLED);
         }
-        sysUserService.touchLastLogin(u.getSn());
+        sysUserService.updateLastLoginAt(u.getSn());
 
         String token = jwtUtil.issue(u.getSn(), u.getUsername(),
                 u.getRoleCodes() == null ? Collections.emptyList() : u.getRoleCodes());

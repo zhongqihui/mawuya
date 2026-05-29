@@ -4,7 +4,7 @@
  */
 package com.qihuizhong.mawuya.bms.controller;
 
-import com.qihuizhong.mawuya.core.entity.ReviewInfo;
+import com.qihuizhong.mawuya.core.dataobject.ReviewDO;
 import com.qihuizhong.mawuya.core.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -54,7 +54,7 @@ public class ReviewController extends BaseController {
             }
         }
 
-        List<ReviewInfo> list = reviewService.listByStatus(statusFilter, 1, 200);
+        List<ReviewDO> list = reviewService.listByStatus(statusFilter, 1, 200);
 
         model.addAttribute("reviewList", list);
         model.addAttribute("currentStatus", statusFilter == null ? "all" : String.valueOf(statusFilter));

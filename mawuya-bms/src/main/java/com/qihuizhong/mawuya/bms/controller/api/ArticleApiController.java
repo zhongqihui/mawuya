@@ -11,7 +11,7 @@ import com.qihuizhong.mawuya.bms.dto.request.SnRequest;
 import com.qihuizhong.mawuya.bms.dto.response.ImageUploadResponse;
 import com.qihuizhong.mawuya.core.common.BaseResponse;
 import com.qihuizhong.mawuya.core.common.web.SkipApiResponseWrap;
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
 import com.qihuizhong.mawuya.core.enums.ResultCodeEnum;
 import com.qihuizhong.mawuya.core.exception.BusinessException;
 import com.qihuizhong.mawuya.core.service.ArticleService;
@@ -68,14 +68,14 @@ public class ArticleApiController {
 
     @PostMapping("create")
     public BaseResponse<Void> create(@Valid ArticleCreateRequest req) {
-        ArticleInfo a = new ArticleInfo()
+        ArticleDO a = new ArticleDO()
                 .setArticleTitle(req.getArticleTitle())
                 .setArticleSummary(req.getArticleSummary())
                 .setArticleContent(req.getArticleContent());
         if (req.getCategorySn() != null) {
             a.setCategorySn(req.getCategorySn());
         }
-        if (articleService.insert(a) <= 0) {
+        if (articleService.save(a) <= 0) {
             throw new BusinessException("文章创建失败");
         }
         return BaseResponse.success("发布成功", null);
@@ -83,7 +83,7 @@ public class ArticleApiController {
 
     @PostMapping("update")
     public BaseResponse<Void> update(@Valid ArticleUpdateRequest req) {
-        ArticleInfo dbArticle = articleService.selectById(req.getSn());
+        ArticleDO dbArticle = articleService.getById(req.getSn());
         if (dbArticle == null) {
             throw new BusinessException(ResultCodeEnum.NOT_FOUND, "文章不存在");
         }
@@ -93,7 +93,7 @@ public class ArticleApiController {
         if (req.getCategorySn() != null) {
             dbArticle.setCategorySn(req.getCategorySn());
         }
-        if (articleService.update(dbArticle) <= 0) {
+        if (articleService.updateById(dbArticle) <= 0) {
             throw new BusinessException("文章更新失败");
         }
         return BaseResponse.success("更新成功", null);
@@ -101,7 +101,7 @@ public class ArticleApiController {
 
     @PostMapping("delete")
     public BaseResponse<Void> delete(@Valid SnRequest req) {
-        String result = articleService.delArtcleAndReview(String.valueOf(req.getSn()));
+        String result = articleService.removeWithReview(String.valueOf(req.getSn()));
         if (!"success".equals(result)) {
             throw new BusinessException("文章删除失败");
         }
@@ -124,8 +124,8 @@ public class ArticleApiController {
                     ? file.getContentType()
                     : guessContentType(file.getOriginalFilename());
             long imgSn = imageBlobService.save(bytes, file.getOriginalFilename(), contentType, null);
-            ArticleInfo info = new ArticleInfo().setSn(sn).setPictureUrl("/image/db/" + imgSn);
-            articleService.updatePictureUrl(info);
+            ArticleDO info = new ArticleDO().setSn(sn).setPictureUrl("/image/db/" + imgSn);
+            articleService.updatePictureUrlById(info);
             return BaseResponse.success("已设置封面",
                     new ImageUploadResponse(imgSn, "/image/db/" + imgSn,
                             file.getOriginalFilename(), (long) bytes.length));
@@ -143,13 +143,13 @@ public class ArticleApiController {
      */
     @PostMapping("cover/from-library")
     public BaseResponse<Void> coverFromLibrary(@Valid ArticleCoverFromLibraryRequest req) {
-        if (imageBlobService.loadMeta(req.getImageSn()) == null) {
+        if (imageBlobService.getMetaById(req.getImageSn()) == null) {
             throw new BusinessException(ResultCodeEnum.NOT_FOUND, "图片不存在");
         }
-        ArticleInfo info = new ArticleInfo()
+        ArticleDO info = new ArticleDO()
                 .setSn(req.getSn())
                 .setPictureUrl("/image/db/" + req.getImageSn());
-        if (articleService.updatePictureUrl(info) <= 0) {
+        if (articleService.updatePictureUrlById(info) <= 0) {
             throw new BusinessException("封面设置失败");
         }
         return BaseResponse.success("已设置封面", null);
@@ -165,7 +165,7 @@ public class ArticleApiController {
     @PostMapping("editor/img-upload")
     @SkipApiResponseWrap
     public Map<String, Object> editorImgUpload(@RequestParam("editormd-image-file") MultipartFile file) {
-        Map<String, Object> res = new LinkedHashMap<>();
+        Map<String, Object> res = new LinkedHashMap<>(4);
         try {
             validateImage(file);
             byte[] bytes = file.getBytes();

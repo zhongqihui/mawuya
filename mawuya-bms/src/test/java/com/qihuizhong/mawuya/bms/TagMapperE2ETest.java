@@ -4,8 +4,8 @@
  */
 package com.qihuizhong.mawuya.bms;
 
-import com.qihuizhong.mawuya.core.entity.ArticleInfo;
-import com.qihuizhong.mawuya.core.entity.Tag;
+import com.qihuizhong.mawuya.core.dataobject.ArticleDO;
+import com.qihuizhong.mawuya.core.dataobject.TagDO;
 import com.qihuizhong.mawuya.core.mapper.TagMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,10 +37,10 @@ class TagMapperE2ETest {
     @DisplayName("CRUD：insert / selectById / update / deleteById")
     void shouldRunFullCrud() {
         String name = "ut-tag-" + UUID.randomUUID().toString().substring(0, 8);
-        Tag t = new Tag(name).setTagColor("#abcdef");
+        TagDO t = new TagDO(name).setTagColor("#abcdef");
         assertThat(tagMapper.insert(t)).isPositive();
 
-        Tag saved = tagMapper.selectList(new HashMap<>()).stream()
+        TagDO saved = tagMapper.selectList(new HashMap<>()).stream()
                 .filter(x -> name.equals(x.getTagName())).findFirst().orElseThrow(() -> new AssertionError("未找到刚插入的标签: " + name));
         assertThat(saved.getSn()).isPositive();
         assertThat(saved.getTagColor()).isEqualTo("#abcdef");
@@ -58,16 +58,16 @@ class TagMapperE2ETest {
     void shouldBindAndQueryArticleTag() {
         // 准备一个标签
         String name = "ut-bind-" + UUID.randomUUID().toString().substring(0, 6);
-        tagMapper.insert(new Tag(name).setTagColor("#999"));
-        Tag tag = tagMapper.selectList(new HashMap<>()).stream()
+        tagMapper.insert(new TagDO(name).setTagColor("#999"));
+        TagDO tag = tagMapper.selectList(new HashMap<>()).stream()
                 .filter(x -> name.equals(x.getTagName())).findFirst().orElseThrow(() -> new AssertionError("未找到刚插入的标签: " + name));
 
         Integer articleSn = 9999;  // 虚拟文章 sn，本测试只验证关联表行为
         assertThat(tagMapper.bindArticleTag(articleSn, tag.getSn())).isEqualTo(1);
 
         // 反查
-        List<Tag> tags = tagMapper.selectByArticleSn(articleSn);
-        assertThat(tags).extracting(Tag::getTagName).contains(name);
+        List<TagDO> tags = tagMapper.selectByArticleSn(articleSn);
+        assertThat(tags).extracting(TagDO::getTagName).contains(name);
 
         List<Integer> articleSns = tagMapper.selectArticleSnByTag(tag.getSn());
         assertThat(articleSns).contains(articleSn);
@@ -83,9 +83,9 @@ class TagMapperE2ETest {
     @Test
     @DisplayName("selectAllWithArtSize：标签云 art_size 计数正确")
     void shouldComputeArtSize() {
-        List<Tag> cloud = tagMapper.selectAllWithArtSize();
+        List<TagDO> cloud = tagMapper.selectAllWithArtSize();
         assertThat(cloud).isNotEmpty();
-        // 每个 Tag 都应有 artSize（≥0）
+        // 每个 TagDO 都应有 artSize（≥0）
         assertThat(cloud).allSatisfy(t -> {
             assertThat(t.getSn()).isPositive();
             assertThat(t.getTagName()).isNotBlank();
