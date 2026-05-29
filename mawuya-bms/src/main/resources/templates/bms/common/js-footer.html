@@ -19,19 +19,48 @@
     <script type="text/javascript" th:src="@{/statics/plugins/layer/layer.js}"></script>
 
     <!--
-      ===== BMS 统一 API 客户端 =====
-      封装 BaseResponse 协议（{code, message, data}）的判定逻辑，
-      所有页面通过 Api.isOk(res) 判断成功，Api.data(res) 拿数据，Api.msg(res) 拿提示。
-      迁移完成后整个 BMS 前端只走 /bms/api/** 路径。
+      ============================================================
+       BMS 统一 API 客户端 (window.Api)
+      ============================================================
+
+      作用：
+        封装 BaseResponse 协议（{code, message, data}）的判定逻辑；
+        所有页面通过 Api.isOk(res) / Api.data(res) / Api.msg(res) 统一访问。
+
+      使用示例：
+        $.post('/bms/api/xxx', params, function (res) {
+            if (Api.isOk(res)) {
+                var d = Api.data(res);
+                // ...
+            } else {
+                layer.msg(Api.msg(res, '操作失败'));
+            }
+        });
+
+      约束（与后端阿里规约错误码体系对齐）：
+        - 成功 code = '00000'
+        - 用户端错误 code = 'A0xxx'（如 A0230 未登录 / A0400 参数非法）
+        - 系统执行错误 code = 'B0xxx'
+        - 第三方服务错误 code = 'C0xxx'
+
+      注意事项：
+        - 全局 401 兜底通过 jQuery $.ajaxError 自动接管，无需每个页面单独写；
+        - 视图请求（HTML 直链）由 Spring Security 直接 302 到登录页，不进 Api；
+        - 仅 /bms/api/** 这种 JSON 接口才会触发 Api.isOk 判定。
     -->
     <script type="text/javascript">
+        'use strict';
         window.Api = (function () {
-            // 与后端 ResultCodeEnum.SUCCESS 保持一致（阿里规约 5 位字符串：成功 = "00000"）
-            var SUCCESS = '00000';
+            // 与后端 ResultCodeEnum.SUCCESS 保持一致（阿里规约 5 位字符串）
+            var CODE_SUCCESS      = '00000';
+            // 未登录或 token 失效（与 ResultCodeEnum.UNAUTHORIZED 对齐）
+            var CODE_UNAUTHORIZED = 'A0230';
+            var STATUS_UNAUTHORIZED = 401;
+
             return {
                 /** 判定 BaseResponse 是否成功 */
                 isOk: function (res) {
-                    return !!res && res.code === SUCCESS;
+                    return !!res && res.code === CODE_SUCCESS;
                 },
                 /** 取 data 字段（可能为 null/undefined） */
                 data: function (res) {
@@ -44,73 +73,100 @@
                     }
                     return fallback || '';
                 },
+                /** 暴露常量供页面判断 */
+                CODE_SUCCESS: CODE_SUCCESS,
+                CODE_UNAUTHORIZED: CODE_UNAUTHORIZED,
                 /** 全局 401 兜底：登录态失效统一跳登录页（避免每个页面写） */
                 install: function () {
-                    if (!window.jQuery) return;
+                    if (!window.jQuery) {
+                        return;
+                    }
                     $(document).ajaxError(function (event, jqXHR) {
-                        if (jqXHR && jqXHR.status === 401) {
-                            // 后端 entryPoint 已返回 BaseResponse(code=001401)
-                            // 仅 /bms/api/** 会触发；视图请求由 Spring Security 直接 302 到登录页
+                        if (jqXHR && jqXHR.status === STATUS_UNAUTHORIZED) {
                             window.location.href = '/bms/login.do?expired=1';
                         }
                     });
                 }
             };
         })();
-        if (window.jQuery) { Api.install(); }
+        if (window.jQuery) {
+            Api.install();
+        }
     </script>
 
+    <!--
+      ============================================================
+       BMS 主框架 Tab 切换逻辑
+      ============================================================
+      职责：左侧菜单点击后，在主区域以 tab 方式打开 / 切换 / 关闭页面。
+
+      命名规范：
+        - DOM id 前缀：title{id} = tab 头；content{id} = tab 体
+        - 选择器全部用统一的常量 SELECTOR_*
+
+      注意事项：
+        - 依赖 #tab-title 与 #tab-content 两个容器存在；如未来主框架改造，
+          需同步调整 SELECTOR_TITLE / SELECTOR_CONTENT。
+    -->
     <script type="text/javascript">
+        'use strict';
         $(document).ready(function () {
+            var SELECTOR_TITLE   = '#tab-title';
+            var SELECTOR_CONTENT = '#tab-content';
+            var CLASS_ACTIVE     = 'active';
+
             App.init();
             App.dataTables();
 
-            $('.link-li').click(function () {
-                var id = $(this).attr('id');
-                var url = $(this).attr('link-url');
-                var title = $(this).html();
+            // 高亮指定 tab，其余还原
+            function activateTab(id) {
+                $(SELECTOR_TITLE).find('li').attr('class', 'title-li');
+                $('#title' + id).attr('class', 'title-li ' + CLASS_ACTIVE);
 
-                var flag = true;
-                $('#tab-title').find('li').each(function () {
-                    var h = $(this).attr('id');
-                    if (h === 'title' + id) {
-                        flag = false;
+                $(SELECTOR_CONTENT + ' .tab-pane').attr('class', 'tab-pane');
+                $('#content' + id).attr('class', 'tab-pane ' + CLASS_ACTIVE);
+            }
+
+            // 左侧菜单 click：判断是否已打开，未打开则新建 tab；已打开则仅高亮
+            $('.link-li').click(function () {
+                var $self = $(this);
+                var id    = $self.attr('id');
+                var url   = $self.attr('link-url');
+                var title = $self.html();
+
+                var alreadyOpened = false;
+                $(SELECTOR_TITLE).find('li').each(function () {
+                    if ($(this).attr('id') === 'title' + id) {
+                        alreadyOpened = true;
                     }
                 });
 
-                cssActive(id);
+                activateTab(id);
 
-                if (flag) {
-                    $('#tab-title').append('<li class="title-li active" id="title' + id + '">' + title + '&nbsp;&nbsp;<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
-                    $('#tab-content').append('<div class="tab-pane active" id="content' + id + '"></div>');
+                if (!alreadyOpened) {
+                    $(SELECTOR_TITLE).append(
+                        '<li class="title-li ' + CLASS_ACTIVE + '" id="title' + id + '">' + title +
+                        '&nbsp;&nbsp;<button type="button" class="close" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span></button></li>'
+                    );
+                    $(SELECTOR_CONTENT).append('<div class="tab-pane ' + CLASS_ACTIVE + '" id="content' + id + '"></div>');
                     $('#content' + id).load(url);
                 }
 
+                // 重新绑定（新增 tab 后旧 click 监听器会失效）
                 $('.title-li').click(function () {
                     var titleId = $(this).attr('id');
-                    var id2 = titleId.replace('title', '');
-                    cssActive(id2);
+                    activateTab(titleId.replace('title', ''));
                 });
 
                 $('.close').click(function () {
                     var titleId = $(this).parent('li').attr('id');
-                    var id2 = titleId.replace('title', '');
-                    $('#title' + id2).remove();
-                    $('#content' + id2).remove();
-                    cssActive(0);
+                    var tabId   = titleId.replace('title', '');
+                    $('#title' + tabId).remove();
+                    $('#content' + tabId).remove();
+                    activateTab(0);
                 });
             });
-
-            function cssActive(id) {
-                $('#tab-title').find('li').each(function () {
-                    $(this).attr("class", "title-li");
-                });
-                $('#title' + id).attr("class", "title-li active");
-                $('#tab-content .tab-pane').each(function () {
-                    $(this).attr("class", "tab-pane");
-                });
-                $('#content' + id).attr("class", "tab-pane active");
-            }
         });
     </script>
 </th:block>

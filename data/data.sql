@@ -1,49 +1,73 @@
 -- =====================================================================
--- Mawuya 测试文章种子数据
--- 用途：前台首页/分类/归档/详情/分页 功能验证
+-- Mawuya 博客系统 · 演示数据脚本（可选执行）
 --
--- 执行方式：
---   mysql -h127.0.0.1 -P3306 -uroot -p123456 blog < data/seed-articles.sql
+-- 用途：注入 25 篇覆盖多分类 / 多年份 / 多状态的演示文章 + 15 个种子标签，
+--      用于本地验证首页 / 分类 / 归档 / 详情 / 分页 / 标签云等功能。
 --
--- 脚本特性（幂等）：
---   1. 先按 article_title 删除可能已存在的种子文章，再重新插入；
---   2. 分类按 category_name 唯一键 upsert，不会覆盖业务真实数据；
---   3. 文章覆盖 5 个分类、3 个年份（用于归档），共 25 条，足以触发分页（pageSize=10）。
+-- 执行方式（必须先执行 schema.sql）：
+--   mysql -uroot -p123456 -h127.0.0.1 -D blog < data/data.sql
 --
--- 数据状态分布：
---   - read_num / praise_num / tease_num / review_num 跨低中高三档
---   - picture_url 覆盖 3 种状态：无图(NULL)、单图、多图（分号分隔）
---   - article_content 覆盖短文 / 长文 / 含 emoji
+-- 注意事项：
+--   1. 演示文章统一以 [SEED] 开头作为标识，重复执行会清掉旧的再重插（幂等）；
+--   2. 演示标签按 tag_name 唯一键 upsert，不会覆盖业务真实数据；
+--   3. 必须 SET NAMES utf8mb4，确保 emoji（如 🌸 🚀）4 字节字符正确入库；
+--   4. 演示数据会自动落进 article_info / category_info / tag_info 三张表，
+--      不会写入 article_tag 关联（避免误覆盖）；如需联动可手工补 article_tag。
 -- =====================================================================
 
 USE `blog`;
-
--- 强制连接字符集为 utf8mb4，确保 emoji（如 🌸 🚀）4 字节字符正确入库；
--- 否则 5.7 默认客户端字符集 utf8mb3 会把 emoji 误判为 6 字节序列从而触发 varchar 长度报错。
 SET NAMES utf8mb4;
 
+-- ---------------------------------------------------------------------
 -- 1. 准备分类（幂等 upsert）
+-- ---------------------------------------------------------------------
 INSERT INTO `category_info` (`category_name`) VALUES
     ('未分类'), ('技术'), ('生活'), ('随笔'), ('读书')
-    ON DUPLICATE KEY UPDATE `category_name` = VALUES(`category_name`);
+ON DUPLICATE KEY UPDATE `category_name` = VALUES(`category_name`);
 
--- 取出 5 个分类的 sn 备用（@cat_xxx 为会话变量，下文 INSERT 直接引用）
 SET @cat_default = (SELECT sn FROM category_info WHERE category_name = '未分类' LIMIT 1);
 SET @cat_tech    = (SELECT sn FROM category_info WHERE category_name = '技术'   LIMIT 1);
 SET @cat_life    = (SELECT sn FROM category_info WHERE category_name = '生活'   LIMIT 1);
 SET @cat_essay   = (SELECT sn FROM category_info WHERE category_name = '随笔'   LIMIT 1);
 SET @cat_book    = (SELECT sn FROM category_info WHERE category_name = '读书'   LIMIT 1);
 
--- 2. 清理旧的种子数据（按标题前缀，避免误删人工数据）
+-- ---------------------------------------------------------------------
+-- 2. 演示标签（按 tag_name 唯一键 upsert）
+-- ---------------------------------------------------------------------
+INSERT INTO `tag_info` (`tag_name`, `tag_color`) VALUES
+    ('Java',   '#007396'),
+    ('Spring', '#6db33f'),
+    ('MySQL',  '#00758f'),
+    ('JVM',    '#e76f00'),
+    ('Redis',  '#dc382c'),
+    ('架构',   '#2494f2'),
+    ('前端',   '#f06529'),
+    ('生活',   '#ff8a8a'),
+    ('旅行',   '#7e57c2'),
+    ('美食',   '#ff7043'),
+    ('读书',   '#5c6bc0'),
+    ('随笔',   '#9e9e9e'),
+    ('健康',   '#26a69a'),
+    ('运动',   '#43a047'),
+    ('入门',   '#26c6da')
+ON DUPLICATE KEY UPDATE `tag_color` = VALUES(`tag_color`);
+
+-- ---------------------------------------------------------------------
+-- 3. 清理旧的演示文章（仅按 [SEED] 前缀，不影响真实数据）
+-- ---------------------------------------------------------------------
 DELETE FROM `article_info` WHERE `article_title` LIKE '[SEED]%';
 
--- 3. 批量插入 25 条种子文章
+-- ---------------------------------------------------------------------
+-- 4. 批量插入 25 篇演示文章
+--    覆盖维度：5 个分类 / 3 个年份（归档）/ 高中低三档热度 /
+--             有图无图 / 单图多图 / 短文长文 / 含 emoji。
+-- ---------------------------------------------------------------------
 INSERT INTO `article_info`
     (`category_sn`, `read_num`, `review_num`, `praise_num`, `tease_num`,
      `picture_url`, `article_title`, `article_summary`, `article_content`,
      `insert_time`, `update_time`)
 VALUES
--- 技术分类（10 条，覆盖各种状态）---------------------------------------
+-- 技术分类（10 条）
 (@cat_tech,   1024, 12,  88,  2,  '/statics/images/blur_bg.png',
  '[SEED] Spring Boot 启动原理深度解析',
  '从 SpringApplication.run 到 Tomcat 启动的全链路梳理',
@@ -104,7 +128,7 @@ VALUES
  '<p>rebase 能保持线性历史，但会改写提交；merge 保留分支痕迹，更安全。建议私有分支用 rebase，公共分支用 merge。</p>',
  '2025-05-01 12:00:00', '2025-05-01 12:00:00'),
 
--- 生活分类（5 条）-------------------------------------------------------
+-- 生活分类（5 条）
 (@cat_life,    320,  8,  40,  2,  '/statics/images/blur_bg.png',
  '[SEED] 春日漫步：城市绿道的小确幸 🌸',
  '周末骑行三十公里的随手记录',
@@ -135,7 +159,7 @@ VALUES
  '<p>三块钱的小香葱、十二块的活鲈鱼，菜市场是观察城市烟火气的最佳去处。</p>',
  '2025-04-10 09:30:00', '2025-04-10 09:30:00'),
 
--- 随笔分类（4 条）-------------------------------------------------------
+-- 随笔分类（4 条）
 (@cat_essay,   100,  2,  10,  0,  NULL,
  '[SEED] 关于"忙"的反思',
  '我们究竟在忙什么？',
@@ -160,7 +184,7 @@ VALUES
  '<p>越来越喜欢长文与博客这种慢节奏表达，朋友圈对我已经变成只用来发布的工具。</p>',
  '2025-04-28 17:00:00', '2025-04-28 17:00:00'),
 
--- 读书分类（4 条）-------------------------------------------------------
+-- 读书分类（4 条）
 (@cat_book,    260,  5,  30,  1,  '/statics/images/blur_bg.png',
  '[SEED] 《深入理解 Java 虚拟机》读书笔记',
  '从内存模型到字节码执行引擎',
@@ -185,7 +209,7 @@ VALUES
  '<p>正在精读第 5 章 Replication，从单主到多主到无主三种模式的对比让人印象深刻。</p>',
  '2025-05-20 19:30:00', '2025-05-20 19:30:00'),
 
--- 未分类（2 条，验证 categorySn=0/默认分类的展示）---------------------
+-- 未分类（2 条）
 (@cat_default,  18,  0,   1,  0,  NULL,
  '[SEED] Hello World：第一篇博客',
  '从这里开始',
@@ -198,11 +222,17 @@ VALUES
  '<p>占位内容</p>',
  '2025-05-28 11:00:00', '2025-05-28 11:00:00');
 
--- 4. 验证：打印当前文章总数与分类汇总
-SELECT 'TOTAL' AS metric, COUNT(*) AS value FROM article_info WHERE article_title LIKE '[SEED]%'
+-- ---------------------------------------------------------------------
+-- 5. 校验：打印当前演示数据汇总
+-- ---------------------------------------------------------------------
+SELECT 'TOTAL_ARTICLES' AS metric, COUNT(*) AS value
+FROM article_info
+WHERE article_title LIKE '[SEED]%'
 UNION ALL
 SELECT CONCAT('CAT-', c.category_name), COUNT(a.sn)
 FROM category_info c
 LEFT JOIN article_info a ON a.category_sn = c.sn AND a.article_title LIKE '[SEED]%'
 GROUP BY c.sn, c.category_name
+UNION ALL
+SELECT 'TOTAL_TAGS', COUNT(*) FROM tag_info
 ORDER BY metric;

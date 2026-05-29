@@ -1,10 +1,23 @@
-/* ====================================================================
- * Mawuya BMS · 扩展样式
- * - 不修改原 NexT/style.css 主题文件
- * - 只追加：图片上传组件 / 图片库 grid / 缩略图等
- * ==================================================================== */
+/* ================================================================== *
+ * Mawuya BMS · 项目扩展样式
+ *
+ * 命名规范：
+ *   - 项目自有类一律用 kebab-case（短横线小写），子组件遵循 BEM：block__elem--modifier
+ *   - 与第三方主题（style.css / Bootstrap 3）共存，原则上不覆盖原主题样式
+ *   - 业务组件命名带语义前缀：img-* / bms-*，避免与 Bootstrap 通用类冲突
+ *
+ * 加载顺序（见 bms/common/css-head.html）：
+ *   bootstrap → font-awesome → style.css → bms-extra.css
+ *   即 bms-extra.css 是"最后一层"，可被任何具体页面 inline <style> 覆盖。
+ *
+ * 当前内容：
+ *   - 图片上传组件（拖拽 + 实时预览）
+ *   - 图片库 grid 布局
+ *   - 文章列表缩略图 hover 效果
+ *   - 移动端响应式断点（768px）
+ * ================================================================== */
 
-/* ---- 通用上传区（含拖拽 + 实时预览） ---- */
+/* ---------- 通用上传区（含拖拽 + 实时预览） ---------- */
 .img-upload-zone {
     position: relative;
     border: 2px dashed #d6dde6;
@@ -61,7 +74,7 @@
     margin-top: 10px;
 }
 
-/* ---- 图片库 Grid ---- */
+/* ---------- 图片库 Grid 列表 ---------- */
 .img-lib-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -123,7 +136,7 @@
     flex: 0 0 auto;
 }
 
-/* ---- 列表页缩略图 hover 放大 ---- */
+/* ---------- 列表页缩略图 hover 放大 ---------- */
 .bms-thumb {
     transition: transform .2s, box-shadow .2s;
 }
@@ -134,7 +147,7 @@
     position: relative;
 }
 
-/* ---- 移动端 ---- */
+/* ---------- 移动端断点 ---------- */
 @media (max-width: 768px) {
     .img-lib-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
     .img-upload-trigger { padding: 22px 10px; }

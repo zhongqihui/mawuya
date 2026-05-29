@@ -24,13 +24,29 @@
     <script type="text/javascript" th:src="@{/statics/plugins/jquery.js}"></script>
     <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
+        'use strict';
+
+        // 由 Thymeleaf 注入：分页 POST 的目标 URL（不含上下文）+ 应用上下文路径
         var __pageUrl = /*[[${page.url}]]*/ 'index';
         var __ctxPath = /*[[@{/}]]*/ '/';
+
+        /**
+         * 跳转到指定页码：动态生成隐藏 form 并 POST currNum 字段。
+         * 使用 POST 而不是 GET 是为了避免分页参数污染浏览器历史/前进后退。
+         *
+         * @param curr 目标页码（字符串或数字）
+         */
         function goURL(curr) {
-            $('<form action="' + __ctxPath + __pageUrl + '" method="post" style="display:none">' +
-                '<input type="hidden" name="currNum" value="' + curr + '"/></form>')
-                .appendTo('body')
-                .submit();
+            var $form = $('<form></form>')
+                .attr('action', __ctxPath + __pageUrl)
+                .attr('method', 'post')
+                .attr('hidden', 'hidden');
+            $('<input/>')
+                .attr('type', 'hidden')
+                .attr('name', 'currNum')
+                .attr('value', curr)
+                .appendTo($form);
+            $form.appendTo('body').submit();
         }
         /*]]>*/
     </script>
