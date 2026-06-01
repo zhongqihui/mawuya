@@ -201,20 +201,25 @@ public class LogToAPIThread implements Runnable {
 
         /** 双源都失败时的统一处理：未到重试上限就重新入主源队列；否则入库。 */
         private void handleAllFailed(String reason) {
-            if (logInfo.getTryTimes() >= MAX_TRY) {
+            // 关键：tryTimes 是包装类型 Integer（与 DB 列对齐，允许 NULL）。
+            // LogInterceptor 创建 LogDO 时虽然已设 0，但仍按"防御式编程"做 null-safe，
+            // 避免上游遗漏导致 OkHttp 回调线程崩溃 / 重试链路丢日志。
+            int currTry = logInfo.getTryTimes() == null ? 0 : logInfo.getTryTimes();
+            if (currTry >= MAX_TRY) {
                 if (log.isWarnEnabled()) {
                     log.warn("geo lookup gave up after {} tries, ip={}, lastReason={}",
-                            logInfo.getTryTimes(), logInfo.getIpAddr(), reason);
+                            currTry, logInfo.getIpAddr(), reason);
                 }
                 enqueueDb(logInfo);
                 return;
             }
-            logInfo.setTryTimes(logInfo.getTryTimes() + 1);
+            int nextTry = currTry + 1;
+            logInfo.setTryTimes(nextTry);
             try {
                 DataCenter.getLogInfoToAPIQueue().put(logInfo);
                 if (log.isDebugEnabled()) {
                     log.debug("geo lookup retry, ip={}, retry={}, reason={}",
-                            logInfo.getIpAddr(), logInfo.getTryTimes(), reason);
+                            logInfo.getIpAddr(), nextTry, reason);
                 }
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();

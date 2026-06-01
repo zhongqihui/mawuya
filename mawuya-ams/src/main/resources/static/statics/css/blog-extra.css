@@ -282,15 +282,53 @@
 /* ---------- 评论模块 ---------- */
 .comment-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid #eee; }
 .comment-section h3 { font-size: 16px; margin: 0 0 16px 0; }
-.comment-list { list-style: none; padding: 0; }
-.comment-item { padding: 14px 0; border-bottom: 1px dashed #eee; }
+.comment-list { list-style: none; padding: 0; margin: 0; margin-left: 0; padding-left: 0; }
+.comment-item { padding: 14px 0; border-bottom: 1px dashed #eee; margin-left: 0; padding-left: 0; }
+/*
+ * 评论头：紧凑左对齐布局（图标 → 用户名 → 时间 紧跟，不用 margin-left:auto 把时间拉到右端，
+ * 避免大屏宽下左右两侧视觉断裂）。
+ *
+ * .comment-head 与 .comment-body 都从 .comment-item 的同一左缘起，
+ * 显式归零 margin/padding，避免 .posts-expand 等祖先样式污染。
+ */
 .comment-item .comment-head {
-    display: flex; align-items: center; gap: 10px;
-    color: #555; font-size: 13px; margin-bottom: 6px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin: 0 0 6px 0;
+    color: #555;
+    font-size: 13px;
+    line-height: 1.6;
+    position: relative;
 }
-.comment-item .comment-head .author { color: #2494f2; font-weight: 600; }
-.comment-item .comment-head .date { color: #999; font-size: 12px; margin-left: auto; }
-.comment-item .comment-body { color: #333; line-height: 1.7; word-wrap: break-word; }
+.comment-item .comment-head .fa-user-o {
+    color: #bbb;
+    font-size: 13px;
+    position: absolute;
+    left: 0;
+    top: 2px;
+}
+.comment-item .comment-head .author {
+    color: #2494f2;
+    font-weight: 600;
+    margin-right: 8px;
+}
+.comment-item .comment-head .author {
+    color: #2494f2;
+    font-weight: 600;
+}
+.comment-item .comment-head .date {
+    color: #999;
+    font-size: 12px;
+}
+/* 内容与头部左缘对齐：margin/padding 全归零，避免被 .posts-expand 祖先继承的样式污染 */
+.comment-item .comment-body {
+    margin: 0;
+    padding: 0;
+    color: #333;
+    line-height: 1.7;
+    word-wrap: break-word;
+}
 .comment-empty { padding: 24px 0; text-align: center; color: #999; }
 
 .comment-form-box {
@@ -592,7 +630,30 @@
     .site-nav .site-search .search-submit { color: #666; }
 
     /* 7. 主内容区 --------------------------------------------- */
-    .main { padding-bottom: 60px !important; }
+    /*
+     * 收紧 .main 底部 padding：
+     *   主题原 .main { padding-bottom: 150px } 是 NexT 老旧 sticky-footer 实现的预留位，
+     *   移动端用不到这么大的预留空间，收紧到 24px 让 main 内容紧贴 footer。
+     */
+    .main { padding-bottom: 24px !important; }
+
+    /*
+     * 收紧 NexT 桌面美学产物在移动端的过大上下间距：
+     *   桌面 .pagination { margin: 120px 0 40px }   → 移动 24px 0 16px
+     *   桌面 .post-nav   { margin-top: 60px }        → 移动 16px
+     *   桌面 .post-meta  { margin-bottom: 60px }     → 移动 12px
+     *   .post-eof（文章列表分隔线）已由主题在 ≤767px 自动 display:none。
+     */
+    .pagination {
+        margin: 24px 0 16px !important;
+    }
+    .post-nav {
+        margin-top: 16px !important;
+    }
+    .posts-expand .post-meta,
+    .page-post-detail .post-meta {
+        margin-bottom: 12px !important;
+    }
     /* 文章卡片：原 .post-header padding 较大，移动端收紧 */
     .post { padding: 14px 0 !important; }
     .post-header { padding-bottom: 8px; }
@@ -648,41 +709,22 @@
         border: 0 !important;
     }
 
-    /* 9. 侧边栏：从 fixed 抽屉 → 主内容下方静态区块 -------------- */
-    /* 主题原 CSS 在 ≤767px 直接 display:none，必须用更高优先级覆盖 */
-    aside#sidebar.sidebar {
-        display: block !important;
-        position: static !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        margin: 20px 0 0 !important;
-        padding: 0 !important;
-        background: #fff !important;
-        box-shadow: none !important;
-        border-top: 2px solid #2494f2;
-        z-index: auto;
+    /* 9. 侧边栏：移动端完全隐藏 ----------------------------------- */
+    /*
+     * 设计决策（2026-05 更新）：
+     *   早期实现把 sidebar 在 ≤767px 强制内嵌为"主内容下方静态区块"，
+     *   并加了 2px 蓝色 border-top 作分隔。但实际效果是：
+     *     - 在新博客 / 内容页（about/tag_list 等）下，sidebar 仅剩
+     *       一个站点统计 + 几个空 widget，主体几乎是空白；
+     *     - 视觉上呈现为"main 末尾的蓝色横线 → 大片空白 → footer"，
+     *       与"Sidebar 应作为辅助信息"的初衷相悖；
+     *   因此移动端遵循 NexT 主题原生设计：直接 display:none。
+     *   桌面端（≥992px）保留 sidebar；平板（768-991）的内嵌方案仍保留。
+     */
+    aside#sidebar.sidebar,
+    .sidebar-toggle {
+        display: none !important;
     }
-    aside#sidebar.sidebar a { color: #555; border-bottom-color: #ddd; }
-    aside#sidebar.sidebar a:hover { color: #2494f2; }
-    .sidebar-toggle { display: none !important; }
-    .sidebar-inner {
-        padding: 14px 14px !important;
-        color: #333 !important;
-        text-align: left !important;
-    }
-    .sidebar .sidebar-panel { padding: 14px 0 !important; }
-    /* 暗色背景下的小标题在白底下不可见，统一改为深色 */
-    .site-author-name, .site-description,
-    .site-state-item-count, .site-state-item-name,
-    .sidebar .widget-title { color: #333 !important; }
-    .sidebar .widget-title { border-bottom-color: #eee !important; }
-    .widget-hot-list a, .widget-hot-list li { color: #555 !important; border-bottom-color: #eee !important; }
-    .widget-hot-list .hot-meta { color: #999 !important; }
-    .widget-recent-list li { border-bottom-color: #eee !important; }
-    .widget-recent-list .recent-content { color: #444 !important; }
-    .widget-recent-list .recent-target { color: #999 !important; }
-    .site-state-item { width: 33.3% !important; }
 
     /* 10. 表格 / 代码块横向滚动（关键修复：原本只设了 max-width:100%，pre 默认不换行
        会导致内容横向溢出 → 整个页面被撑出现横向滚动条，看起来"页面异常超长"）------ */
@@ -731,7 +773,17 @@
     .about-page .stack-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
     /* 14. footer --------------------------------------------- */
-    .footer { font-size: 12px; padding: 0 14px !important; }
+    /*
+     * margin-top 清零 + 适度 padding：
+     *   主题原 .footer { margin-top: 80px } 在移动端会与上方 main 的预留空间叠加，
+     *   产生显著的视觉断层。这里清掉外边距让 footer 紧贴 main，
+     *   padding 上下补 16px 让版权文字仍有呼吸感。
+     */
+    .footer {
+        font-size: 12px;
+        margin-top: 0 !important;
+        padding: 16px 14px !important;
+    }
     .footer-inner { width: 100% !important; max-width: 100% !important; }
 }
 

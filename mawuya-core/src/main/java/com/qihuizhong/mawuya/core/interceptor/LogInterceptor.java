@@ -29,13 +29,16 @@ public class LogInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // 注意：tryTimes 显式置 0。LogDO.tryTimes 已改为包装类型 Integer，
+        // 不显式设值会导致 LogToAPIThread.handleAllFailed 在自动拆箱时 NPE。
         LogDO logInfo = new LogDO()
                 .setIpAddr(getIpAddr(request))
                 .setBrowser(getOsAndBrowserInfo(request))
                 .setReqTime(String.valueOf(System.currentTimeMillis()))
                 .setParams(getParams(request))
                 .setReqMethod(request.getMethod())
-                .setReqUrl(request.getRequestURL().toString());
+                .setReqUrl(request.getRequestURL().toString())
+                .setTryTimes(0);
 
         request.setAttribute("logInfo", logInfo);
         return true;
