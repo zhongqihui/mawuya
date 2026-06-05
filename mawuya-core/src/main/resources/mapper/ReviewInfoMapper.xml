@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mawuya.core.mapper.ReviewInfoMapper">
+<mapper namespace="com.niudeyapi.mawuya.core.mapper.ReviewInfoMapper">
 
     <!--
       字段顺序保持稳定；review_status 自 v3 起新增，0=待审核 / 1=已通过 / 2=已拒绝。
@@ -10,7 +10,7 @@
         sn,article_sn,psn,csn,praise_num,tease_num,review_name,review_content,review_date,review_status
     </sql>
 
-    <insert id="insert" parameterType="com.mawuya.core.dataobject.ReviewDO"
+    <insert id="insert" parameterType="com.niudeyapi.mawuya.core.dataobject.ReviewDO"
             useGeneratedKeys="true" keyProperty="sn">
         INSERT INTO review_info
             (article_sn, psn, csn, praise_num, tease_num, review_name, review_content, review_date, review_status)
@@ -27,7 +27,7 @@
         DELETE FROM review_info WHERE sn = #{value}
     </delete>
 
-    <update id="update" parameterType="com.mawuya.core.dataobject.ReviewDO">
+    <update id="update" parameterType="com.niudeyapi.mawuya.core.dataobject.ReviewDO">
         UPDATE review_info SET review_content = #{reviewContent} WHERE sn = #{sn}
     </update>
 
@@ -36,17 +36,17 @@
         UPDATE review_info SET review_status = #{status} WHERE sn = #{sn}
     </update>
 
-    <select id="selectById" parameterType="int" resultType="com.mawuya.core.dataobject.ReviewDO">
+    <select id="selectById" parameterType="int" resultType="com.niudeyapi.mawuya.core.dataobject.ReviewDO">
         SELECT <include refid="_columns"/> FROM review_info WHERE sn = #{value}
     </select>
 
-    <select id="selectList" parameterType="map" resultType="com.mawuya.core.dataobject.ReviewDO">
+    <select id="selectList" parameterType="map" resultType="com.niudeyapi.mawuya.core.dataobject.ReviewDO">
         SELECT <include refid="_columns"/> FROM review_info ORDER BY sn DESC
     </select>
 
-    <select id="selectByPage" parameterType="map" resultType="com.mawuya.core.dataobject.ReviewDO">
+    <select id="selectByPage" parameterType="map" resultType="com.niudeyapi.mawuya.core.dataobject.ReviewDO">
         SELECT <include refid="_columns"/> FROM review_info ORDER BY sn DESC
-        <if test="@com.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
+        <if test="@com.niudeyapi.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
             LIMIT #{start},#{limit}
         </if>
     </select>
@@ -56,14 +56,14 @@
     </select>
 
     <!-- AMS 前台：文章详情页评论列表，仅显示已审核通过的 -->
-    <select id="selectByArticleSn" resultType="com.mawuya.core.dataobject.ReviewDO">
+    <select id="selectByArticleSn" resultType="com.niudeyapi.mawuya.core.dataobject.ReviewDO">
         SELECT <include refid="_columns"/> FROM review_info
         WHERE article_sn = #{articleSn} AND review_status = 1
         ORDER BY review_date DESC, sn DESC
     </select>
 
     <!-- AMS 前台：侧边栏「最新评论」，仅显示已审核通过的 -->
-    <select id="selectLatestWithTitle" resultType="com.mawuya.core.dataobject.ReviewDO">
+    <select id="selectLatestWithTitle" resultType="com.niudeyapi.mawuya.core.dataobject.ReviewDO">
         SELECT r.sn, r.article_sn, r.review_name, r.review_content, r.review_date, r.review_status,
                a.article_title
         FROM review_info r
@@ -77,7 +77,7 @@
       BMS 后台审批：按状态筛选评论（status 为 null 表示不过滤，全部返回）
       关联 article_title 让审批列表能直观看到属于哪篇文章。
     -->
-    <select id="selectByStatusWithTitle" resultType="com.mawuya.core.dataobject.ReviewDO">
+    <select id="selectByStatusWithTitle" resultType="com.niudeyapi.mawuya.core.dataobject.ReviewDO">
         SELECT r.sn, r.article_sn, r.psn, r.csn, r.praise_num, r.tease_num,
                r.review_name, r.review_content, r.review_date, r.review_status,
                a.article_title

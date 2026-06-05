@@ -37,4 +37,4 @@ mawuya:
 
 logging:
   level:
-    com.mawuya: INFO
+    com.niudeyapi.mawuya: INFO

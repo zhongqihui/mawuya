@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mawuya.core.mapper.SysUserMapper">
+<mapper namespace="com.niudeyapi.mawuya.core.mapper.SysUserMapper">
 
-    <resultMap id="userMap" type="com.mawuya.core.dataobject.UserDO">
+    <resultMap id="userMap" type="com.niudeyapi.mawuya.core.dataobject.UserDO">
         <id     property="sn"           column="sn"/>
         <result property="username"     column="username"/>
         <result property="passwordHash" column="password_hash"/>
@@ -54,7 +54,7 @@
         </where>
     </select>
 
-    <insert id="insert" parameterType="com.mawuya.core.dataobject.UserDO"
+    <insert id="insert" parameterType="com.niudeyapi.mawuya.core.dataobject.UserDO"
             useGeneratedKeys="true" keyProperty="sn">
         INSERT INTO sys_user (username, password_hash, nickname, email, enabled)
         VALUES (#{username}, #{passwordHash}, #{nickname}, #{email},
@@ -64,7 +64,7 @@
                 </choose>)
     </insert>
 
-    <update id="update" parameterType="com.mawuya.core.dataobject.UserDO">
+    <update id="update" parameterType="com.niudeyapi.mawuya.core.dataobject.UserDO">
         UPDATE sys_user
         <set>
             <if test="nickname != null">nickname = #{nickname},</if>

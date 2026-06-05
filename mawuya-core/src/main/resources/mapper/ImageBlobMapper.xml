@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mawuya.core.mapper.ImageBlobMapper">
+<mapper namespace="com.niudeyapi.mawuya.core.mapper.ImageBlobMapper">
 
-    <resultMap id="metaMap" type="com.mawuya.core.dataobject.ImageDO">
+    <resultMap id="metaMap" type="com.niudeyapi.mawuya.core.dataobject.ImageDO">
         <id property="sn" column="sn"/>
         <result property="fileName"     column="file_name"/>
         <result property="contentType"  column="content_type"/>
@@ -13,11 +13,11 @@
         <result property="createdTime"  column="created_time"/>
     </resultMap>
 
-    <resultMap id="fullMap" type="com.mawuya.core.dataobject.ImageDO" extends="metaMap">
+    <resultMap id="fullMap" type="com.niudeyapi.mawuya.core.dataobject.ImageDO" extends="metaMap">
         <result property="data" column="data"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.mawuya.core.dataobject.ImageDO"
+    <insert id="insert" parameterType="com.niudeyapi.mawuya.core.dataobject.ImageDO"
             useGeneratedKeys="true" keyProperty="sn">
         INSERT INTO image_blob (file_name, content_type, byte_size, data, sha256, source_url)
         VALUES (#{fileName}, #{contentType}, #{byteSize}, #{data}, #{sha256}, #{sourceUrl})

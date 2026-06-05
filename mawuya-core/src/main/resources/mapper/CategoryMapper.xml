@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mawuya.core.mapper.CategoryMapper">
+<mapper namespace="com.niudeyapi.mawuya.core.mapper.CategoryMapper">
 
     <sql id="_columns">
         sn,category_name
     </sql>
 
-    <insert id="insert" parameterType="com.mawuya.core.dataobject.CategoryDO">
+    <insert id="insert" parameterType="com.niudeyapi.mawuya.core.dataobject.CategoryDO">
         INSERT INTO category_info (category_name) VALUES (#{categoryName})
     </insert>
 
@@ -14,21 +14,21 @@
         DELETE FROM category_info WHERE sn = #{value}
     </delete>
 
-    <update id="update" parameterType="com.mawuya.core.dataobject.CategoryDO">
+    <update id="update" parameterType="com.niudeyapi.mawuya.core.dataobject.CategoryDO">
         UPDATE category_info SET category_name = #{categoryName} WHERE sn = #{sn}
     </update>
 
-    <select id="selectById" parameterType="int" resultType="com.mawuya.core.dataobject.CategoryDO">
+    <select id="selectById" parameterType="int" resultType="com.niudeyapi.mawuya.core.dataobject.CategoryDO">
         SELECT <include refid="_columns"/> FROM category_info WHERE sn = #{value}
     </select>
 
-    <select id="selectList" parameterType="map" resultType="com.mawuya.core.dataobject.CategoryDO">
+    <select id="selectList" parameterType="map" resultType="com.niudeyapi.mawuya.core.dataobject.CategoryDO">
         SELECT <include refid="_columns"/> FROM category_info ORDER BY sn DESC
     </select>
 
-    <select id="selectByPage" parameterType="map" resultType="com.mawuya.core.dataobject.CategoryDO">
+    <select id="selectByPage" parameterType="map" resultType="com.niudeyapi.mawuya.core.dataobject.CategoryDO">
         SELECT <include refid="_columns"/> FROM category_info
-        <if test="@com.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
+        <if test="@com.niudeyapi.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
             LIMIT #{start},#{limit}
         </if>
     </select>

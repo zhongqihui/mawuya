@@ -1,0 +1,18 @@
+
+[1m[36m==> 本地编译机环境检查[0m
+[34m[INFO ][0m 2026-06-05 17:45:36 OS: Darwin 23.6.0 x86_64
+[32m[ OK  ][0m 2026-06-05 17:45:36 Java 已安装：java version "1.8.0_171"
+[32m[ OK  ][0m 2026-06-05 17:45:37 Maven 已安装：Apache Maven 3.8.2 (ea98e05a04480131370aa0c110b8c54cf726c06f)
+[32m[ OK  ][0m 2026-06-05 17:45:37 ssh / scp 可用
+[32m[ OK  ][0m 2026-06-05 17:45:37 Maven 工程已识别：/Users/zhongqihui/go/src/git.code.oa.com/gamecloud/mawuya/pom.xml
+[32m[ OK  ][0m 2026-06-05 17:45:37 Maven 中央仓库可达
+
+[1m[36m==> 远端 Linux 服务器检查[0m
+
+[1m[36m==> 请输入远程 Linux 服务器信息[0m
+服务器 IP 地址: SSH 端口 [22]: 登录用户名 [root]: 认证方式 (1=密码, 2=密钥免密) [1]: 登录密码（输入不回显）: 
+[33m[WARN ][0m 2026-06-05 17:47:28 未检测到 sshpass，正在使用密码认证将无法继续。
+[33m[WARN ][0m 2026-06-05 17:47:28 macOS:  brew install hudochenkov/sshpass/sshpass
+[33m[WARN ][0m 2026-06-05 17:47:28 Ubuntu: sudo apt-get install -y sshpass
+[33m[WARN ][0m 2026-06-05 17:47:28 CentOS: sudo yum install -y sshpass
+[31m[ERROR][0m 2026-06-05 17:47:28 请安装 sshpass 后重试，或选择密钥免密方式
