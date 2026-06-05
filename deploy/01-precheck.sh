@@ -181,18 +181,45 @@ else
 fi
 
 # 5. 端口占用（AMS/BMS/MySQL）
+# 若占用进程是 docker-proxy 且对应容器名属于本项目（mawuya-*），
+# 视为"自占用（即将被 compose 平滑替换）"，PASS。
+is_self_owned_docker_port() {
+    local p="$1"
+    command -v docker >/dev/null 2>&1 || return 1
+    local cid
+    cid=$(docker ps --format '{{.ID}} {{.Names}} {{.Ports}}' 2>/dev/null \
+          | awk -v p=":${p}->" '$0 ~ p {print $1; exit}')
+    [ -n "${cid:-}" ] || return 1
+    local cname
+    cname=$(docker inspect -f '{{.Name}}' "${cid}" 2>/dev/null | sed 's|^/||')
+    if [ "${cname}" = "mawuya-ams" ] || [ "${cname}" = "mawuya-bms" ] || [ "${cname}" = "mawuya-mysql" ]; then
+        echo "${cname}"
+        return 0
+    fi
+    return 1
+}
+
 check_port() {
     local p="$1" name="$2"
+    local line=""
     if command -v ss >/dev/null 2>&1; then
         line=$(ss -ltnp 2>/dev/null | awk -v p=":$p" '$4 ~ p {print; exit}')
     else
         line=$(netstat -ltnp 2>/dev/null | awk -v p=":$p" '$4 ~ p {print; exit}')
     fi
-    if [ -n "${line:-}" ]; then
-        fail "端口 ${p}（${name}）已被占用：${line} | 请释放或修改部署端口"
-    else
+    if [ -z "${line:-}" ]; then
         ok "端口 ${p}（${name}）空闲"
+        return
     fi
+    if echo "${line}" | grep -q 'docker-proxy'; then
+        local owner
+        owner="$(is_self_owned_docker_port "${p}" || true)"
+        if [ -n "${owner:-}" ]; then
+            ok "端口 ${p}（${name}）已由本项目容器持有：${owner}（重发布会被替换）"
+            return
+        fi
+    fi
+    fail "端口 ${p}（${name}）已被占用：${line} | 请释放或修改部署端口（或停止冲突容器）"
 }
 check_port "__AMS_PORT__"   "AMS"
 check_port "__BMS_PORT__"   "BMS"

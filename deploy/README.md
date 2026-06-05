@@ -7,11 +7,13 @@
 ```
 deploy/
 ├── deploy.sh                  # 一键入口（推荐使用）
+├── 00-bootstrap-remote.sh     # ⓪ 远端 Linux 依赖一键安装（Docker/compose/工具）
 ├── 01-precheck.sh             # ① 本地+远端环境检查
 ├── 02-build-and-upload.sh     # ② Maven 打包 + SCP 上传
 ├── 03-docker-deploy.sh        # ③ 远端 Docker 部署 / 维护
 ├── lib/
-│   └── common.sh              # 公共函数（颜色/日志/SSH/SCP）
+│   ├── common.sh                       # 公共函数（颜色/日志/SSH/SCP）
+│   └── bootstrap-remote-runner.sh      # 在远端执行的安装脚本（被 ⓪ 推送）
 ├── conf/
 │   └── deploy.env.example     # 环境变量示例（复制为 deploy.env）
 ├── dist/                      # 构建产物 mawuya-bundle-*.tar.gz
@@ -43,7 +45,10 @@ deploy/
 cp deploy/conf/deploy.env.example deploy/conf/deploy.env
 chmod 600 deploy/conf/deploy.env
 
-# 2) 全流程：本地检查 → 打包 → 上传 → 远端 Docker 部署
+# 2) 首次：远端一键装 Docker（可省略已装好的服务器）
+bash deploy/deploy.sh bootstrap
+
+# 3) 全流程：本地检查 → 打包 → 上传 → 远端 Docker 部署
 bash deploy/deploy.sh release
 ```
 
@@ -59,6 +64,42 @@ bash deploy/deploy.sh release
 ---
 
 ## 二、单步使用
+
+### 0. 远端依赖一键安装 `00-bootstrap-remote.sh`
+
+如果远端是**全新的机器**，直接跑这一步即可装好 Docker。脚本会把
+`lib/bootstrap-remote-runner.sh` SCP 到远端 `/tmp` 后用 root（自动 sudo 提权）执行。
+
+| 支持的发行版 | 备注 |
+|---|---|
+| CentOS 7 / 8 | 8 已 EOL，脚本自动切到 `vault.centos.org` |
+| Rocky / AlmaLinux 8/9 | dnf |
+| RHEL 7/8/9 | dnf/yum |
+| Ubuntu 18.04 / 20.04 / 22.04 / 24.04 | apt |
+| Debian 10 / 11 / 12 | apt |
+
+安装内容：
+- 基础工具：`curl wget tar unzip ca-certificates iproute net-tools` …
+- **Docker CE + docker-compose-plugin（v2）**（默认走阿里云镜像源更稳）
+- `/etc/docker/daemon.json`：国内 `registry-mirrors` + 日志大小限制 + `overlay2`
+- 时区 `Asia/Shanghai` + NTP 同步
+- `firewalld` / `ufw` 自动放行 `8080 / 8081 / 3306`（云服务器另需控制台安全组）
+- 创建 `/usr/local/services` 部署目录
+- 自动 `docker run --rm hello-world` 验证
+
+```bash
+# 默认（推荐）：装 Docker + 镜像加速 + 防火墙放行
+bash deploy/deploy.sh bootstrap
+
+# 选项
+bash deploy/00-bootstrap-remote.sh --no-mirror      # 不使用国内镜像（海外服务器用）
+bash deploy/00-bootstrap-remote.sh --no-firewall    # 不动 firewalld/ufw
+bash deploy/00-bootstrap-remote.sh --skip-docker    # 仅装基础工具（已装 Docker 时）
+bash deploy/00-bootstrap-remote.sh --with-jdk       # 同时装 OpenJDK 1.8（Docker 模式不需要）
+```
+
+> 也可以**纯离线**：把 `deploy/lib/bootstrap-remote-runner.sh` 单独 `scp` 到任意 Linux
+> 服务器，`sudo bash bootstrap-remote-runner.sh` 即可，不依赖本机驱动。
 
 ### 1. 环境检查 `01-precheck.sh`
 
