@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.qihuizhong.mawuya.core.mapper.TagMapper">
+<mapper namespace="com.mawuya.core.mapper.TagMapper">
 
     <sql id="_columns">sn,tag_name,tag_color</sql>
 
-    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.dataobject.TagDO">
+    <insert id="insert" parameterType="com.mawuya.core.dataobject.TagDO">
         INSERT INTO tag_info (tag_name, tag_color) VALUES (#{tagName}, #{tagColor})
         ON DUPLICATE KEY UPDATE tag_color = VALUES(tag_color)
     </insert>
@@ -13,21 +13,21 @@
         DELETE FROM tag_info WHERE sn = #{value}
     </delete>
 
-    <update id="update" parameterType="com.qihuizhong.mawuya.core.dataobject.TagDO">
+    <update id="update" parameterType="com.mawuya.core.dataobject.TagDO">
         UPDATE tag_info SET tag_name = #{tagName}, tag_color = #{tagColor} WHERE sn = #{sn}
     </update>
 
-    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.dataobject.TagDO">
+    <select id="selectById" parameterType="int" resultType="com.mawuya.core.dataobject.TagDO">
         SELECT <include refid="_columns"/> FROM tag_info WHERE sn = #{value}
     </select>
 
-    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.TagDO">
+    <select id="selectList" parameterType="map" resultType="com.mawuya.core.dataobject.TagDO">
         SELECT <include refid="_columns"/> FROM tag_info ORDER BY sn ASC
     </select>
 
-    <select id="selectByPage" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.TagDO">
+    <select id="selectByPage" parameterType="map" resultType="com.mawuya.core.dataobject.TagDO">
         SELECT <include refid="_columns"/> FROM tag_info ORDER BY sn ASC
-        <if test="@com.qihuizhong.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
+        <if test="@com.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
             LIMIT #{start},#{limit}
         </if>
     </select>
@@ -36,7 +36,7 @@
         SELECT count(sn) FROM tag_info
     </select>
 
-    <select id="selectAllWithArtSize" resultType="com.qihuizhong.mawuya.core.dataobject.TagDO">
+    <select id="selectAllWithArtSize" resultType="com.mawuya.core.dataobject.TagDO">
         SELECT t.sn, t.tag_name, t.tag_color, COUNT(at.article_sn) AS art_size
         FROM tag_info t
         LEFT JOIN article_tag at ON at.tag_sn = t.sn
@@ -44,7 +44,7 @@
         ORDER BY art_size DESC, t.sn ASC
     </select>
 
-    <select id="selectByArticleSn" resultType="com.qihuizhong.mawuya.core.dataobject.TagDO">
+    <select id="selectByArticleSn" resultType="com.mawuya.core.dataobject.TagDO">
         SELECT t.sn, t.tag_name, t.tag_color
         FROM tag_info t
         INNER JOIN article_tag at ON at.tag_sn = t.sn

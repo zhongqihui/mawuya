@@ -37,4 +37,4 @@ mawuya:
 
 logging:
   level:
-    com.qihuizhong.mawuya: INFO
+    com.mawuya: INFO

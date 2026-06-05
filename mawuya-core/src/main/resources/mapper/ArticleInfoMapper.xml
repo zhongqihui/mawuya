@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.qihuizhong.mawuya.core.mapper.ArticleInfoMapper">
+<mapper namespace="com.mawuya.core.mapper.ArticleInfoMapper">
 
     <sql id="_columns">
         sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,article_content,insert_time,update_time
@@ -10,11 +10,11 @@
         sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,insert_time,update_time
     </sql>
 
-    <select id="selectById" parameterType="int" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <select id="selectById" parameterType="int" resultType="com.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns"/> FROM article_info WHERE sn = #{value}
     </select>
 
-    <select id="selectList" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <select id="selectList" parameterType="map" resultType="com.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns"/> FROM article_info
         <where>
             <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
@@ -33,7 +33,7 @@
         </where>
     </select>
 
-    <select id="selectByPage" parameterType="java.util.Map" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <select id="selectByPage" parameterType="java.util.Map" resultType="com.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns"/> FROM article_info
         <where>
             <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
@@ -41,12 +41,12 @@
             </if>
         </where>
         ORDER BY sn DESC
-        <if test="@com.qihuizhong.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
+        <if test="@com.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
             LIMIT #{start},#{limit}
         </if>
     </select>
 
-    <select id="selectAllNoContent" parameterType="map" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <select id="selectAllNoContent" parameterType="map" resultType="com.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/> FROM article_info
         <where>
             <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
@@ -56,15 +56,15 @@
         ORDER BY sn DESC
     </select>
 
-    <select id="selectNextById" parameterType="int" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <select id="selectNextById" parameterType="int" resultType="com.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/> FROM article_info WHERE <![CDATA[ sn > #{value} ]]> ORDER BY sn ASC LIMIT 1
     </select>
 
-    <select id="selectPrevById" parameterType="int" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <select id="selectPrevById" parameterType="int" resultType="com.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/> FROM article_info WHERE <![CDATA[ sn < #{value} ]]> ORDER BY sn DESC LIMIT 1
     </select>
 
-    <insert id="insert" parameterType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <insert id="insert" parameterType="com.mawuya.core.dataobject.ArticleDO">
         INSERT IGNORE INTO article_info (category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,article_content,insert_time,update_time)
         VALUES (#{categorySn},#{readNum},#{reviewNum},#{praiseNum},#{teaseNum},#{pictureUrl},#{articleTitle},#{articleSummary},#{articleContent},NOW(),NOW())
     </insert>
@@ -73,7 +73,7 @@
         DELETE FROM article_info WHERE sn = #{value}
     </delete>
 
-    <update id="update" parameterType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <update id="update" parameterType="com.mawuya.core.dataobject.ArticleDO">
         UPDATE article_info SET
             category_sn     = #{categorySn},
             read_num        = #{readNum},
@@ -97,19 +97,19 @@
         UPDATE article_info a SET a.category_sn = 0 WHERE sn IN (${value})
     </update>
 
-    <update id="updatePictureUrl" parameterType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <update id="updatePictureUrl" parameterType="com.mawuya.core.dataobject.ArticleDO">
         UPDATE article_info a SET a.picture_url = #{pictureUrl} WHERE a.sn = #{sn}
     </update>
 
     <!-- 全文搜索（标题/摘要/正文 LIKE） -->
-    <select id="searchByKeyword" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <select id="searchByKeyword" resultType="com.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/>
         FROM article_info
         WHERE article_title LIKE CONCAT('%', #{keyword}, '%')
            OR article_summary LIKE CONCAT('%', #{keyword}, '%')
            OR article_content LIKE CONCAT('%', #{keyword}, '%')
         ORDER BY sn DESC
-        <if test="@com.qihuizhong.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
+        <if test="@com.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
             LIMIT #{start},#{limit}
         </if>
     </select>
@@ -122,7 +122,7 @@
     </select>
 
     <!-- 按 sn 列表批量查（标签详情页用） -->
-    <select id="selectListBySnList" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <select id="selectListBySnList" resultType="com.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/>
         FROM article_info
         WHERE sn IN
@@ -133,7 +133,7 @@
     </select>
 
     <!-- 热门文章 Top N -->
-    <select id="selectHotTopN" resultType="com.qihuizhong.mawuya.core.dataobject.ArticleDO">
+    <select id="selectHotTopN" resultType="com.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/>
         FROM article_info
         ORDER BY read_num DESC, sn DESC
