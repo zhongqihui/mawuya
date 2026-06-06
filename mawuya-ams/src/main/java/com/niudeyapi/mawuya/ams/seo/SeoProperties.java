@@ -44,6 +44,22 @@ public class SeoProperties {
     /** sitemap 单文件最多包含的 URL 数（标准 5w 上限，博客远低于此） */
     private int sitemapMaxUrls = 5000;
 
+    // ---------- 页脚信息：版权 / 联系方式 / 备案 ----------
+    /** 站点建站年份，用于页脚版权区间 "startYear - currentYear"；不填则只展示当前年 */
+    private int startYear = 2013;
+    /** 站点联系邮箱（页脚 mailto 链接，留空则不展示） */
+    private String email = "";
+    /** GitHub 主页 URL（页脚链接，留空则不展示） */
+    private String github = "";
+    /** ICP 备案号文本，例如 "粤ICP备12345678号-1"（留空则不展示） */
+    private String icpNumber = "";
+    /** ICP 备案查询链接，默认指向工信部 beian.miit.gov.cn */
+    private String icpUrl = "https://beian.miit.gov.cn/";
+    /** 公安备案号文本，例如 "粤公网安备 44030002000123 号"（留空则不展示） */
+    private String policeRecordNumber = "";
+    /** 公安备案查询链接（留空则不展示，常见为 beian.mps.gov.cn 对应备案详情页） */
+    private String policeRecordUrl = "";
+
     public String getSiteUrl() { return siteUrl; }
     public void setSiteUrl(String siteUrl) {
         // 去掉尾斜杠，便于直接拼 path
@@ -84,4 +100,25 @@ public class SeoProperties {
 
     public int getSitemapMaxUrls() { return sitemapMaxUrls; }
     public void setSitemapMaxUrls(int sitemapMaxUrls) { this.sitemapMaxUrls = sitemapMaxUrls; }
+
+    public int getStartYear() { return startYear; }
+    public void setStartYear(int startYear) { this.startYear = startYear; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getGithub() { return github; }
+    public void setGithub(String github) { this.github = github; }
+
+    public String getIcpNumber() { return icpNumber; }
+    public void setIcpNumber(String icpNumber) { this.icpNumber = icpNumber; }
+
+    public String getIcpUrl() { return icpUrl; }
+    public void setIcpUrl(String icpUrl) { this.icpUrl = icpUrl; }
+
+    public String getPoliceRecordNumber() { return policeRecordNumber; }
+    public void setPoliceRecordNumber(String policeRecordNumber) { this.policeRecordNumber = policeRecordNumber; }
+
+    public String getPoliceRecordUrl() { return policeRecordUrl; }
+    public void setPoliceRecordUrl(String policeRecordUrl) { this.policeRecordUrl = policeRecordUrl; }
 }

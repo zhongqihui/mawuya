@@ -4,11 +4,59 @@
 <th:block th:fragment="footer">
     <footer id="footer" class="footer" role="contentinfo">
         <div class="footer-inner">
+            <!-- 版权声明：startYear - 当前年；作者名通过 th:text 输出（Thymeleaf 默认转义，防 XSS） -->
             <div class="copyright">
-                <span> &copy; 2013 - 2026</span>
-                <span class="with-love"><i class="fa fa-heart"></i></span>
-                <span class="author" th:text="${seoProperties.author}">zqh</span>
+                <span>&copy;</span>
+                <span th:if="${seoProperties.startYear > 0 and seoProperties.startYear < #dates.year(#dates.createNow())}"
+                      th:text="${seoProperties.startYear} + ' - ' + ${#dates.year(#dates.createNow())}">2013 - 2026</span>
+                <span th:unless="${seoProperties.startYear > 0 and seoProperties.startYear < #dates.year(#dates.createNow())}"
+                      th:text="${#dates.year(#dates.createNow())}">2026</span>
+                <span class="with-love" aria-hidden="true"><i class="fa fa-heart"></i></span>
+                <span class="author" th:text="${seoProperties.author}">Zhongqihui</span>
+                <span class="rights">. All Rights Reserved.</span>
             </div>
+
+            <!-- 联系方式：邮箱 / GitHub，留空则不渲染；外链统一 noopener noreferrer 防止 tab-nabbing -->
+            <div class="footer-contact"
+                 th:if="${!#strings.isEmpty(seoProperties.email)} or ${!#strings.isEmpty(seoProperties.github)}">
+                <a th:if="${!#strings.isEmpty(seoProperties.email)}"
+                   th:href="'mailto:' + ${seoProperties.email}"
+                   th:title="'发送邮件给 ' + ${seoProperties.author}"
+                   rel="nofollow">
+                    <i class="fa fa-envelope" aria-hidden="true"></i>
+                    <span th:text="${seoProperties.email}">your@email.com</span>
+                </a>
+                <span th:if="${!#strings.isEmpty(seoProperties.email)} and ${!#strings.isEmpty(seoProperties.github)}"
+                      class="sep" aria-hidden="true">·</span>
+                <a th:if="${!#strings.isEmpty(seoProperties.github)}"
+                   th:href="${seoProperties.github}"
+                   target="_blank" rel="noopener noreferrer nofollow"
+                   title="GitHub 主页">
+                    <i class="fa fa-github" aria-hidden="true"></i>
+                    <span>GitHub</span>
+                </a>
+            </div>
+
+            <!-- ICP / 公安备案号；任一为空则该项不渲染；备案号文本必须与备案系统一致 -->
+            <div class="footer-beian"
+                 th:if="${!#strings.isEmpty(seoProperties.icpNumber)} or ${!#strings.isEmpty(seoProperties.policeRecordNumber)}">
+                <a th:if="${!#strings.isEmpty(seoProperties.icpNumber)}"
+                   th:href="${seoProperties.icpUrl}"
+                   target="_blank" rel="noopener noreferrer nofollow"
+                   th:title="${seoProperties.icpNumber}"
+                   th:text="${seoProperties.icpNumber}">粤ICP备00000000号-1</a>
+                <span th:if="${!#strings.isEmpty(seoProperties.icpNumber)} and ${!#strings.isEmpty(seoProperties.policeRecordNumber)}"
+                      class="sep" aria-hidden="true">·</span>
+                <a th:if="${!#strings.isEmpty(seoProperties.policeRecordNumber)}"
+                   th:href="${!#strings.isEmpty(seoProperties.policeRecordUrl)} ? ${seoProperties.policeRecordUrl} : '#'"
+                   target="_blank" rel="noopener noreferrer nofollow"
+                   th:title="${seoProperties.policeRecordNumber}">
+                    <img th:src="@{/statics/images/police-badge.png}" alt="公安备案" class="police-badge"
+                         onerror="this.style.display='none'"/>
+                    <span th:text="${seoProperties.policeRecordNumber}">粤公网安备 00000000000000 号</span>
+                </a>
+            </div>
+
             <!-- SEO 友好的内链：RSS 订阅 + Sitemap，搜索引擎抓取自发现 -->
             <div class="footer-links">
                 <a th:href="@{/rss.xml}" title="RSS 订阅" rel="alternate">RSS</a>

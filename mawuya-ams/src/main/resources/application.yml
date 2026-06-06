@@ -66,3 +66,11 @@ mawuya:
     twitter-site: ""
     robots-index: true
     sitemap-max-urls: 5000
+    # 页脚信息：版权 / 联系方式 / 备案号；上线前请按真实信息填写，留空项不会渲染
+    start-year: 2022
+    email: zhongqihui996@gmail.com
+    github: https://github.com/zhongqihui
+    #icp-number: "闽ICP备2022014622号"
+    #icp-url: https://beian.miit.gov.cn/
+    police-record-number: ""
+    police-record-url: ""

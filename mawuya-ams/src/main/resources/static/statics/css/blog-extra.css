@@ -934,15 +934,102 @@
 .related-list a::before { content: "› "; color: #aaa; }
 .related-list a:hover { color: #5b9bd5; }
 
-/* ---------- footer 内链 ---------- */
-.footer-links {
-    margin-top: 8px;
-    font-size: 12px; color: #999;
+/* ==================== 页脚统一布局 ====================
+ * 覆盖 main5174.css 中的旧规则：
+ *   - .footer-inner { text-align: left } (line 2608)
+ *   - .copyright-txt { float: right }    (line 2632)
+ * 统一改用 Flexbox 列布局 + 全局居中，避免 text-align / float 混用导致的错位。
+ * 选择器加 .footer 前缀提升特异性，无需 !important 即可覆盖。
+ */
+.footer .footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;       /* 横向居中 */
+    justify-content: center;
+    text-align: center;        /* 兜底：inline 元素仍按文本居中 */
+    gap: 6px;                  /* 各行之间统一间距，替代以前的 margin-top */
+    padding: 4px 16px;
+    box-sizing: border-box;
 }
-.footer-links a {
-    color: #888; text-decoration: none; transition: color .15s;
+
+/* 旧主题如果还残留 .copyright-txt 浮动，这里强制取消 */
+.footer .copyright-txt { float: none; margin: 0; }
+
+/* 每一行都用 inline-flex 让图标/文字/分隔符在垂直方向自然对齐 */
+.footer .copyright,
+.footer .footer-contact,
+.footer .footer-links,
+.footer .footer-beian {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 4px 8px;
+    margin: 0;                 /* 间距统一交给 .footer-inner 的 gap */
+    width: 100%;
+    line-height: 1.7;
 }
-.footer-links a:hover { color: #5b9bd5; text-decoration: underline; }
+
+/* 版权行：稍大字号 */
+.footer .copyright {
+    font-size: 13px;
+    color: #888;
+}
+.footer .copyright .author  { font-weight: 600; color: #666; }
+.footer .copyright .rights  { color: #999; }
+.footer .copyright .with-love .fa-heart { color: #e25c5c; margin: 0 2px; }
+
+/* 联系方式 / 内链 / 备案 三行共用样式 */
+.footer .footer-contact,
+.footer .footer-links,
+.footer .footer-beian {
+    font-size: 12px;
+    color: #999;
+}
+.footer .footer-contact a,
+.footer .footer-links a,
+.footer .footer-beian a {
+    color: #888;
+    text-decoration: none;
+    transition: color .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.footer .footer-contact a:hover,
+.footer .footer-links a:hover,
+.footer .footer-beian a:hover { color: #5b9bd5; text-decoration: underline; }
+
+.footer .footer-contact .fa,
+.footer .footer-beian  .fa { font-size: 13px; }
+.footer .footer-beian .police-badge {
+    width: 14px; height: 14px; vertical-align: middle;
+}
+.footer .sep { color: #ccc; user-select: none; }
+
+/* ---------- 暗色主题适配 ---------- */
+[data-theme="tech-dark"] .footer .copyright { color: #aaa; }
+[data-theme="tech-dark"] .footer .copyright .author { color: #ddd; }
+[data-theme="tech-dark"] .footer .copyright .rights { color: #999; }
+[data-theme="tech-dark"] .footer .footer-contact,
+[data-theme="tech-dark"] .footer .footer-links,
+[data-theme="tech-dark"] .footer .footer-beian { color: #999; }
+[data-theme="tech-dark"] .footer .footer-contact a,
+[data-theme="tech-dark"] .footer .footer-links a,
+[data-theme="tech-dark"] .footer .footer-beian a { color: #bbb; }
+[data-theme="tech-dark"] .footer .footer-contact a:hover,
+[data-theme="tech-dark"] .footer .footer-links a:hover,
+[data-theme="tech-dark"] .footer .footer-beian a:hover { color: #4a90e2; }
+[data-theme="tech-dark"] .footer .sep { color: #555; }
+
+/* ---------- 响应式：移动端字号缩档 + 间距收紧 ---------- */
+@media (max-width: 767px) {
+    .footer .footer-inner { gap: 4px; padding: 4px 12px; }
+    .footer .copyright    { font-size: 12px; }
+    .footer .footer-contact,
+    .footer .footer-links,
+    .footer .footer-beian { font-size: 11px; gap: 3px 6px; }
+}
 
 /* ---------- 暗色主题面包屑适配 ---------- */
 [data-theme="tech-dark"] .breadcrumb-nav {
@@ -959,3 +1046,4 @@
 [data-theme="tech-dark"] .related-posts h3 { color: #ddd; }
 [data-theme="tech-dark"] .related-list a { color: #bbb; }
 [data-theme="tech-dark"] .related-list a:hover { color: #4a90e2; }
+

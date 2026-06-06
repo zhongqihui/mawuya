@@ -6,7 +6,7 @@
     <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
 </head>
 <body lang="zh-Hans">
-<div class="container one-collumn sidebar-position-left page-home">
+<div class="container one-collumn sidebar-position-left page-about">
     <div class="headband"></div>
     <th:block th:replace="~{fts/common/header :: header}"></th:block>
 
@@ -18,46 +18,64 @@
 
                     <article class="about-page" itemscope itemtype="https://schema.org/AboutPage">
                         <h1 itemprop="name">👋 关于这里</h1>
-                        <p itemprop="description">这是 <strong>Mawuya Blog</strong>，一个分享技术与生活的小站。</p>
+                        <p itemprop="description">
+                            这是 <strong th:text="${seoProperties.siteName}">Zqh's Blog</strong>，
+                            由 <span itemprop="author" itemscope itemtype="https://schema.org/Person">
+                                <span itemprop="name" th:text="${seoProperties.author}">Zhongqihui</span>
+                            </span> 维护的个人站点，
+                            用来沉淀后端技术与日常思考。
+                        </p>
 
                         <section aria-labelledby="about-stack">
                             <h2 id="about-stack">🛠️ 技术栈</h2>
+                            <!-- 与根 pom.xml 中的版本号对齐，避免文档与实际依赖漂移 -->
                             <div class="stack-grid">
-                                <div>Java 1.8</div>
-                                <div>Spring Boot 2.2</div>
-                                <div>MyBatis</div>
-                                <div>Druid</div>
-                                <div>MySQL 5.7+</div>
+                                <div>Java</div>
+                                <div>Spring Boot</div>
+                                <div>MySQL</div>
                                 <div>Thymeleaf</div>
                                 <div>Editor.md</div>
-                                <div>Maven 多模块</div>
                             </div>
                         </section>
 
                         <section aria-labelledby="about-content">
                             <h2 id="about-content">📚 你能在这里看到什么</h2>
                             <ul>
-                                <li>Java / Spring Boot 后端实战经验</li>
-                                <li>MySQL / Redis / 中间件踩坑记录</li>
-                                <li>JVM 调优与系统设计思考</li>
-                                <li>读书笔记、旅行手记与生活随想</li>
+                                <li>Java / Spring Boot 后端实战与源码阅读笔记</li>
+                                <li>MySQL、MyBatis、Druid 等常用组件的使用与排坑</li>
+                                <li>从零搭建博客与后台管理系统（AMS / BMS）的工程实践</li>
+                                <li>读书笔记、生活随想与一些不成熟的小想法</li>
                             </ul>
                         </section>
 
                         <section aria-labelledby="about-contact">
                             <h2 id="about-contact">📨 联系作者</h2>
+                            <!-- 信息源统一从 SeoProperties 读取，与 footer 保持一致；空值不渲染 -->
                             <ul>
-                                <li>GitHub: <a href="https://github.com/" target="_blank" rel="noopener noreferrer">@zqh</a></li>
-                                <li>Email: zqh#example.com</li>
+                                <li th:if="${!#strings.isEmpty(seoProperties.github)}">
+                                    GitHub：
+                                    <a th:href="${seoProperties.github}"
+                                       target="_blank" rel="noopener noreferrer nofollow"
+                                       th:text="${seoProperties.author}">Zhongqihui</a>
+                                </li>
+                                <li th:if="${!#strings.isEmpty(seoProperties.email)}">
+                                    Email：
+                                    <a th:href="'mailto:' + ${seoProperties.email}"
+                                       rel="nofollow"
+                                       th:text="${seoProperties.email}">your@email.com</a>
+                                </li>
+                                <li th:if="${#strings.isEmpty(seoProperties.github)} and ${#strings.isEmpty(seoProperties.email)}">
+                                    暂未公开联系方式，欢迎在文章下方留言。
+                                </li>
                             </ul>
                         </section>
 
                         <section aria-labelledby="about-notes">
                             <h2 id="about-notes">💡 站点说明</h2>
                             <ul>
-                                <li>所有文章均为原创或已注明转载来源</li>
-                                <li>评论遵循友善、克制原则</li>
-                                <li>欢迎在文章下方留言交流，会逐条回复 ✨</li>
+                                <li>所有文章均为原创，转载内容会在文首注明出处</li>
+                                <li>评论遵循友善、克制原则，禁止人身攻击与垃圾信息</li>
+                                <li>欢迎在文章下方留言交流，作者会尽量逐条回复 ✨</li>
                             </ul>
                         </section>
                     </article>
