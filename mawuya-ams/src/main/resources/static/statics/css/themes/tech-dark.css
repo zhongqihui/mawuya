@@ -21,8 +21,23 @@ html[data-theme="tech-dark"] {
 }
 
 /* ---------- 全站底色 ---------- */
+/* 渐变挂在 html 上并以视口为基准 fixed（100vw×100vh），body 透明。
+   避免「body 渐变 fixed + html 纯色」在长页/短页切换时出现颜色断层割裂。
+   同时释放 main.css 的 `html, body { height: 100% }`，让 html 可随内容延展。 */
+html[data-theme="tech-dark"],
 html[data-theme="tech-dark"] body {
-    background: radial-gradient(ellipse at top, #111a2e 0%, #0a0e1a 60%) fixed !important;
+    height: auto !important;
+    min-height: 100vh !important;
+}
+html[data-theme="tech-dark"] {
+    background-color: #0a0e1a !important;
+    background-image: radial-gradient(ellipse at top, #111a2e 0%, #0a0e1a 60%) !important;
+    background-attachment: scroll !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+}
+html[data-theme="tech-dark"] body {
+    background: transparent !important;
     color: var(--th-fg) !important;
 }
 

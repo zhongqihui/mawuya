@@ -20,8 +20,28 @@ html[data-theme="gradient-vivid"] {
 }
 
 /* ---------- 全站底色 ---------- */
+/* 设计要点：
+ *   - 渐变挂在 html，body 透明，避免「body fixed 渐变 + html 纯色」割裂；
+ *   - 不用 background-attachment:fixed：iOS Safari 完全不支持、Android 多版本 fixed
+ *     退化为 scroll 且 100vw×100vh 会在文档高度大于视口时只覆盖首屏，下方变成
+ *     background-color 纯粉，造成"手机端上下色差"（用户主诉）；
+ *   - 改用普通 scroll 背景 + background-size:100% 100% + html height:auto + min-height:100vh，
+ *     让渐变随 html 整高拉伸到底，无论 PC/手机、长页/短页都是同一张渐变，绝无色差。
+ *   - 同时释放 main.css 的 `html,body{height:100%}` 限制。 */
+html[data-theme="gradient-vivid"],
 html[data-theme="gradient-vivid"] body {
-    background: linear-gradient(135deg, #fef3ff 0%, #fff5e1 50%, #e0f2ff 100%) fixed !important;
+    height: auto !important;
+    min-height: 100vh !important;
+}
+html[data-theme="gradient-vivid"] {
+    background-color: #fef3ff !important;
+    background-image: linear-gradient(135deg, #fef3ff 0%, #fff5e1 50%, #e0f2ff 100%) !important;
+    background-attachment: scroll !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+}
+html[data-theme="gradient-vivid"] body {
+    background: transparent !important;
     color: var(--th-fg) !important;
 }
 
@@ -37,6 +57,9 @@ html[data-theme="gradient-vivid"] .site-subtitle {
 }
 
 /* ---------- 文章卡片 ---------- */
+/* 给文章卡片加内边距，避免 .post-more-link / .post-meta / 标题 等子元素紧贴白卡边缘
+   导致"阅读全文按钮挨着卡片底"的难看效果（用户主诉）。
+   桌面 28px 上下 + 32px 左右，移动端在底部 @media 收窄。 */
 html[data-theme="gradient-vivid"] .post-block,
 html[data-theme="gradient-vivid"] .posts-expand .post {
     background: var(--th-card-bg) !important;
@@ -44,11 +67,23 @@ html[data-theme="gradient-vivid"] .posts-expand .post {
     box-shadow: var(--th-card-shadow);
     border: none !important;
     overflow: hidden;
+    padding: 12px 18px;
     transition: transform .25s ease, box-shadow .25s ease;
 }
 html[data-theme="gradient-vivid"] .post-block:hover {
     transform: translateY(-3px);
     box-shadow: 0 14px 32px rgba(167, 119, 227, 0.25);
+}
+
+/* 移动端：卡片内边距收窄，且压缩 .post-more-link 的上边距（主题原 50px 在窄屏占比过大） */
+@media (max-width: 767px) {
+    html[data-theme="gradient-vivid"] .post-block,
+    html[data-theme="gradient-vivid"] .posts-expand .post {
+        padding: 18px 16px;
+    }
+    html[data-theme="gradient-vivid"] .post-more-link {
+        margin-top: 12px !important;
+    }
 }
 
 /* ---------- 文章标题：渐变 ---------- */
@@ -112,20 +147,17 @@ html[data-theme="gradient-vivid"] .posts-expand .post-tags a {
     margin-right: 6px;
 }
 
-/* ---------- 侧边栏 ---------- */
+/* ---------- 侧边栏 ----------
+ * 注意：原 NexT 主题在桌面端将 .sidebar 设为 position:fixed; width:0（隐藏抽屉），
+ *       不占文档流，因此 .main-inner 高度 = .content-wrap 高度。
+ *       本主题切勿覆盖 .sidebar 的 position，否则 sidebar 会重回文档流，
+ *       把 .main-inner 撑高出几百 px（=sidebar-inner 高度），表现为 content-wrap
+ *       与 footer 之间出现大片渐变空白（用户主诉）。
+ *       下面只覆盖卡片视觉属性，不动布局相关 position/width/height。 */
 html[data-theme="gradient-vivid"] .sidebar {
     background: var(--th-card-bg) !important;
     border-radius: var(--th-card-radius);
     box-shadow: var(--th-card-shadow);
-    position: relative;
-}
-html[data-theme="gradient-vivid"] .sidebar::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #ec4899, #8b5cf6, #fb923c);
-    border-radius: var(--th-card-radius) var(--th-card-radius) 0 0;
 }
 html[data-theme="gradient-vivid"] .sidebar a {
     color: var(--th-purple) !important;
@@ -199,6 +231,19 @@ html[data-theme="gradient-vivid"] textarea:focus {
 }
 
 /* ---------- footer ---------- */
+/* 主题原 main5174.css 有 .main{padding-bottom:150px} + .footer{margin-top:80px}（NexT 老旧
+   sticky-footer 预留位，但 .footer 的 position:absolute 已被注释，sticky 实际未启用）。
+   其他主题下这 230px 空白区因 footer 自身灰底（#f5f5f5）+ main 浅底"颜色接近"看不出，
+   但本主题 main 内/footer 上方均为彩色渐变透出，且 footer 仍是 #f5f5f5 灰条，导致
+   .main-inner 末尾到灰色 footer 之间出现一大片渐变空白。这里只对本主题收紧。 */
+html[data-theme="gradient-vivid"] .main {
+    padding-bottom: 32px !important;
+}
+html[data-theme="gradient-vivid"] .footer {
+    margin-top: 0 !important;
+    padding: 16px 0 !important;
+    background: transparent !important;
+}
 html[data-theme="gradient-vivid"] .footer,
 html[data-theme="gradient-vivid"] .footer-inner {
     color: var(--th-fg-muted) !important;

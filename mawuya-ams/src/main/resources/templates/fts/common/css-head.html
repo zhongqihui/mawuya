@@ -15,11 +15,22 @@
 
     <link rel="shortcut icon" th:href="@{/statics/images/myfavicon.ico}"/>
 
-    <!-- 关键 CSS 内联：减少首屏阻塞，提升 LCP（背景 + 字体 + 容器底色） -->
-    <style>
-        html,body{margin:0;padding:0;background:#fff;color:#555;
+    <!-- 关键 CSS 内联：减少首屏阻塞，提升 LCP（背景 + 字体 + 容器底色）
+         背景色按 currentTheme 服务端注入，避免外部主题 CSS 加载完成前先闪白底，
+         同时根治内联 background:#fff 与主题底色叠层冲突导致的滚动区露白问题。 -->
+    <style th:inline="text">
+        /* 主题底色（SSR 注入，default/未知 一律按白底兜底） */
+        html{background:[(${currentTheme == 'tech-dark' ? '#0a0e1a' : (currentTheme == 'gradient-vivid' ? '#fef3ff' : (currentTheme == 'minimal-business' ? '#fafafa' : '#fff'))})];}
+        /* min-height:100vh 保证短内容下 html/body 至少撑满视口，避免主题底色仅覆盖顶部 */
+        html,body{margin:0;padding:0;min-height:100vh;color:#555;
             font:14px/1.6 "PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,Roboto,sans-serif;
             -webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;}
+        body{background:transparent;}
+        /* main5174.css 中 body{background:#fff} 会覆盖上面这条；
+           对非 default 主题用 !important 锁死透明，让 html 主题底色透出来 */
+        html[data-theme="tech-dark"] body,
+        html[data-theme="gradient-vivid"] body,
+        html[data-theme="minimal-business"] body{background:transparent !important;}
         img{max-width:100%;height:auto;}
         .post-thumb-fixed{aspect-ratio:16/9;object-fit:cover;width:100%;display:block;}
         .breadcrumb-nav{padding:8px 0;font-size:12px;color:#999;}

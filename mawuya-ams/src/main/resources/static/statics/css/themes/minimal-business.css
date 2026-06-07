@@ -17,6 +17,16 @@ html[data-theme="minimal-business"] {
 }
 
 /* ---------- 全站底色 ---------- */
+/* html 与 body 同色 + min-height:100vh，避免内容不足时滚动区域露白底。
+   释放 main.css 的 `html,body{height:100%}`，让 html 高度可随内容增长。 */
+html[data-theme="minimal-business"],
+html[data-theme="minimal-business"] body {
+    height: auto !important;
+    min-height: 100vh !important;
+}
+html[data-theme="minimal-business"] {
+    background: var(--th-bg) !important;
+}
 html[data-theme="minimal-business"] body {
     background: var(--th-bg) !important;
     color: var(--th-fg-mid) !important;
