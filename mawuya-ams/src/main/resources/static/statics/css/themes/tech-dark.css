@@ -51,29 +51,22 @@ html[data-theme="tech-dark"] {
 }
 
 /* ---------- 全站底色 ----------
-   渐变挂在 html 上 + scroll attachment + height:auto 让背景随文档延展。
-   避免「body 渐变 fixed + html 纯色」在长页/短页切换出现颜色断层。 */
-html[data-theme="tech-dark"],
-html[data-theme="tech-dark"] body {
-    height: auto !important;
-    min-height: 100vh !important;
-}
+   渐变挂在 html 上：scroll attachment + 100% 全屏，让背景随文档延展。
+   blog-base.css 已不锁 html/body 高度，本主题无需再写 height:auto / min-height:100vh 修复规则。 */
 html[data-theme="tech-dark"] {
-    background-color: var(--th-bg) !important;
+    background-color: var(--th-bg);
     background-image:
         radial-gradient(ellipse 80% 50% at 50% 0%, rgba(94, 234, 212, 0.06) 0%, transparent 50%),
         radial-gradient(ellipse 60% 40% at 100% 100%, rgba(244, 114, 182, 0.05) 0%, transparent 50%),
-        linear-gradient(180deg, var(--th-bg-grad-from) 0%, var(--th-bg-grad-to) 60%) !important;
-    background-attachment: scroll !important;
-    background-repeat: no-repeat !important;
-    background-size: 100% 100% !important;
+        linear-gradient(180deg, var(--th-bg-grad-from) 0%, var(--th-bg-grad-to) 60%);
+    background-attachment: scroll;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
 }
 html[data-theme="tech-dark"] body {
-    background: transparent !important;
-    color: var(--th-fg) !important;
-    /* 深底笔画过细会闪烁、过宽字距会让眼睛追字累，
-       这里把字距收紧到 0、字重 400→正文 segment 用 weight:420 不到，靠平台字体粗体调度，
-       浏览器在 macOS 会自动启用 antialiased 笔画。 */
+    background: transparent;
+    color: var(--th-fg);
+    /* 深底字体抗锯齿 + 收紧字距，避免眩光与扫读疲劳 */
     font-size: 15px;
     line-height: 1.78;
     letter-spacing: 0;

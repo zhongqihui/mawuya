@@ -1,34 +1,36 @@
-/* ================================================================== *
- * Mawuya AMS · 项目扩展样式
+/* ============================================================
+ *  blog-extra.css —— Mawuya AMS 业务定制层
+ * ------------------------------------------------------------
+ *  与 blog-base.css 关系：
+ *    - blog-base.css 提供"无主题"的基础结构（容器/字体/间距/响应式断点/sidebar 占流/汉堡菜单）
+ *    - blog-extra.css 提供业务级定制：
+ *        1) 文章正文图片增强（点击缩放 + 阴影 + 首页 16:9 缩略图）
+ *        2) NexT 替代规则（lightbox / back-to-top / use-motion 入场动画）
+ *        3) 顶部搜索框 token 系统（让三套主题各自覆写）
+ *        4) 评论模块 / 关于页 / 标签徽标 / 相关阅读 / 面包屑
+ *        5) show_article 自带的旧 image-lightbox（与 blog-base.js 的 .blog-lightbox 共存）
+ *    - 三套主题 CSS 提供"皮肤层"（颜色/卡片背景/阴影），仅在 blog-extra.css 之后加载
  *
- * 命名规范：
- *   - 项目自有类一律用 kebab-case（短横线小写），尽量遵循 BEM：block__elem--modifier
- *   - 涉及覆盖第三方主题的样式（main5174.css / NexT）才允许使用 !important，
- *     必须配合更高特异性选择器（如 #posts .xxx）+ 注释说明覆盖原因
- *   - 不在此文件追加业务无关的实验性样式；所有样式都需服务于具体页面/组件
+ *  设计原则：
+ *    - 命名 kebab-case，尽量遵循 BEM
+ *    - 只做"业务定制"，不重复 blog-base.css 已有的基础规则
+ *    - 不再覆盖任何 NexT main5174.css 内容（已删除）
+ *    - !important 仅在必要时用（如硬覆盖 main.css 历史遗留——已极少）
  *
- * 加载顺序（见 fts/common/css-head.html）：
- *   bootstrap → fontawesome → main5174.css → editor.md → blog-extra.css → themes/*
- *   即 blog-extra.css 处于"项目自定义"层，可覆盖 NexT 主题，不会被 themes 覆盖。
- *
- * 注意事项：
- *   - 修改前请先确认是否能用 main5174.css 已有类完成，避免重复造轮子
- *   - 媒体查询统一用「移动优先」之外的「桌面降级」断点：768 / 1024
- *   - 颜色值统一用 #rrggbb 或 rgba()，禁止使用主题 keyword 如 'navy'
- * ================================================================== */
+ *  @author 钟启辉
+ * ============================================================ */
 
-/* ---------- 通用图文排版增强 ----------
- * 关键：主题 main5174.css 第 1169 行 .posts-expand .post-body img 特异性 (0,0,3)
- * 高于通用 .post-body img (0,0,2)，且原规则不限 max-width，导致大图在移动端溢出
- * 整个视口（看起来就像"页面被拉超长"）。
- * 这里用同等或更高特异性的选择器 + !important 兜底，确保图片永远不撑破容器。
- */
+/* ============================================================
+ *  1. 文章图片增强
+ *     - 全部图片：max-width / 阴影 / hover 反馈 / 缩放鼠标指针
+ *     - 首页/列表卡片缩略图：固定 16:9，object-fit:cover 防 CLS
+ * ============================================================ */
 .posts-expand .post-body img,
 .post-body img,
 .editormd-html-preview img,
 #articleContentDiv img {
-    max-width: 100% !important;
-    height: auto !important;
+    max-width: 100%;
+    height: auto;
     box-sizing: border-box;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
@@ -42,111 +44,53 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
 }
 
-/* ---------- 首页/列表的文章卡片缩略图：强制统一尺寸 16:9 ---------- */
-/* 关键：原 CSS 在选择器 `.post-body img` 里写了 width:auto + height:auto + object-fit:contain，
-   配合 `max-height:360px` 时，因为 height 是 auto，object-fit 不生效，导致每张图高度参差。
-   这里用专属类 .post-thumb-fixed 让首页卡片图 100% 走"固定盒子 + cover 裁剪"模式，
-   并用更高优先级（id + class）覆盖通用规则。 */
+/* 首页文章卡片缩略图：固定 16:9
+ * 行为：点击触发 blog-base.js 的原生 lightbox 放大；详情入口走标题 / "阅读全文"按钮 */
 .posts-expand .post-thumb-fixed,
 #posts .post-thumb-fixed,
 .post-body img.post-thumb-fixed {
-    width: 100% !important;
-    height: auto !important;       /* 现代浏览器：与 aspect-ratio 协同算出固定高度 */
-    aspect-ratio: 16 / 9;          /* 强制 16:9 宽高比 */
-    max-height: 360px !important;  /* 极宽屏幕也不至于无限放大 */
-    object-fit: cover !important;  /* 配合固定盒子裁剪而不是变形 */
-    object-position: center center;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    width: 100%;
+    height: auto;
+    max-height: 360px;
     display: block;
-    margin: 16px auto !important;
+    margin: 0;
     border-radius: 6px;
-    cursor: pointer;
+    box-shadow: none;
+    cursor: zoom-in;             /* 视觉提示：可点击放大 */
+    transition: transform .25s ease, box-shadow .25s ease, filter .25s ease;
 }
-
+.posts-expand .post-thumb-fixed:hover,
+#posts .post-thumb-fixed:hover {
+    filter: brightness(1.04);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .12);
+}
 /* 老浏览器（不支持 aspect-ratio）的兜底：用经典 padding-top 占位法 */
 @supports not (aspect-ratio: 16 / 9) {
     .post-thumb-wrap {
         position: relative;
         width: 100%;
-        padding-top: 56.25%;        /* 16:9 = 9/16 = 56.25% */
+        padding-top: 56.25%;
         margin: 16px 0;
         border-radius: 6px;
         overflow: hidden;
-        background: #f3f4f6;
     }
-    .post-thumb-wrap .post-thumb-fixed {
-        position: absolute !important;
-        inset: 0;
-        top: 0; left: 0; right: 0; bottom: 0;
-        width: 100% !important;
-        height: 100% !important;
-        max-height: none !important;
-        margin: 0 !important;
-        border-radius: 0;
+    .post-thumb-wrap > a,
+    .post-thumb-wrap > img {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
     }
+    .post-thumb-fixed { aspect-ratio: auto; }
 }
 
-/* 文章列表页中分类/标签下的小卡片图：限制更小尺寸 */
-.post-thumb {
-    max-width: 100%;
-    max-height: 200px;
-    object-fit: cover;
-    border-radius: 4px;
-}
-
-/* GIF / 表情图等小图不要被强制放大 */
-.post-body img.no-zoom {
-    cursor: default;
-}
-
-/* 正文长 URL / 长英文不要撑破容器 */
-/* 详情页正文容器：强制不溢出（关键兜底） */
-.posts-expand .post-body,
-.post-body,
-#articleContentDiv,
-#articleContentDiv .markdown-body {
-    max-width: 100% !important;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    box-sizing: border-box;
-}
-
-/* 长 URL / 长英文不要撑破容器 */
-.post-body p,
-.post-body li,
-.post-body blockquote,
-.editormd-html-preview p,
-.editormd-html-preview li,
-#articleContentDiv p,
-#articleContentDiv li {
-    word-wrap: break-word;
-    overflow-wrap: anywhere;     /* 比 break-word 更激进，强制断长 token */
-}
-
-.post-body table,
-.editormd-html-preview table {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-    border-collapse: collapse;
-    margin: 1em 0;
-}
-.post-body pre,
-.editormd-html-preview pre {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    max-width: 100%;
-}
-.post-body blockquote,
-.editormd-html-preview blockquote {
-    border-left: 4px solid #2494f2;
-    background: #f7f9fc;
-    padding: .6em 1em;
-    margin: 1em 0;
-    color: #555;
-    border-radius: 0 4px 4px 0;
-}
-
-/* ---------- 图片点击放大预览（轻量级 lightbox） ---------- */
+/* ============================================================
+ *  2. show_article 自带旧 lightbox（保留兼容）
+ *     show_article.html line 268 在 jQuery $(function(){...}) 里直接 new
+ *     一个 .image-lightbox 弹层；这里保留其样式（与 blog-base.js 的
+ *     .blog-lightbox 是两套，但选择器不冲突）。
+ * ============================================================ */
 .image-lightbox {
     position: fixed;
     inset: 0;
@@ -156,7 +100,7 @@
     justify-content: center;
     z-index: 9999;
     cursor: zoom-out;
-    animation: fadeIn .15s ease;
+    animation: blogFadeIn .15s ease;
 }
 .image-lightbox img {
     max-width: 92vw;
@@ -171,20 +115,162 @@
     cursor: pointer;
     line-height: 1;
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes blogFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ---------- 顶部搜索框（统一架构 + 主题可覆写）----------
- * 设计要点：
- *   1) 完全用 CSS 变量驱动颜色，三套主题各自覆写一组 token 即可换皮，无需重写结构；
- *   2) 强力 reset NexT 原 main5174.css line 2554 的反人类规则：
- *      - opacity:.5（会让深色主题下输入字符几乎不可见——用户主诉）
- *      - background:url(svg)（搜索 icon 嵌在输入区，与现有 .fa.fa-search 按钮重复）
- *      - border-bottom + border:none（与本主题"圆角胶囊"风格冲突）
- *      - width:140px（固定宽度，移动端会撑出 header）
- *   3) 移动端容器宽度自适应；输入区始终保留 36px 右内距给搜索按钮，按钮位置 absolute；
- *   4) focus 时 box-shadow 形成主题色光圈，给出明确"已聚焦"反馈，避免用户找不到光标位置。 */
+/* ============================================================
+ *  3. NexT-Replace —— 替代 fancybox / velocity / NexT motion
+ *  对应 blog-base.js 中的 setupImageLightbox / setupBackToTop / markMotionReady
+ * ============================================================ */
 
-/* 基础 token：默认走亮色主题（白/灰），三套主题各自覆写见各自 css 文件 */
+/* 3-1) 图片 lightbox（替代 fancybox） */
+.blog-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    background: rgba(8, 12, 22, 0.85);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-sizing: border-box;
+    opacity: 0;
+    transition: opacity .2s ease;
+}
+.blog-lightbox.is-open {
+    display: flex;
+    opacity: 1;
+    animation: blogLightboxFadeIn .2s ease both;
+}
+.blog-lightbox-img {
+    max-width: 100%;
+    max-height: calc(100vh - 100px);
+    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, .5);
+    animation: blogLightboxZoomIn .25s cubic-bezier(.4, 0, .2, 1) both;
+}
+.blog-lightbox-caption {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 80vw;
+    padding: 6px 14px;
+    background: rgba(0, 0, 0, .5);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.5;
+    border-radius: 4px;
+    text-align: center;
+}
+.blog-lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, .12);
+    color: #fff;
+    border: 0;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s;
+}
+.blog-lightbox-close:hover { background: rgba(255, 255, 255, .22); }
+.blog-lightbox-trigger { cursor: zoom-in; transition: opacity .15s; }
+.blog-lightbox-trigger:hover { opacity: .92; }
+html.blog-lightbox-lock { overflow: hidden; }
+
+@keyframes blogLightboxFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes blogLightboxZoomIn {
+    from { opacity: 0; transform: scale(.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* 3-2) back-to-top（替代 velocity scroll） */
+.back-to-top {
+    position: fixed;
+    right: 24px;
+    bottom: 32px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .55);
+    color: #fff;
+    cursor: pointer;
+    z-index: 90;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity .2s ease, transform .2s ease, background .2s ease, visibility .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+}
+.back-to-top::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-top: 2px solid currentColor;
+    border-left: 2px solid currentColor;
+    transform: translateY(2px) rotate(45deg);
+}
+.back-to-top.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.back-to-top:hover { background: rgba(0, 0, 0, .75); }
+@media (max-width: 767px) {
+    .back-to-top { right: 14px; bottom: 18px; width: 38px; height: 38px; }
+}
+
+/* 3-3) use-motion 入场动画（替代 NexT velocity 链式动画） */
+html.use-motion .site-meta,
+html.use-motion .menu,
+html.use-motion .posts-expand,
+html.use-motion .sidebar {
+    opacity: 0;
+}
+html.use-motion.is-motion-ready .site-meta,
+html.use-motion.is-motion-ready .menu,
+html.use-motion.is-motion-ready .posts-expand,
+html.use-motion.is-motion-ready .sidebar {
+    animation: nextFadeInUp .6s cubic-bezier(.22, 1, .36, 1) both;
+}
+html.use-motion.is-motion-ready .menu        { animation-delay: 50ms; }
+html.use-motion.is-motion-ready .posts-expand { animation-delay: 150ms; }
+html.use-motion.is-motion-ready .sidebar     { animation-delay: 250ms; }
+
+@keyframes nextFadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    html.use-motion .site-meta,
+    html.use-motion .menu,
+    html.use-motion .posts-expand,
+    html.use-motion .sidebar {
+        opacity: 1 !important;
+        animation: none !important;
+    }
+}
+
+/* ============================================================
+ *  4. 顶部搜索框（统一 token 系统）
+ *  blog-base.css 仅提供 .site-search 容器布局；本节定义视觉 token
+ *  及输入框/按钮交互。三套主题各自覆写下面 9 个 --search-* token。
+ * ============================================================ */
 :root {
     --search-bg:           #ffffff;
     --search-bg-focus:     #ffffff;
@@ -197,30 +283,16 @@
     --search-focus-ring:   rgba(37, 99, 235, 0.15);
 }
 
-.site-search {
-    position: relative;
-    margin-top: 8px;
-}
-.site-search-form {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-/* 输入框：用 :where 与 !important 双重覆盖 main.css 的 opacity:.5 / svg / border-bottom 等
-   遗留规则；同时显式禁用 webkit 浏览器原生搜索框样式（避免 mobile Safari 加圆角阴影） */
 .site-search input.st-search-input,
 .site-search input[type="text"].st-search-input {
     width: 100%;
     box-sizing: border-box;
-    padding: 7px 36px 7px 14px !important;
-    border: 1px solid var(--search-border) !important;
-    background: var(--search-bg) !important;
-    background-image: none !important;            /* 干掉 main.css 的 svg 放大镜底图 */
-    color: var(--search-fg) !important;
-    border-radius: 999px !important;
-    outline: none !important;
-    opacity: 1 !important;                         /* 干掉 main.css 的 opacity:.5 */
+    padding: 7px 36px 7px 14px;
+    border: 1px solid var(--search-border);
+    background: var(--search-bg);
+    color: var(--search-fg);
+    border-radius: 999px;
+    outline: none;
     font-size: 13.5px;
     line-height: 1.4;
     -webkit-appearance: none;
@@ -229,25 +301,21 @@
 }
 .site-search input.st-search-input:focus,
 .site-search input[type="text"].st-search-input:focus {
-    border-color: var(--search-border-focus) !important;
-    background: var(--search-bg-focus) !important;
-    box-shadow: 0 0 0 3px var(--search-focus-ring) !important;
-    opacity: 1 !important;
+    border-color: var(--search-border-focus);
+    background: var(--search-bg-focus);
+    box-shadow: 0 0 0 3px var(--search-focus-ring);
 }
-.site-search input.st-search-input::placeholder,
-.site-search input[type="text"].st-search-input::placeholder {
+.site-search input.st-search-input::placeholder {
     color: var(--search-placeholder);
-    opacity: 1;          /* Firefox placeholder 默认有透明度，显式重置 */
+    opacity: 1;
 }
-/* 干掉 iOS Safari / Chrome 的输入框内自动放大镜清除按钮，避免与右侧搜索按钮重叠 */
+/* 干掉 iOS Safari / Chrome 的输入框内自动放大镜清除按钮 */
 .site-search input.st-search-input::-webkit-search-decoration,
 .site-search input.st-search-input::-webkit-search-cancel-button,
 .site-search input.st-search-input::-webkit-search-results-button,
 .site-search input.st-search-input::-webkit-search-results-decoration {
     display: none;
 }
-
-/* 搜索按钮：定位在输入框右内侧，主题色 icon */
 .site-search .search-submit {
     position: absolute;
     right: 4px;
@@ -271,107 +339,37 @@
     color: var(--search-icon-hover);
     box-shadow: 0 0 0 2px var(--search-focus-ring);
 }
-.site-search .search-submit .fa {
-    font-size: 14px;
+.site-search .search-submit .fa { font-size: 14px; }
+
+/* iOS Safari 触屏窄屏防 focus 自动缩放 */
+@media (hover: none) and (pointer: coarse) and (max-width: 767px) {
+    .site-search input.st-search-input,
+    .site-search input[type="text"].st-search-input {
+        font-size: 16px;
+    }
 }
 
-/* ---------- 侧边栏新组件 ---------- */
-/* ---------- 侧边栏新组件 ----------
- * 注意：原主题在桌面端把 .sidebar 设为 background:#222 黑底 + color:#999，
- * 所以默认 widget 文字必须用浅色。在 ≤991px 我们把 sidebar 改成白底，
- * 那里再单独覆盖成深色（见对应媒体查询段）。
- */
-.sidebar .sidebar-panel { padding: 18px 22px; border-top: 1px solid rgba(255,255,255,.06); }
-.sidebar .sidebar-panel:first-child { border-top: 0; }
-.sidebar .widget-title {
-    font-size: 14px; font-weight: 600;
-    margin: 0 0 12px 0; padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255,255,255,.12); color: #ddd;
+/* ============================================================
+ *  5. 评论模块
+ * ============================================================ */
+.comment-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #eee;
 }
-.sidebar .widget-title .fa { margin-right: 6px; color: #2494f2; }
-
-.widget-hot-list, .widget-recent-list {
-    list-style: none; padding: 0; margin: 0;
+.comment-section h3 {
+    font-size: 16px;
+    margin: 0 0 16px;
 }
-.widget-hot-list li {
-    padding: 6px 0; font-size: 13px; line-height: 1.5;
-    border-bottom: 1px dashed rgba(255,255,255,.08);
+.comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
-.widget-hot-list li:last-child { border-bottom: 0; }
-.widget-hot-list a {
-    display: block; color: #ccc; text-decoration: none;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.comment-item {
+    padding: 14px 0;
+    border-bottom: 1px dashed #eee;
 }
-.widget-hot-list a:hover { color: #2494f2; }
-.widget-hot-list .hot-meta { color: #888; font-size: 11px; }
-
-.widget-recent-list li {
-    padding: 8px 0; font-size: 12px; line-height: 1.6;
-    border-bottom: 1px dashed rgba(255,255,255,.08);
-}
-.widget-recent-list li:last-child { border-bottom: 0; }
-.widget-recent-list .recent-name { color: #2494f2; }
-.widget-recent-list .recent-content {
-    color: #bbb; margin: 2px 0;
-    overflow: hidden; text-overflow: ellipsis;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-}
-.widget-recent-list .recent-target {
-    color: #888; font-size: 11px; text-decoration: none;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;
-}
-.widget-recent-list .recent-target:hover { color: #2494f2; }
-
-.tag-cloud { line-height: 2.2; }
-.tag-cloud-item {
-    display: inline-block; padding: 3px 10px; margin: 3px 4px;
-    border: 1px solid currentColor; border-radius: 12px;
-    text-decoration: none; font-size: 12px;
-    transition: all .2s;
-}
-.tag-cloud-item:hover {
-    background: currentColor;
-}
-.tag-cloud-item:hover span,
-.tag-cloud-item:hover small { color: #fff; }
-.tag-cloud-item small { margin-left: 4px; opacity: .6; }
-
-/* ---------- 标签详情页 ---------- */
-.tag-detail-header { padding: 30px 0 20px; text-align: center; border-bottom: 1px solid #eee; }
-.tag-detail-header h1 { display: inline-block; padding: 6px 18px; border-radius: 18px; color: #fff; font-size: 20px; }
-.tag-detail-list { list-style: none; padding: 0; }
-.tag-detail-list li { padding: 12px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
-.tag-detail-list li a { color: #333; text-decoration: none; flex: 1; min-width: 0; }
-.tag-detail-list li a:hover { color: #2494f2; }
-.tag-detail-list .tag-detail-date { color: #999; font-size: 12px; flex-shrink: 0; }
-
-/* ---------- 搜索结果页 ---------- */
-.search-meta {
-    padding: 18px 0; border-bottom: 1px solid #eee; margin-bottom: 16px;
-    color: #555; font-size: 14px;
-}
-.search-meta strong { color: #2494f2; }
-.search-empty { padding: 60px 0; text-align: center; color: #999; }
-.search-empty .fa { font-size: 32px; margin-bottom: 10px; display: block; }
-.search-result-item { padding: 16px 0; border-bottom: 1px dashed #eee; }
-.search-result-item .title { font-size: 16px; font-weight: 600; }
-.search-result-item .title a { color: #333; text-decoration: none; }
-.search-result-item .title a:hover { color: #2494f2; }
-.search-result-item .summary { color: #666; font-size: 13px; margin-top: 4px; line-height: 1.6; }
-.search-result-item .meta { color: #999; font-size: 12px; margin-top: 4px; }
-
-/* ---------- 评论模块 ---------- */
-.comment-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid #eee; }
-.comment-section h3 { font-size: 16px; margin: 0 0 16px 0; }
-.comment-list { list-style: none; padding: 0; margin: 0; margin-left: 0; padding-left: 0; }
-.comment-item { padding: 14px 0; border-bottom: 1px dashed #eee; margin-left: 0; padding-left: 0; }
-/*
- * 评论头：紧凑左对齐布局（图标 → 用户名 → 时间 紧跟，不用 margin-left:auto 把时间拉到右端，
- * 避免大屏宽下左右两侧视觉断裂）。
- *
- * .comment-head 与 .comment-body 都从 .comment-item 的同一左缘起，
- * 显式归零 margin/padding，避免 .posts-expand 等祖先样式污染。
- */
 .comment-item .comment-head {
     display: flex;
     align-items: baseline;
@@ -381,6 +379,7 @@
     font-size: 13px;
     line-height: 1.6;
     position: relative;
+    padding-left: 18px;
 }
 .comment-item .comment-head .fa-user-o {
     color: #bbb;
@@ -394,604 +393,193 @@
     font-weight: 600;
     margin-right: 8px;
 }
-.comment-item .comment-head .author {
-    color: #2494f2;
-    font-weight: 600;
-}
 .comment-item .comment-head .date {
     color: #999;
     font-size: 12px;
 }
-/* 内容与头部左缘对齐：margin/padding 全归零，避免被 .posts-expand 祖先继承的样式污染 */
 .comment-item .comment-body {
     margin: 0;
-    padding: 0;
+    padding-left: 18px;
     color: #333;
     line-height: 1.7;
     word-wrap: break-word;
 }
-.comment-empty { padding: 24px 0; text-align: center; color: #999; }
-
-.comment-form-box {
-    margin-top: 24px; padding: 18px;
-    background: #f9fafb; border-radius: 6px; border: 1px solid #eef0f3;
-}
-.comment-form-box h4 { margin: 0 0 12px 0; font-size: 14px; color: #333; }
-.comment-form-box .form-row { margin-bottom: 10px; }
-.comment-form-box input[type=text],
-.comment-form-box textarea {
-    width: 100%; box-sizing: border-box;
-    padding: 8px 10px; border: 1px solid #ddd;
-    border-radius: 4px; font-size: 13px; outline: none;
-    transition: border-color .2s;
-    font-family: inherit;
-}
-.comment-form-box textarea { resize: vertical; min-height: 90px; }
-.comment-form-box input[type=text]:focus,
-.comment-form-box textarea:focus { border-color: #2494f2; }
-.comment-form-box .submit-btn {
-    background: #2494f2; color: #fff; border: 0;
-    padding: 8px 18px; border-radius: 4px; cursor: pointer;
-    font-size: 13px; transition: background .2s;
-}
-.comment-form-box .submit-btn:hover { background: #167cd6; }
-
-/* ---------- 标签徽标（详情页/列表页文章卡片中） ---------- */
-.article-tags { margin-top: 6px; }
-.article-tag {
-    display: inline-block; padding: 2px 8px; margin-right: 6px;
-    border-radius: 10px; font-size: 11px; color: #fff;
-    text-decoration: none;
-}
-.article-tag:hover { opacity: .85; }
-
-/* ---------- 关于页 ---------- */
-.about-page { padding: 30px 0; line-height: 1.9; font-size: 15px; color: #333; }
-.about-page h1 { font-size: 24px; margin-bottom: 18px; }
-.about-page h2 { font-size: 18px; margin-top: 28px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
-.about-page ul { padding-left: 22px; }
-.about-page .stack-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px; margin-top: 12px;
-}
-.about-page .stack-grid div {
-    padding: 10px; background: #f7f9fc; border-radius: 4px; text-align: center; font-size: 13px;
-}
-
-/* ============================================================== *
- * 全端响应式（手机 / 平板 / 桌面 / 宽屏）
- *
- * 设计目标：
- *   - 完全覆盖原 NexT 主题 main5174.css 的固定 700/900px 容器
- *   - 在所有屏幕尺寸下都能用，单元测试视口包括 320 / 393 (iPhone 15)
- *     / 430 (iPhone 15 Pro Max) / 768 / 1024 / 1280 / 1600+
- *   - 不破坏原视觉设计，仅修复布局缺陷
- *
- * 断点：
- *   ≤480px   超小屏（iPhone SE 等）
- *   481-767  小屏（多数手机横屏 / 大手机竖屏）
- *   768-991  平板
- *   992-1199 小桌面（笔记本）
- *   1200+    大桌面
- *   1600+    宽屏（保留主题原始大间距设计）
- * ============================================================== */
-
-/* ---------- 大屏：把 .main-inner 适当加宽，缓解\"左侧间距过宽\"主诉 ---------- */
-/* 主题原 .main-inner = 700px（@1600px+ = 900px）。在 1280-1599 屏宽下，
-   左右各留 ~290px 空白显得很浪费。这里把中间断点拉宽到 980px，让阅读区更舒展。 */
-@media (min-width: 992px) and (max-width: 1599px) {
-    .container .main-inner,
-    .container .header-inner,
-    .container .footer-inner {
-        width: min(980px, calc(100vw - 80px)) !important;
-    }
-}
-
-/* 桌面/平板（≥768px）：清掉 .site-meta 的负 margin
- * 主题 main5174.css line 2273 给 .site-meta 设了 margin-left:-20px（为 logo 装饰位预留），
- * 导致 site-title 比 header 内容边界更靠左 20px，与正文容器不对齐（用户主诉）。
- * 这里在所有桌面断点（含 1600+）都清掉，让 site-title 与正文左边界对齐。
- * 移动端不受影响（移动端 site-meta 设了 width:100% + text-align:center，没有此问题）。
- */
-@media (min-width: 768px) {
-    .container .site-meta {
-        margin-left: 0 !important;
-    }
-}
-
-/* ---------- 站点副标题：取消主题 main5174.css line 2343 的 display:none ----------
- * NexT 默认隐藏 .site-subtitle，但模板里已经写了文案"这是一个疯子的世界..."，
- * 用户希望它显示出来。这里在 header 区域显式显示：
- *   - 桌面端：站点标题下方居中淡灰，与标题保持视觉层级
- *   - 移动端：blog-extra.css 在 ≤767/≤480 还有专门微调（字号/换行），此处只解锁 display
- *   - 极窄屏（≤480px 第 825 行）保持 display:none 不变，避免 header 过挤 */
-.header .site-subtitle {
-    display: block !important;
-    margin: 6px 0 0;
-    font-size: 13px;
-    line-height: 1.5;
-    font-weight: 400;
-    text-align: inherit;
-    /* 颜色不写死，交给各主题（minimal / tech-dark / gradient-vivid）单独覆写，
-       默认走主题原有的 site-subtitle 颜色规则 */
-}
-
-/* ---------- 平板（768-991px）：容器铺到 92vw + sidebar 强制内嵌 ---------- */
-@media (min-width: 768px) and (max-width: 991px) {
-    .container .main-inner,
-    .container .header-inner,
-    .container .footer-inner {
-        width: 92vw !important;
-        max-width: 920px !important;
-        padding: 0 16px !important;
-        box-sizing: border-box;
-    }
-
-    /* 平板下的 .posts-expand 不再额外加 margin（防止主题某些规则影响） */
-    .posts-expand { margin: 0 !important; }
-
-    /* 主题默认在 768-991 直接 display:none 隐藏 sidebar，但我们的侧栏含统计 / 热门 / 标签云
-       等有用信息，应保留。强制把它从 fixed 抽屉改成内容下方的内嵌区块。 */
-    aside#sidebar.sidebar {
-        display: block !important;
-        position: static !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        background: #fff !important;
-        box-shadow: none !important;
-        margin: 24px 0 0 !important;
-        padding: 0 !important;
-        border-top: 2px solid #2494f2;
-        border-radius: 0;
-    }
-    aside#sidebar.sidebar a { color: #555; border-bottom-color: #ddd; }
-    aside#sidebar.sidebar a:hover { color: #2494f2; }
-    .sidebar-toggle { display: none !important; }
-    .sidebar-inner { padding: 16px !important; color: #333 !important; }
-    .site-author-name, .site-description { color: #333 !important; }
-    .site-state-item-count, .site-state-item-name { color: #333 !important; }
-    /* 白底场景下 widget 内的元素覆盖回深色 */
-    .sidebar .widget-title { color: #333 !important; border-bottom-color: #eee !important; }
-    .widget-hot-list a, .widget-hot-list li { color: #555 !important; border-bottom-color: #eee !important; }
-    .widget-hot-list .hot-meta { color: #999 !important; }
-    .widget-recent-list li { border-bottom-color: #eee !important; }
-    .widget-recent-list .recent-content { color: #444 !important; }
-    .widget-recent-list .recent-target { color: #999 !important; }
-}
-
-/* ---------- 手机（≤767px）：完整移动端布局 ---------- */
-@media (max-width: 767px) {
-    /* 1. 全局容器：铺满视口 ----------------------------------------- */
-    html, body { overflow-x: hidden; }
-    .container,
-    .container .main-inner,
-    .container .footer-inner,
-    .header,
-    .header-inner,
-    .main,
-    .content-wrap,
-    .content {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
-    .container .main-inner { padding: 0 14px !important; }
-    .content { padding: 0 !important; }
-
-    /*
-     * 关键修复：main5174.css 在 ≤767px 给 .posts-expand 加了 margin: 0 20px。
-     * 与 .main-inner 自身的 14px 内边距叠加后，移动端文章左右各占 34px，
-     * 在 iPhone 15 (393px) 上正文宽度只剩 ~325px，看起来就是\"左侧间距过宽\"。
-     * 此处强制清掉这个外边距，让 .posts-expand 跟随 .main-inner 的 14px 即可。
-     */
-    .posts-expand,
-    #posts.posts-expand,
-    .container .posts-expand {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding-top: 16px !important;
-    }
-
-    /* 2. 顶部 header / banner ------------------------------------ */
-    .header-inner {
-        padding: 14px 14px 8px !important;
-        text-align: center;
-        position: relative;
-    }
-    .site-meta { width: 100%; padding-right: 50px; box-sizing: border-box; }
-    .site-title { font-size: 20px !important; line-height: 1.3; }
-    .site-subtitle { font-size: 12px !important; padding: 0 8px; line-height: 1.4; }
-    .custom-logo-site-title { padding: 4px 0; }
-    .logo-line-before, .logo-line-after { display: none !important; }
-
-    /* 3. 汉堡菜单按钮：用 fontawesome fa-bars/fa-times 替代纯 CSS 三横线，更精致 -----
-     * 用 .header .site-nav-toggle 提高特异性 (0,2,1)，超过主题 line 2347 的
-     * `.site-nav-toggle { position:static; float:right }` (0,1,0)，且全部加 !important
-     * 兜底，避免被任何后加载的规则覆盖。
-     */
-    .header .site-nav-toggle,
-    #header .site-nav-toggle,
-    .site-nav-toggle {
-        display: block !important;
-        position: absolute !important;
-        top: 18px !important;
-        left: 10px !important;       /* 主题 line 1018 设了 left:10px，必须显式清掉 */
-        right: auto !important;
-        bottom: auto !important;
-        float: none !important;      /* 主题 line 2347 设了 float:right，与 absolute 冲突 */
-        z-index: 100 !important;
-    }
-    .site-nav-toggle button {
-        background: transparent;
-        border: 0;
-        cursor: pointer;
-        padding: 8px 10px;
-        line-height: 1;
-        color: #555;
-        font-size: 22px;
-        border-radius: 6px;
-        transition: background .2s, color .2s;
-    }
-    .site-nav-toggle button:hover,
-    .site-nav-toggle button:active {
-        background: rgba(0, 0, 0, .05);
-        color: #222;
-    }
-    .site-nav-toggle .site-nav-toggle-icon-close { display: none; }
-    /* 展开后切换：bars → times */
-    .site-nav-toggle button[aria-expanded="true"] .site-nav-toggle-icon { display: none; }
-    .site-nav-toggle button[aria-expanded="true"] .site-nav-toggle-icon-close { display: inline-block; }
-
-    /* 4. 导航：默认隐藏，由 JS 切换 .show 类 ------------------- */
-    .site-nav {
-        display: none;
-        padding: 0;
-        margin-top: 8px;
-        background: #fafafa;             /* 浅灰底，跟白色 header 区分开 */
-        border-top: 1px solid #ececec;
-        border-bottom: 1px solid #ececec;
-        animation: slideDown .2s ease-out;
-    }
-    .site-nav.show,
-    .site-nav[style*="block"] {
-        display: block !important;
-    }
-    @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-6px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* 5. 菜单：横向均分网格 + 图标文字垂直居中（关键修复：原本 <i> 默认 inline 不居中） */
-    .site-nav .menu,
-    .site-nav #menu.menu,
-    .site-nav .menu.menu-left {
-        display: grid !important;
-        grid-template-columns: repeat(5, 1fr);
-        list-style: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        gap: 0;
-    }
-    .site-nav .menu > .menu-item {
-        display: block !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        text-align: center;
-        border-right: 1px solid #ececec;
-    }
-    .site-nav .menu > .menu-item:last-child { border-right: 0; }
-
-    /*
-     * 关键：用 flex column + center 对齐，让图标与文字共享同一中线。
-     * 同时把 <br> 隐藏（inline 的 <br> 会破坏 flex 节奏，改由 flex 自身换行）。
-     */
-    .site-nav .menu .menu-item a {
-        display: flex !important;
-        flex-direction: column;
-        align-items: center;        /* 横向居中 */
-        justify-content: center;    /* 纵向居中 */
-        gap: 4px;
-        padding: 10px 4px !important;
-        font-size: 11px !important;
-        line-height: 1.2 !important;
-        color: #555 !important;     /* 与品牌灰色调一致，不再使用蓝色 */
-        border-bottom: 0 !important;
-        text-decoration: none;
-        min-height: 56px;
-        text-align: center;
-    }
-    .site-nav .menu .menu-item a br { display: none !important; }
-    .site-nav .menu .menu-item a:hover,
-    .site-nav .menu .menu-item a:active {
-        color: #222 !important;
-        background: rgba(0, 0, 0, .03);
-    }
-    .site-nav .menu .menu-item-icon {
-        display: block;
-        font-size: 18px !important;
-        line-height: 1 !important;
-        margin: 0 !important;
-        color: inherit !important;  /* 继承 a 的颜色，不再独立蓝色 */
-    }
-
-    /* 6. 移动端搜索框：菜单展开时作为独立块出现 ----------------
-     * 只调整布局/字号；颜色完全交给 :root / 主题覆写的 CSS 变量驱动，
-     * 杜绝旧版"无论什么主题都强制白底灰边黑字"的视觉割裂。 */
-    .site-nav .site-search {
-        padding: 12px 14px 14px;
-    }
-    .site-nav .site-search input.st-search-input,
-    .site-nav .site-search input[type="text"].st-search-input {
-        font-size: 14px;
-        padding: 9px 38px 9px 14px !important;
-    }
-
-    /* 7. 主内容区 --------------------------------------------- */
-    /*
-     * 收紧 .main 底部 padding：
-     *   主题原 .main { padding-bottom: 150px } 是 NexT 老旧 sticky-footer 实现的预留位，
-     *   移动端用不到这么大的预留空间，收紧到 24px 让 main 内容紧贴 footer。
-     */
-    .main { padding-bottom: 24px !important; }
-
-    /*
-     * 收紧 NexT 桌面美学产物在移动端的过大上下间距：
-     *   桌面 .pagination { margin: 120px 0 40px }   → 移动 24px 0 16px
-     *   桌面 .post-nav   { margin-top: 60px }        → 移动 16px
-     *   桌面 .post-meta  { margin-bottom: 60px }     → 移动 12px
-     *   .post-eof（文章列表分隔线）已由主题在 ≤767px 自动 display:none。
-     */
-    .pagination {
-        margin: 24px 0 16px !important;
-    }
-    .post-nav {
-        margin-top: 16px !important;
-    }
-    .posts-expand .post-meta,
-    .page-post-detail .post-meta {
-        margin-bottom: 12px !important;
-    }
-    /* 文章卡片：原 .post-header padding 较大，移动端收紧 */
-    .post { padding: 14px 0 !important; }
-    .post-header { padding-bottom: 8px; }
-    .post-header .post-title,
-    .post-header .post-title-link { font-size: 18px !important; line-height: 1.4; }
-    .post-meta {
-        font-size: 12px;
-        line-height: 1.6;
-    }
-    /* meta 在小屏分两行更易读 */
-    .post-meta .post-time,
-    .post-meta .post-category {
-        display: inline-block;
-        margin: 1px 4px 1px 0;
-    }
-    /*
-     * 评论数 / 阅读数的双端差异化展示：
-     *   - 移动端 (≤767px)：图标 + 数字（不要\\"评论\\"/\\"阅读\\"文字，省空间）
-     *   - 桌面端 (≥992px)：数字 + \\"评论\\"/\\"阅读\\"（不要图标，文字风格更克制）
-     *
-     * HTML 拆成两段 span：
-     *   .post-meta-num   —— 纯数字，移动端必须显示
-     *   .post-meta-unit  —— \\" 评论\\"/\\" 阅读\\" 单位文字，沿用主题 .post-meta-item-text
-     *                       的默认行为（移动端隐藏，桌面显示）
-     *
-     * 主题在 ≤767px 默认 .post-meta-item-text { display: none }，会把单位文字也隐藏，
-     * 正好符合需求；这里只需保证 .post-meta-num 不被一起隐藏即可。
-     */
-    .post-meta .post-meta-num {
-        display: inline !important;
-        margin-left: 1px;
-        color: #999;
-    }
-    /* 图标与紧跟其后的数据保持极小间距 */
-    .post-meta .post-meta-item-icon {
-        margin-right: 3px !important;
-    }
-
-    /* 8. 详情页 ----------------------------------------------- */
-    .page-post-detail .post-body { font-size: 15px; line-height: 1.75; }
-    .page-post-detail .post-body h2 { font-size: 18px; margin-top: 1.5em; }
-    .page-post-detail .post-body h3 { font-size: 16px; }
-    .page-post-detail .post-body p { word-break: break-word; }
-
-    /* 上下篇导航：竖排 */
-    .post-nav {
-        flex-direction: column !important;
-        display: flex !important;
-    }
-    .post-nav .post-nav-item {
-        width: 100% !important;
-        padding: 6px 0 !important;
-        border: 0 !important;
-    }
-
-    /* 9. 侧边栏：移动端完全隐藏 ----------------------------------- */
-    /*
-     * 设计决策（2026-05 更新）：
-     *   早期实现把 sidebar 在 ≤767px 强制内嵌为"主内容下方静态区块"，
-     *   并加了 2px 蓝色 border-top 作分隔。但实际效果是：
-     *     - 在新博客 / 内容页（about/tag_list 等）下，sidebar 仅剩
-     *       一个站点统计 + 几个空 widget，主体几乎是空白；
-     *     - 视觉上呈现为"main 末尾的蓝色横线 → 大片空白 → footer"，
-     *       与"Sidebar 应作为辅助信息"的初衷相悖；
-     *   因此移动端遵循 NexT 主题原生设计：直接 display:none。
-     *   桌面端（≥992px）保留 sidebar；平板（768-991）的内嵌方案仍保留。
-     */
-    aside#sidebar.sidebar,
-    .sidebar-toggle {
-        display: none !important;
-    }
-
-    /* 10. 表格 / 代码块横向滚动（关键修复：原本只设了 max-width:100%，pre 默认不换行
-       会导致内容横向溢出 → 整个页面被撑出现横向滚动条，看起来"页面异常超长"）------ */
-    .post-body table,
-    .post-body pre,
-    .editormd-html-preview table,
-    .editormd-html-preview pre {
-        font-size: 12px;
-        max-width: 100%;
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-    }
-    /* pre 内 code 不要试图换行（保留代码格式 + 横向滚动） */
-    .post-body pre code,
-    .editormd-html-preview pre code {
-        white-space: pre;
-        word-break: normal;
-    }
-    /* 移动端图片再次保险：高度无上限，按比例自然缩放 */
-    .post-body img,
-    .editormd-html-preview img {
-        max-width: 100% !important;
-        height: auto !important;
-        max-height: none !important;
-    }
-
-    /* 11. 评论 ----------------------------------------------- */
-    .comment-form-box { padding: 12px; }
-    .comment-form-box .submit-btn { width: 100%; }
-    .comment-section h3 { font-size: 15px; }
-    .comment-item .comment-head { flex-wrap: wrap; }
-    .comment-item .comment-head .date { margin-left: 0; width: 100%; font-size: 11px; }
-
-    /* 12. 标签详情页 ----------------------------------------- */
-    .tag-detail-list li {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-    .tag-detail-list .tag-detail-date { font-size: 11px; }
-
-    /* 13. 关于页 grid ---------------------------------------- */
-    .about-page { padding: 16px 0; font-size: 14px; }
-    .about-page h1 { font-size: 20px; }
-    .about-page h2 { font-size: 16px; }
-    .about-page .stack-grid { grid-template-columns: repeat(2, 1fr) !important; }
-
-    /* 14. footer --------------------------------------------- */
-    /*
-     * margin-top 清零 + 适度 padding：
-     *   主题原 .footer { margin-top: 80px } 在移动端会与上方 main 的预留空间叠加，
-     *   产生显著的视觉断层。这里清掉外边距让 footer 紧贴 main，
-     *   padding 上下补 16px 让版权文字仍有呼吸感。
-     */
-    .footer {
-        font-size: 12px;
-        margin-top: 0 !important;
-        padding: 16px 14px !important;
-    }
-    .footer-inner { width: 100% !important; max-width: 100% !important; }
-}
-
-/* ---------- 超小屏（≤480px，iPhone SE / 折叠屏窄态）-------- */
-@media (max-width: 480px) {
-    .site-title { font-size: 18px !important; }
-    .site-subtitle { font-size: 11px !important; }
-    /* 5 个菜单挤一行字号过小，改成两行 */
-    .site-nav .menu,
-    .site-nav #menu.menu,
-    .site-nav .menu.menu-left {
-        grid-template-columns: repeat(5, 1fr) !important;
-    }
-    .site-nav .menu .menu-item-icon { font-size: 16px !important; }
-    .site-nav .menu .menu-item a { font-size: 10px !important; }
-
-    .post-header .post-title,
-    .post-header .post-title-link { font-size: 17px !important; }
-    .page-post-detail .post-body { font-size: 14px; }
-
-    /* 卡片缩略图调矮一点 */
-    .posts-expand .post-thumb-fixed,
-    #posts .post-thumb-fixed { max-height: 220px !important; }
-
-    .about-page .stack-grid { grid-template-columns: 1fr !important; }
-}
-
-/* ---------- 320px 兜底：极小屏不破版 -------------------------- */
-@media (max-width: 360px) {
-    .site-title { font-size: 16px !important; }
-    .site-meta { padding-right: 40px; }
-    .site-nav .menu .menu-item a { font-size: 9px !important; }
-}
-
-/* ---------- 横屏手机 / iPad mini 横屏：高度小 ----------------- */
-@media (max-height: 480px) and (orientation: landscape) {
-    .header-inner { padding: 8px 14px !important; }
-    .site-title { font-size: 16px !important; }
-    .site-subtitle { display: none; }
-}
-
-/* ---------- 触屏设备搜索框防自动缩放 ----------
- * iOS Safari 在 input 字号 <16px 且获得焦点时会自动放大整屏（防止误触），
- * 会破坏移动端 header 布局。这里限定「触屏 + 窄屏」场景把搜索框字号强提到 16px。
- * 桌面用 hover/pointer 媒体特性，无 hover、coarse pointer 即触屏。 */
-@media (hover: none) and (pointer: coarse) and (max-width: 767px) {
-    .site-search input.st-search-input,
-    .site-search input[type="text"].st-search-input {
-        font-size: 16px !important;
-    }
-}
-
-/* ---------- 打印样式（PDF / 打印预览 友好） ---------- */
-@media print {
-    .header, .footer, .sidebar, .site-search, .post-nav, .back-to-top,
-    .site-nav-toggle, .comment-form-box {
-        display: none !important;
-    }
-    .container .main-inner { width: 100% !important; max-width: 100% !important; }
-    .post-body { font-size: 12pt; line-height: 1.7; }
-    .post-body img { max-height: none !important; page-break-inside: avoid; }
-}
-
-/* ===== 评论审核提示（v2.1） ===== */
-.comment-tip {
-    margin: 8px 0 14px;
-    padding: 10px 14px;
-    border-radius: 4px;
-    font-size: 14px;
-    line-height: 1.6;
-    border-left: 4px solid #999;
-    background: #f7f7f7;
-    color: #444;
-}
-.comment-tip-success {
-    border-left-color: #52c41a;
-    background: #f6ffed;
-    color: #389e0d;
-}
-.comment-tip-error {
-    border-left-color: #f5222d;
-    background: #fff1f0;
-    color: #cf1322;
+.comment-empty {
+    padding: 24px 0;
+    text-align: center;
+    color: #999;
 }
 .comment-review-note {
-    margin: 0 0 14px;
-    padding: 8px 12px;
-    font-size: 12px;
-    color: #888;
-    background: #fafafa;
+    margin: 12px 0;
+    padding: 10px 14px;
+    background: #f9f9f9;
+    color: #666;
+    font-size: 13px;
     border: 1px dashed #e5e5e5;
     border-radius: 4px;
 }
 .comment-review-note .fa { margin-right: 6px; color: #5b9bd5; }
-
-/* ================================================================== *
- * SEO 改造 v2.2 新增组件样式
- *  - 面包屑导航 / 相关阅读 / 视觉隐藏 / footer 内链
- * ================================================================== */
-
-/* ---------- 视觉隐藏（保留可访问性 + SEO 抓取，不影响视觉） ---------- */
-.visually-hidden {
-    position: absolute !important;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0, 0, 0, 0);
-    white-space: nowrap; border: 0;
+.comment-tip {
+    color: #999;
+    font-size: 12px;
+    margin-bottom: 8px;
 }
 
-/* ---------- 面包屑（已在 css-head 内联了基础样式，这里做主题适配） ---------- */
+.comment-form-box {
+    margin-top: 24px;
+    padding: 18px;
+    background: #f9fafb;
+    border-radius: 6px;
+    border: 1px solid #eef0f3;
+}
+.comment-form-box h4 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: #333;
+}
+.comment-form-box .form-row { margin-bottom: 10px; }
+.comment-form-box input[type=text],
+.comment-form-box textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+    font-family: inherit;
+}
+.comment-form-box textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+.comment-form-box input[type=text]:focus,
+.comment-form-box textarea:focus { border-color: #2494f2; }
+.comment-form-box .submit-btn {
+    background: #2494f2;
+    color: #fff;
+    border: 0;
+    padding: 8px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background .2s;
+}
+.comment-form-box .submit-btn:hover { background: #167cd6; }
+
+/* ============================================================
+ *  6. 标签徽标 / 文章卡片标签
+ * ============================================================ */
+.article-tags { margin-top: 6px; }
+.article-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    margin-right: 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    color: #fff;
+    text-decoration: none;
+}
+.article-tag:hover { opacity: .85; }
+
+/* ============================================================
+ *  7. 关于页 / 技术栈网格
+ * ============================================================ */
+.about-page {
+    padding: 30px 0;
+    line-height: 1.9;
+    font-size: 15px;
+    color: #333;
+}
+.about-page h1 {
+    font-size: 24px;
+    margin-bottom: 18px;
+}
+.about-page h2 {
+    font-size: 18px;
+    margin-top: 28px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #eee;
+}
+.about-page ul { padding-left: 22px; }
+.about-page .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+.about-page .stack-grid div {
+    padding: 10px;
+    background: #f7f9fc;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 13px;
+}
+
+/* ============================================================
+ *  8. 标签详情页 / 搜索结果页
+ * ============================================================ */
+.tag-detail-header {
+    padding: 30px 0 20px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+.tag-detail-header h1 {
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 18px;
+    color: #fff;
+    font-size: 20px;
+}
+.tag-detail-list {
+    list-style: none;
+    padding: 0;
+}
+.tag-detail-list li {
+    padding: 12px 0;
+    border-bottom: 1px dashed #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+}
+.tag-detail-list li a {
+    color: #333;
+    text-decoration: none;
+    flex: 1;
+    min-width: 0;
+}
+.tag-detail-list li a:hover { color: #2494f2; }
+.tag-detail-list .tag-detail-date {
+    color: #999;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.search-result-item {
+    padding: 16px 0;
+    border-bottom: 1px dashed #eee;
+}
+.search-result-item .title { font-size: 16px; font-weight: 600; }
+.search-result-item .title a { color: #333; text-decoration: none; }
+.search-result-item .title a:hover { color: #2494f2; }
+.search-result-item .summary {
+    color: #666;
+    font-size: 13px;
+    margin-top: 4px;
+    line-height: 1.6;
+}
+.search-result-item .meta {
+    color: #999;
+    font-size: 12px;
+    margin-top: 4px;
+}
+/* .archive-move-on 由 archive 页面提供，暂无定制样式，沿用默认 */
+
+/* ============================================================
+ *  9. 面包屑
+ * ============================================================ */
 .breadcrumb-nav {
     margin: 0 0 12px;
     padding: 8px 0;
@@ -1000,20 +588,34 @@
     border-bottom: 1px solid #f0f0f0;
 }
 .breadcrumb-list {
-    list-style: none; margin: 0; padding: 0;
-    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
 }
 .breadcrumb-item {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 .breadcrumb-item a {
-    color: #666; text-decoration: none; transition: color .15s;
+    color: #666;
+    text-decoration: none;
+    transition: color .15s;
 }
 .breadcrumb-item a:hover { color: #222; text-decoration: underline; }
-.breadcrumb-item [aria-current="page"] { color: #333; font-weight: 500; }
+.breadcrumb-item [aria-current="page"] {
+    color: #333;
+    font-weight: 500;
+}
 .breadcrumb-sep { color: #ccc; }
 
-/* ---------- 相关阅读 ---------- */
+/* ============================================================
+ *  10. 相关阅读
+ * ============================================================ */
 .related-posts {
     margin: 32px 0 16px;
     padding: 16px 20px;
@@ -1022,49 +624,59 @@
     border-radius: 4px;
 }
 .related-posts h3 {
-    margin: 0 0 12px; padding: 0;
-    font-size: 16px; color: #333;
+    margin: 0 0 12px;
+    padding: 0;
+    font-size: 16px;
+    color: #333;
     border: 0;
 }
-.related-posts h3 .fa { margin-right: 6px; color: #5b9bd5; }
+.related-posts h3 .fa {
+    margin-right: 6px;
+    color: #5b9bd5;
+}
 .related-list {
-    list-style: none; margin: 0; padding: 0;
-    display: grid; grid-template-columns: 1fr; gap: 6px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
 }
 @media (min-width: 768px) {
-    .related-list { grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+    .related-list { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 18px; }
 }
-.related-list li { line-height: 1.6; }
+.related-list li {
+    line-height: 1.6;
+    min-width: 0;          /* 关键：grid 子项默认 min-width:auto = 内容宽度，
+                              会导致超长标题撑破列宽，必须显式设为 0 */
+    overflow: hidden;
+}
 .related-list a {
-    color: #555; text-decoration: none; transition: color .15s;
-    display: inline-block; max-width: 100%;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: #555;
+    text-decoration: none;
+    transition: color .15s;
+    display: block;        /* 改 block：让 a 占满 li 宽度，nowrap+ellipsis 才能命中 */
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .related-list a::before { content: "› "; color: #aaa; }
 .related-list a:hover { color: #5b9bd5; }
 
-/* ==================== 页脚统一布局 ====================
- * 覆盖 main5174.css 中的旧规则：
- *   - .footer-inner { text-align: left } (line 2608)
- *   - .copyright-txt { float: right }    (line 2632)
- * 统一改用 Flexbox 列布局 + 全局居中，避免 text-align / float 混用导致的错位。
- * 选择器加 .footer 前缀提升特异性，无需 !important 即可覆盖。
- */
+/* ============================================================
+ *  11. Footer 统一布局（覆盖 blog-base.css 默认结构，做更细致的居中 / 间距控制）
+ * ============================================================ */
 .footer .footer-inner {
     display: flex;
     flex-direction: column;
-    align-items: center;       /* 横向居中 */
+    align-items: center;
     justify-content: center;
-    text-align: center;        /* 兜底：inline 元素仍按文本居中 */
-    gap: 6px;                  /* 各行之间统一间距，替代以前的 margin-top */
+    text-align: center;
+    gap: 6px;
     padding: 4px 16px;
     box-sizing: border-box;
 }
-
-/* 旧主题如果还残留 .copyright-txt 浮动，这里强制取消 */
-.footer .copyright-txt { float: none; margin: 0; }
-
-/* 每一行都用 inline-flex 让图标/文字/分隔符在垂直方向自然对齐 */
 .footer .copyright,
 .footer .footer-contact,
 .footer .footer-links,
@@ -1074,21 +686,15 @@
     justify-content: center;
     align-items: center;
     gap: 4px 8px;
-    margin: 0;                 /* 间距统一交给 .footer-inner 的 gap */
+    margin: 0;
     width: 100%;
     line-height: 1.7;
 }
-
-/* 版权行：稍大字号 */
-.footer .copyright {
-    font-size: 13px;
-    color: #888;
-}
-.footer .copyright .author  { font-weight: 600; color: #666; }
-.footer .copyright .rights  { color: #999; }
+.footer .copyright { font-size: 13px; color: #888; }
+.footer .copyright .author { font-weight: 600; color: #666; }
+.footer .copyright .rights { color: #999; }
 .footer .copyright .with-love .fa-heart { color: #e25c5c; margin: 0 2px; }
 
-/* 联系方式 / 内链 / 备案 三行共用样式 */
 .footer .footer-contact,
 .footer .footer-links,
 .footer .footer-beian {
@@ -1108,15 +714,22 @@
 .footer .footer-contact a:hover,
 .footer .footer-links a:hover,
 .footer .footer-beian a:hover { color: #5b9bd5; text-decoration: underline; }
-
 .footer .footer-contact .fa,
-.footer .footer-beian  .fa { font-size: 13px; }
-.footer .footer-beian .police-badge {
-    width: 14px; height: 14px; vertical-align: middle;
-}
+.footer .footer-beian .fa { font-size: 13px; }
+.footer .footer-beian .police-badge { width: 14px; height: 14px; vertical-align: middle; }
 .footer .sep { color: #ccc; user-select: none; }
 
-/* ---------- 暗色主题适配 ---------- */
+@media (max-width: 767px) {
+    .footer .footer-inner { gap: 4px; padding: 4px 12px; }
+    .footer .copyright    { font-size: 12px; }
+    .footer .footer-contact,
+    .footer .footer-links,
+    .footer .footer-beian { font-size: 11px; gap: 3px 6px; }
+}
+
+/* ============================================================
+ *  12. 暗色主题适配（仅 footer / 面包屑这种"未在主题 CSS 中处理"的细节）
+ * ============================================================ */
 [data-theme="tech-dark"] .footer .copyright { color: #aaa; }
 [data-theme="tech-dark"] .footer .copyright .author { color: #ddd; }
 [data-theme="tech-dark"] .footer .copyright .rights { color: #999; }
@@ -1131,28 +744,9 @@
 [data-theme="tech-dark"] .footer .footer-beian a:hover { color: #4a90e2; }
 [data-theme="tech-dark"] .footer .sep { color: #555; }
 
-/* ---------- 响应式：移动端字号缩档 + 间距收紧 ---------- */
-@media (max-width: 767px) {
-    .footer .footer-inner { gap: 4px; padding: 4px 12px; }
-    .footer .copyright    { font-size: 12px; }
-    .footer .footer-contact,
-    .footer .footer-links,
-    .footer .footer-beian { font-size: 11px; gap: 3px 6px; }
-}
-
-/* ---------- 暗色主题面包屑适配 ---------- */
 [data-theme="tech-dark"] .breadcrumb-nav {
-    border-bottom-color: rgba(255,255,255,.08);
+    border-bottom-color: rgba(255, 255, 255, .08);
     color: #888;
 }
 [data-theme="tech-dark"] .breadcrumb-item a { color: #aaa; }
 [data-theme="tech-dark"] .breadcrumb-item a:hover { color: #fff; }
-[data-theme="tech-dark"] .breadcrumb-item [aria-current="page"] { color: #ddd; }
-[data-theme="tech-dark"] .related-posts {
-    background: rgba(255,255,255,.04);
-    border-left-color: #4a90e2;
-}
-[data-theme="tech-dark"] .related-posts h3 { color: #ddd; }
-[data-theme="tech-dark"] .related-list a { color: #bbb; }
-[data-theme="tech-dark"] .related-list a:hover { color: #4a90e2; }
-

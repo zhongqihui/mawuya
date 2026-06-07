@@ -1,0 +1,1527 @@
+/* ============================================================
+ *  blog-base.css —— AMS 前台基础样式（取代 NexT main5174.css 2658 行）
+ * ------------------------------------------------------------
+ *  设计要点：
+ *    1) 变量驱动，所有尺寸/间距/颜色集中在 :root，主题层用 var() 覆写
+ *    2) 不锁死 html/body 高度（main5174.css 写死 height:100% 引发了几乎所有滚动/背景 bug）
+ *    3) 容器宽度按断点平滑变化，不再写死 700px/900px
+ *    4) 不预留 NexT 老旧 sticky-footer（150px+80px=230px）空白
+ *    5) sidebar 默认占文档流（不再用 fixed），桌面端右侧并排
+ *    6) 不引入 fancybox/lazyload 的 CSS（已被 blog-base.js 原生 lightbox + HTML5 loading 替代）
+ *
+ *  与 blog-extra.css 关系：
+ *    - blog-base.css 提供"无主题、无装饰"的基础结构（容器/字体/段落/链接/侧边栏框架）
+ *    - blog-extra.css 提供业务定制（lightbox/back-to-top/use-motion/页面级响应式微调）
+ *    - 三套主题 css/themes/* 提供"皮肤层"（颜色/卡片背景/阴影）
+ *
+ *  @author 钟启辉
+ * ============================================================ */
+
+/* ============================================================
+ *  1. 设计令牌（CSS 变量）
+ * ============================================================ */
+:root {
+    /* 容器宽度（按断点自动切换） */
+    --content-width:      980px;
+    --content-padding:    24px;
+
+    /* 字体 */
+    --font-family-base:   "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+    --font-family-mono:   "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --font-size-base:     15px;
+    --line-height-base:   1.78;
+
+    /* 全局色（默认 default 主题，深色/渐变主题在自己 css 里覆写） */
+    --color-bg:           #ffffff;
+    --color-fg:           #1f2937;
+    --color-fg-mid:       #374151;
+    --color-fg-mute:      #6b7280;
+    --color-link:         #2563eb;
+    --color-link-hover:   #1d4ed8;
+    --color-border:       #e5e7eb;
+    --color-border-soft:  #f1f5f9;
+
+    /* 卡片/按钮 */
+    --radius-card:        10px;
+    --radius-btn:         6px;
+    --radius-pill:        999px;
+
+    /* 间距 token */
+    --gap-xs:             6px;
+    --gap-sm:             12px;
+    --gap-md:             20px;
+    --gap-lg:             40px;
+    --gap-xl:             64px;
+}
+
+/* ============================================================
+ *  2. Reset + 基础排版
+ * ============================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+}
+body {
+    margin: 0;
+    padding: 0;
+    font: var(--font-size-base) / var(--line-height-base) var(--font-family-base);
+    color: var(--color-fg-mid);
+    background: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+img {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+}
+a {
+    color: var(--color-link);
+    text-decoration: none;
+    transition: color .15s;
+}
+a:hover {
+    color: var(--color-link-hover);
+}
+hr {
+    border: none;
+    height: 1px;
+    background: var(--color-border);
+    margin: var(--gap-lg) 0;
+}
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-fg);
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 1.6em 0 0.6em;
+}
+h1 { font-size: 26px; }
+h2 { font-size: 22px; }
+h3 { font-size: 19px; }
+h4 { font-size: 16px; }
+h5 { font-size: 15px; }
+h6 { font-size: 14px; }
+
+p { margin: 0 0 1.05em; }
+
+/* 仅可见于屏幕阅读器（a11y） */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0);
+    white-space: nowrap; border: 0;
+}
+
+/* ============================================================
+ *  3. 主结构容器
+ *  DOM: .container > .header / .main > .main-inner > .content-wrap + .sidebar / .footer
+ * ============================================================ */
+.container {
+    position: relative;
+    /* 不再写 min-height:100% 锁死高度，避免与 body min-height:100vh 双重锁定 */
+}
+.header,
+.main,
+.footer {
+    width: 100%;
+}
+.header-inner,
+.main-inner,
+.footer-inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--content-padding);
+    box-sizing: border-box;
+}
+/* main 不再预留 NexT 老旧 sticky-footer 的 150px padding-bottom */
+.main {
+    padding: var(--gap-lg) 0;
+}
+/* main-inner：桌面默认两栏（左主内容 + 右 sidebar）；
+   .sidebar-hidden 时切回单栏（sidebar 隐藏，content-wrap 自然铺满） */
+.main-inner {
+    display: flex;
+    gap: var(--gap-lg);
+    align-items: flex-start;
+}
+.main-inner.sidebar-hidden {
+    display: block;
+}
+.content-wrap {
+    flex: 1 1 auto;
+    min-width: 0; /* 防止 flex 子项内容溢出 */
+}
+.content {
+    width: 100%;
+}
+
+/* ============================================================
+ *  4. Header / Logo / Menu
+ * ============================================================ */
+.header {
+    padding: var(--gap-md) 0;
+}
+.headband {
+    height: 3px;
+    background: var(--color-link);
+}
+/* header-inner：
+ *   桌面 -- site-meta（按内容宽）| site-nav（按内容宽，紧贴左边）| 搜索框右靠齐
+ *   space-between 会让左右两端撑开，导致"博客名↔菜单"之间出现大空白；改为左对齐 + 搜索框 margin-left:auto */
+.header-inner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--gap-md);
+}
+.site-meta {
+    flex: 0 0 auto;             /* 不要 flex-grow，让站点标题挨着 brand 宽即可，避免右拉出空白 */
+    min-width: 0;
+    margin-right: var(--gap-md);
+}
+.custom-logo-site-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-sm);
+}
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    color: var(--color-fg);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+.brand:hover { color: var(--color-link); }
+.site-title {
+    color: inherit;
+    font-weight: inherit;
+}
+/* logo 装饰线（兼容 NexT，三套主题可按需 display:none） */
+.logo-line-before, .logo-line-after {
+    display: none;
+}
+.site-subtitle {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-fg-mute);
+    font-weight: 400;
+}
+
+/* 桌面端水平菜单：紧挨 site-meta 左侧；搜索框 margin-left:auto 推到最右 */
+.site-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+    flex: 1 1 auto;             /* 占满 site-meta 之后的剩余宽度，搜索框靠右 */
+    min-width: 0;
+}
+.menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.menu-left { /* NexT 兼容类 */
+    display: flex;
+}
+.menu-item {
+    margin: 0;
+}
+.menu-item a {
+    display: inline-flex;       /* 让 a 内容横向排列，杜绝 <br/> 触发"文字 + 图标"分两行 */
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    color: var(--color-fg-mid);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;        /* 关键：菜单文字一律不允许换行（修"首页"被拆成两列） */
+    border-radius: var(--radius-btn);
+    transition: color .15s, background .15s;
+}
+.menu-item a:hover,
+.menu-item-active > a {
+    color: var(--color-link);
+    background: var(--color-border-soft);
+}
+/* 关键修复：NexT 老结构是 <i icon/><br/>文本，导致换行；图标隐藏 + br 隐藏，菜单回归单行文本 */
+.menu-item-icon { display: none; }
+.menu-item a br { display: none; }
+
+/* 站内搜索：blog-extra.css 已用 token 化覆写，这里只保留布局占位 */
+.site-search {
+    position: relative;
+    flex: 0 1 220px;
+    margin-left: auto;          /* 关键：让搜索框紧贴 header 右边沿，其余空间被推到这里 */
+}
+.site-search-form {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* 移动端汉堡按钮（默认隐藏，≤767 显示） */
+.site-nav-toggle {
+    display: none;
+}
+.site-nav-toggle button {
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--color-fg);
+    font-size: 22px;
+    padding: 6px 8px;
+    line-height: 1;
+}
+.site-nav-toggle-icon-close {
+    display: none;
+}
+
+/* ============================================================
+ *  5. 文章列表 .posts-expand（首页 / 分类 / 标签 / 归档 / 搜索）
+ * ============================================================ */
+.posts-expand {
+    margin: 0;
+    padding: 0;
+}
+.posts-expand .post {
+    margin: 0 0 var(--gap-lg);
+    padding: 0;
+    border: none;
+}
+
+/* default 主题（非 tech-dark/gradient-vivid/minimal-business）的文章列表：
+ * 与三套主题保持视觉一致，统一卡片化（圆角 + 内边距 + 极淡描边阴影）。
+ * 主题 CSS 中已有同等卡片样式（带主题色阴影），这里只兜底"default"场景。 */
+html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-theme="minimal-business"])
+    .posts-expand .post {
+    background: #fff;
+    border-radius: var(--radius-card);
+    box-shadow: 0 0 0 1px var(--color-border-soft), 0 1px 2px rgba(0, 0, 0, .02);
+    padding: 22px 26px;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-theme="minimal-business"])
+    .posts-expand .post:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 1px var(--color-border), 0 6px 18px rgba(0, 0, 0, .06);
+}
+.post-header { margin: 0; }
+.post-title {
+    margin: 0 0 var(--gap-sm);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+.posts-expand .post-title-link {
+    color: var(--color-fg);
+    position: relative;
+    display: inline-block;
+    transition: color .15s;
+}
+.posts-expand .post-title-link::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 2px;
+    background: var(--color-link);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .25s ease;
+}
+.posts-expand .post-title-link:hover { color: var(--color-link); }
+.posts-expand .post-title-link:hover::before { transform: scaleX(1); }
+
+/* meta */
+.post-meta {
+    margin: 0 0 var(--gap-md);
+    color: var(--color-fg-mute);
+    font-size: 13px;
+    line-height: 1.7;
+}
+.post-meta-item-icon {
+    display: inline-block;
+    margin-right: 4px;
+}
+.post-meta-item-text {
+    display: inline-block;
+}
+.post-meta-num {
+    color: var(--color-fg);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+.post-meta-unit { /* "评论"、"阅读"等单位 — 占位类（移动端会在 @media 内 display:none） */
+    display: inline-block;
+}
+.post-time, .post-category, .post-comments-link { display: inline-block; }
+
+/* body */
+.post-body {
+    color: var(--color-fg-mid);
+    line-height: var(--line-height-base);
+}
+.post-body img {
+    max-width: 100%;
+    height: auto;
+}
+.post-body code {
+    background: #f5f6f8;
+    color: var(--color-fg);
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-btn);
+    padding: 1px 7px;
+    font: 0.92em var(--font-family-mono);
+}
+.post-body pre {
+    background: #f5f6f8;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-btn);
+    padding: 14px 18px;
+    overflow-x: auto;
+    line-height: 1.6;
+}
+.post-body pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+}
+.post-body blockquote {
+    margin: 1.4em 0;
+    padding: 12px 18px;
+    background: #f7f8fa;
+    border-left: 3px solid var(--color-link);
+    border-radius: 0 var(--radius-btn) var(--radius-btn) 0;
+    color: var(--color-fg-mute);
+}
+.post-body blockquote p:last-child { margin-bottom: 0; }
+.post-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.2em 0;
+}
+.post-body th, .post-body td {
+    border: 1px solid var(--color-border);
+    padding: 8px 12px;
+    text-align: left;
+}
+.post-body th { background: #f7f8fa; font-weight: 600; }
+
+/* 文章封面图 */
+.post-thumb-wrap {
+    position: relative;
+    width: 100%;
+    margin: 16px 0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.post-thumb-fixed {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    width: 100%;
+    display: block;
+}
+
+/* 阅读全文按钮容器 */
+.post-more-link {
+    margin: var(--gap-md) 0 0;
+    text-align: left;
+}
+
+/* 标签 */
+.posts-expand .post-tags {
+    margin-top: var(--gap-md);
+    text-align: left;
+}
+.posts-expand .post-tags a {
+    display: inline-block;
+    padding: 3px 12px;
+    margin-right: 6px;
+    background: var(--color-border-soft);
+    color: var(--color-fg-mid);
+    font-size: 12.5px;
+    border-radius: var(--radius-pill);
+    transition: all .15s;
+}
+.posts-expand .post-tags a:hover {
+    background: var(--color-link);
+    color: #fff;
+}
+
+/* 文章分隔（post-eof）：
+ * NexT 老视觉里用 80x1 小细线分隔两篇文章，外层上下 var(--gap-lg) margin
+ * 在卡片化布局下（default / 三套主题）卡片之间已有 gap，再叠 post-eof + margin
+ * 会形成一大段空白（卡片内底部"白条"）；故全局隐藏。
+ * 同时 .post-footer 也去掉 margin-top（footer 内只剩 post-eof 时 margin 多余）。 */
+.posts-expand .post-eof { display: none; }
+.post-footer { margin-top: 0; }
+
+/* ============================================================
+ *  6. 通用按钮 .btn
+ * ============================================================ */
+.btn {
+    display: inline-block;
+    padding: 7px 18px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-btn);
+    background: #fff;
+    color: var(--color-fg);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: all .15s;
+    text-decoration: none;
+}
+.btn:hover {
+    border-color: var(--color-link);
+    color: var(--color-link);
+}
+
+/* ============================================================
+ *  7. 分页 / 文章导航
+ * ============================================================ */
+.pagination {
+    margin: var(--gap-lg) 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+.pagination .prev,
+.pagination .next,
+.pagination .page-number,
+.pagination .space {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-btn);
+    color: var(--color-fg-mid);
+    font-size: 14px;
+    transition: all .15s;
+}
+.pagination .prev:hover,
+.pagination .next:hover,
+.pagination .page-number:hover {
+    border-color: var(--color-link);
+    color: var(--color-link);
+}
+.pagination .page-number.current {
+    background: var(--color-link);
+    border-color: var(--color-link);
+    color: #fff;
+}
+.pagination .space {
+    border: 0;
+    color: var(--color-fg-mute);
+}
+
+.post-nav {
+    display: flex;
+    gap: var(--gap-md);
+    margin-top: var(--gap-lg);
+    padding-top: var(--gap-md);
+    border-top: 1px solid var(--color-border-soft);
+}
+.post-nav-item {
+    flex: 1 1 50%;
+    min-width: 0;                   /* 防 flex 子项被内容撑爆，保证子级 ellipsis 生效 */
+    display: flex;                  /* 让内部 a 能 max-width:100% 命中省略号 */
+}
+.post-nav-prev { justify-content: flex-start; text-align: left; }
+.post-nav-next { justify-content: flex-end;   text-align: right; }
+.post-nav-item a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+    color: var(--color-fg-mid);
+    font-size: 14px;
+    transition: color .15s;
+}
+.post-nav-item a:hover { color: var(--color-link); }
+.post-nav-item a i { margin: 0 2px; flex: 0 0 auto; }
+/* 关键：标题过长时 nowrap + ellipsis，鼠标 hover 在 a 上靠 title="…" 弹原生 tooltip
+   (show_article.html 已对上一篇/下一篇 a 设置 title) */
+.post-nav-item a > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+/* ============================================================
+ *  8. 侧边栏 .sidebar
+ *  设计：桌面默认显示（更好看），右下悬浮 .sidebar-toggle 可收起再展开。
+ *  收起态由 main-inner 的 .sidebar-hidden 控制（缺省即显示）。
+ * ============================================================ */
+.sidebar {
+    flex: 0 0 280px;
+    width: 280px;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    padding: var(--gap-md);
+}
+.main-inner.sidebar-hidden .sidebar {
+    display: none;
+}
+.sidebar-inner { padding: 0; }
+
+/* 悬浮"显示侧边栏"按钮：固定在视口右下，与 back-to-top 错开 */
+.sidebar-toggle {
+    position: fixed;
+    right: 24px;
+    bottom: 84px;               /* back-to-top 在 32px / 高 42px，向上让 10px 间距 */
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .55);
+    color: #fff;
+    cursor: pointer;
+    z-index: 91;                /* 比 back-to-top 高 1，避免被遮挡 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s ease, transform .2s ease, opacity .2s;
+}
+.sidebar-toggle:hover { background: rgba(0, 0, 0, .75); transform: scale(1.05); }
+/* 三道短线（汉堡）：用伪元素 + currentColor，无图标依赖。
+   绝对定位居中：以父中心（21,21）为原点，用 translate(-50%, -50%) + Y 偏移 */
+.sidebar-toggle::before,
+.sidebar-toggle::after,
+.sidebar-toggle > i {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 1px;
+    transform: translate(-50%, -50%);
+    transition: transform .2s ease, opacity .2s ease;
+}
+.sidebar-toggle::before { transform: translate(-50%, calc(-50% - 6px)); }
+.sidebar-toggle::after  { transform: translate(-50%, calc(-50% + 6px)); }
+.sidebar-toggle > i     { transform: translate(-50%, -50%); }
+/* 展开态：变成 "×" */
+.sidebar-toggle.is-open::before { transform: translate(-50%, -50%) rotate(45deg); }
+.sidebar-toggle.is-open::after  { transform: translate(-50%, -50%) rotate(-45deg); }
+.sidebar-toggle.is-open > i     { opacity: 0; }
+
+.sidebar-panel + .sidebar-panel,
+.widget-hot + .widget-recent,
+.widget-recent + .widget-tags,
+.sidebar-panel:not(:first-child) {
+    margin-top: var(--gap-md);
+    padding-top: var(--gap-md);
+    border-top: 1px solid var(--color-border-soft);
+}
+.widget-title {
+    margin: 0 0 var(--gap-sm);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-fg);
+    letter-spacing: 0.02em;
+}
+.widget-title .fa { margin-right: 6px; color: var(--color-link); }
+
+/* 站点统计区 */
+.site-overview { text-align: center; }
+/* 头像 + 名字外层链接（点击跳 GitHub）—— 视觉上"看不出是链接"，但 hover 微反馈
+ * 用 flex column + center 让头像与名字严格在同一垂直中心线对齐：
+ * inline-block 在子项宽度大于 100px 头像时会撑出，导致头像偏左、名字偏右（用户主诉）。 */
+.site-author-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+    transition: color .15s;
+}
+.site-author-link:hover { color: var(--color-link); }
+.site-author-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.site-author-link:hover .site-author-image {
+    transform: scale(1.04);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .15);
+}
+.site-author-name {
+    margin: 0 0 4px;                 /* gap 已由父 flex 控制，去掉自带 margin-top 防双重间距 */
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-fg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+/* GitHub 角标：默认低对比度，hover 时随父链接变主题色 */
+.site-author-github {
+    opacity: 0.55;
+    color: var(--color-fg-mute);
+    transition: opacity .15s ease, color .15s ease, transform .15s ease;
+}
+.site-author-link:hover .site-author-github {
+    opacity: 1;
+    color: var(--color-link);
+    transform: translateY(-1px);
+}
+.site-description {
+    margin: 0 0 var(--gap-sm);
+    font-size: 12.5px;
+    color: var(--color-fg-mute);
+    line-height: 1.6;
+}
+.site-state {
+    display: flex;
+    margin-top: var(--gap-md);
+    border-top: 1px solid var(--color-border-soft);
+    padding-top: var(--gap-md);
+}
+.site-state-item {
+    flex: 1;
+    text-align: center;
+}
+.site-state-item a {
+    display: block;
+    color: var(--color-fg-mid);
+}
+.site-state-item-count {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-fg);
+}
+.site-state-item-name {
+    display: block;
+    font-size: 12px;
+    color: var(--color-fg-mute);
+    margin-top: 2px;
+}
+
+/* 热门文章 / 最新评论 list */
+.widget-hot-list,
+.widget-recent-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+}
+.widget-hot-list > li {
+    margin: 0 0 var(--gap-sm);
+    line-height: 1.5;
+}
+.widget-hot-list a {
+    color: var(--color-fg-mid);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-clamp: 2;
+}
+.widget-hot-list a:hover { color: var(--color-link); }
+.hot-meta {
+    display: block;
+    font-size: 11.5px;
+    color: var(--color-fg-mute);
+    margin-top: 2px;
+}
+.widget-recent-list > li {
+    margin: 0 0 var(--gap-sm);
+    padding-bottom: var(--gap-sm);
+    border-bottom: 1px dashed var(--color-border-soft);
+}
+.widget-recent-list > li:last-child { border-bottom: 0; }
+.recent-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-fg);
+    font-size: 12.5px;
+    margin-bottom: 4px;
+    min-width: 0;
+}
+.recent-name strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    font-weight: 600;
+}
+/* 圆形头像首字母：纯 CSS，免赖 Font Awesome 字体加载 */
+.recent-avatar {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--color-link);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
+    font-style: normal;
+}
+.recent-name .fa { color: var(--color-fg-mute); margin-right: 4px; }
+.recent-content {
+    font-size: 12.5px;
+    color: var(--color-fg-mute);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-clamp: 2;
+    margin-bottom: 4px;
+}
+.recent-target {
+    font-size: 11.5px;
+    color: var(--color-link);
+}
+
+/* 标签云 */
+.tag-cloud,
+.tagcloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    line-height: 1;
+}
+.tag-cloud-item,
+.tag-cloud a,
+.tagcloud a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    color: var(--color-fg-mid);
+    background: var(--color-bg);
+    font-size: 12.5px;
+    transition: all .15s;
+}
+.tag-cloud-item:hover,
+.tag-cloud a:hover,
+.tagcloud a:hover {
+    background: var(--color-link);
+    border-color: var(--color-link);
+    color: #fff !important;
+}
+.tag-cloud-item small,
+.tag-cloud a small {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+/* ============================================================
+ *  9. Footer
+ * ============================================================ */
+.footer {
+    padding: var(--gap-md) 0;
+    color: var(--color-fg-mute);
+    font-size: 13px;
+}
+.footer-inner {
+    text-align: center;
+}
+.copyright,
+.footer-contact,
+.footer-beian,
+.footer-links {
+    margin: 6px 0;
+}
+.with-love { color: #ec4899; margin: 0 4px; }
+.footer .sep { margin: 0 6px; color: var(--color-border-strong); }
+.police-badge {
+    width: 14px; height: 14px;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+/* ============================================================
+ *  10. 分类 / 标签 / 归档 / 搜索 列表页
+ * ============================================================ */
+.category-all-page,
+.tag-detail-list,
+.search-result-item {
+    margin: 0 0 var(--gap-md);
+}
+.category-all-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 var(--gap-md);
+    letter-spacing: -0.01em;
+}
+
+/* ---- 分类列表：现代分类卡片 ----
+ * 设计语言：
+ *   - 整张卡片即一个可点击 <a>，覆盖整个 hit area（移动端体验更好）
+ *   - 三段式：左 icon（带渐变背景 + folder svg）｜中 主信息（名 + 副标题）｜右 角标 + 箭头
+ *   - hover：卡片底部多 2px 阴影 + 箭头位移 + icon 渐变向深色调
+ *   - 移动端单列；桌面 minmax(260px, 1fr) 自适应多列 */
+.category-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--gap-sm);
+}
+.category-list-item {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;            /* 卡片背景下沉到 .category-list-link，整张可点 */
+}
+.category-list-link {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px 1fr auto auto;
+    align-items: center;
+    column-gap: 12px;
+    padding: 14px 16px;
+    background: #fff;
+    border-radius: var(--radius-card);
+    box-shadow: 0 0 0 1px var(--color-border-soft),
+                0 1px 2px rgba(0, 0, 0, .02);
+    color: var(--color-fg);
+    text-decoration: none;
+    transition: transform .18s ease, box-shadow .18s ease,
+                background .18s ease, color .18s ease;
+}
+.category-list-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 1px var(--color-border),
+                0 8px 22px rgba(0, 0, 0, .07);
+    color: var(--color-link);
+}
+
+/* 左侧 icon：渐变方块 + 语义化 line icon
+ * 5 个 svg 全部默认 display:none，由下方 [data-cat="XXX"] 选择器显示对应那一个 + 切换渐变背景
+ * 兼容未匹配的分类名：fallback 到 .cat-svg-folder（数据 sn=1 未分类等） */
+.cat-icon {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1 0%, #2563eb 100%);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, .22);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+.cat-svg { display: none; }
+/* 默认 fallback：显示 folder（无任何 data-cat 命中时） */
+.cat-icon:not([data-cat="技术"]):not([data-cat="读书"]):not([data-cat="随笔"]):not([data-cat="生活"]) .cat-svg-folder { display: block; }
+
+/* 每个分类：显示对应 svg + 改渐变 + 改阴影色 */
+.cat-icon[data-cat="技术"] .cat-svg-tech     { display: block; }
+.cat-icon[data-cat="技术"] {
+    background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .25);
+}
+
+.cat-icon[data-cat="读书"] .cat-svg-book     { display: block; }
+.cat-icon[data-cat="读书"] {
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, .28);
+}
+
+.cat-icon[data-cat="随笔"] .cat-svg-essay    { display: block; }
+.cat-icon[data-cat="随笔"] {
+    background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, .28);
+}
+
+.cat-icon[data-cat="生活"] .cat-svg-life     { display: block; }
+.cat-icon[data-cat="生活"] {
+    background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, .28);
+}
+
+/* fallback "未分类" / 未命中 → folder 灰渐变 */
+.cat-icon:not([data-cat="技术"]):not([data-cat="读书"]):not([data-cat="随笔"]):not([data-cat="生活"]) {
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    box-shadow: 0 4px 12px rgba(100, 116, 139, .22);
+}
+
+.category-list-link:hover .cat-icon {
+    transform: scale(1.05) rotate(-3deg);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .15);
+}
+
+/* 中间主信息 */
+.cat-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.cat-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: inherit;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.cat-sub {
+    font-size: 12px;
+    color: var(--color-fg-mute);
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+}
+
+/* 右侧数字气泡（仍兼容历史类名 .category-list-count） */
+.cat-count,
+.category-list-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 22px;
+    padding: 0 8px;
+    background: var(--color-border-soft);
+    color: var(--color-fg-mid);
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    transition: background .18s ease, color .18s ease;
+}
+.category-list-link:hover .cat-count,
+.category-list-link:hover .category-list-count {
+    background: var(--color-link);
+    color: #fff;
+}
+
+/* 右侧箭头：hover 略向右滑动 */
+.cat-arrow {
+    color: var(--color-fg-mute);
+    font-size: 20px;
+    line-height: 1;
+    transition: transform .18s ease, color .18s ease;
+}
+.category-list-link:hover .cat-arrow {
+    transform: translateX(3px);
+    color: var(--color-link);
+}
+
+/* 移动端单列 + 略收紧 padding */
+@media (max-width: 767px) {
+    .category-list {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .category-list-link {
+        padding: 12px 14px;
+        column-gap: 10px;
+    }
+    .cat-icon { width: 40px; height: 40px; border-radius: 10px; }
+}
+
+/* ---- 相关阅读列表（show_article 使用，blog-extra.css 还会再覆盖一层卡片样式） ---- */
+.related-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.related-list > li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border-soft);
+    min-width: 0;
+}
+.related-list > li:last-child { border-bottom: 0; }
+.tag-detail-header {
+    margin: 0 0 var(--gap-md);
+}
+.tag-detail-header h1 {
+    display: inline-block;
+    padding: 4px 14px;
+    color: #fff;
+    border-radius: var(--radius-btn);
+    font-size: 18px;
+}
+.tag-detail-date {
+    color: var(--color-fg-mute);
+    font-size: 13px;
+    margin-right: 12px;
+}
+.search-meta {
+    color: var(--color-fg-mute);
+    margin: 0 0 var(--gap-md);
+    font-size: 14px;
+}
+.search-empty {
+    text-align: center;
+    color: var(--color-fg-mute);
+    padding: var(--gap-lg) 0;
+}
+.archive-page-counter {
+    color: var(--color-fg-mute);
+    font-size: 13px;
+}
+
+/* ---- 归档树形结构 ----
+ * 设计：左侧 24px 垂直主干线（border-left），每条 .post 前一个时间圆点（::before）
+ *      年份 .collection-title 加大字号 + 月份小注；月份 .collection-sub 缩进
+ * 不依赖 NexT 旧 markup：兼容现有 archive.html（year h2 + 文章列表平铺） */
+.posts-collapse {
+    position: relative;
+    margin: 0 0 var(--gap-lg);
+    padding: 0 0 0 28px;
+    list-style: none;
+    border-left: 2px solid var(--color-border);
+    max-width: 100%;
+    overflow: hidden;               /* 防内部超长子项把整个归档撑出 content-wrap 宽 */
+    box-sizing: border-box;
+}
+.archive-move-on {
+    position: absolute;
+    top: 0;
+    left: -7px;
+    width: 12px;
+    height: 12px;
+    background: var(--color-link);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px var(--color-bg);
+}
+.collection-title {
+    position: relative;
+    margin: 24px 0 12px -28px;
+    padding: 0 0 0 28px;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--color-fg);
+    letter-spacing: -0.01em;
+}
+.collection-title::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 8px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-link);
+    box-shadow: 0 0 0 4px var(--color-bg);
+}
+.collection-title h2 { margin: 0; display: inline; font-size: inherit; font-weight: inherit; }
+.collection-title small {
+    margin-left: 8px;
+    color: var(--color-fg-mute);
+    font-size: 12px;
+    font-weight: 400;
+}
+.posts-collapse .post {
+    position: relative;
+    padding: 8px 0 8px 4px;
+    margin: 0;
+    border: 0;
+}
+.posts-collapse .post::before {
+    content: "";
+    position: absolute;
+    left: -33px;
+    top: 18px;
+    width: 8px;
+    height: 8px;
+    background: var(--color-bg);
+    border: 2px solid var(--color-border-strong, #cbd5e1);
+    border-radius: 50%;
+    transition: border-color .18s, background .18s;
+}
+.posts-collapse .post:hover::before {
+    background: var(--color-link);
+    border-color: var(--color-link);
+}
+.posts-collapse .post-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: nowrap;            /* PC 上不换行；"MM-DD" 固定 48px 足够 */
+}
+.posts-collapse .post-meta {
+    display: inline-block;
+    color: var(--color-fg-mute);
+    font-size: 12.5px;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 48px;                /* 之前 38px 在中文字号下 "MM-DD" 会被压成两行；改 48px */
+    white-space: nowrap;
+}
+.posts-collapse .post-title {
+    display: block;                 /* flex 子项要 min-width:0 收缩生效，display 不能是 inline */
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;               /* 兜底：父级即使被撑也不会把 .posts-collapse 拉宽 */
+}
+.posts-collapse .post-title a,
+.posts-collapse .post-title-link {
+    color: var(--color-fg);
+    transition: color .15s;
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;            /* PC 上标题超长也省略，与移动端策略一致 */
+}
+.posts-collapse .post-title a:hover,
+.posts-collapse .post-title-link:hover { color: var(--color-link); }
+
+.archive-page-title {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* ============================================================
+ *  11. 响应式断点
+ *    ≤480   极窄屏（隐藏 subtitle / sidebar 不必要细节）
+ *    ≤767   手机（汉堡菜单 / sidebar 内嵌到正文下方）
+ *    768-991 平板（容器铺到 92vw）
+ *    992-1599 桌面（容器 980px）
+ *    ≥1600  超大屏（容器拉到 1100px）
+ * ============================================================ */
+
+@media (min-width: 1600px) {
+    :root { --content-width: 1100px; }
+}
+
+/* 平板：容器自适应；sidebar 自动堆叠到正文下方 */
+@media (min-width: 768px) and (max-width: 991px) {
+    .header-inner,
+    .main-inner,
+    .footer-inner {
+        max-width: none;
+        width: 92vw;
+        padding: 0 16px;
+    }
+    .main-inner {
+        flex-direction: column;
+    }
+    .sidebar {
+        flex: 0 0 auto;
+        width: 100%;
+        margin-top: var(--gap-md);
+    }
+}
+
+/* 手机：汉堡菜单 + sidebar 进入菜单展开区 */
+@media (max-width: 767px) {
+    :root {
+        --content-padding: 14px;
+        --gap-lg: 28px;
+        --gap-xl: 40px;
+    }
+    .header-inner,
+    .main-inner,
+    .footer-inner {
+        max-width: none;
+        width: 100%;
+        padding: 0 var(--content-padding);
+    }
+    .main-inner {
+        flex-direction: column;
+        gap: var(--gap-md);
+    }
+    /* 移动端 header 布局：
+     *   第一行 = [汉堡按钮（左 44px）][博客名 + 副标题（居中）][右侧 44px 占位保持对称]
+     *   第二行 = 菜单 + 搜索（site-nav.show 触发）
+     * 用 flex `order` 控制视觉次序，不动模板 DOM 顺序。 */
+    .header-inner {
+        flex-wrap: wrap;
+        align-items: center;
+        row-gap: var(--gap-sm);
+        column-gap: 0;
+    }
+    /* 汉堡按钮固定左侧：固定 44x44 像素，居中对齐 site-meta 两行总高 */
+    .site-nav-toggle {
+        display: inline-flex;
+        flex: 0 0 44px;
+        order: 1;
+        align-self: center;          /* 垂直居中对齐 site-meta（两行文字）中线 */
+        justify-content: flex-start;
+    }
+    .site-nav-toggle button {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        padding: 0;
+        line-height: 1;
+        border-radius: 10px;
+        background: var(--color-border-soft);   /* 浅色面板，提高视觉权重 */
+        color: var(--color-fg);
+        box-shadow: 0 0 0 1px var(--color-border-soft);
+        transition: background .15s ease, box-shadow .15s ease, transform .12s ease;
+    }
+    .site-nav-toggle button:active {
+        transform: scale(.96);
+    }
+    .site-nav-toggle button:hover,
+    .site-nav-toggle button[aria-expanded="true"] {
+        background: var(--color-border);
+    }
+    /* site-meta 居中：弹性占满中间，文字 / 副标题强制居中 */
+    .site-meta {
+        flex: 1 1 auto;
+        min-width: 0;
+        margin: 0;
+        text-align: center;
+        order: 2;
+    }
+    .custom-logo-site-title {
+        display: block;             /* 块级居中（inline-flex 内容靠左排不会居中） */
+    }
+    .brand {
+        display: inline-flex;
+        font-size: 19px;            /* 略缩 brand，与副标题视觉重量平衡 */
+        line-height: 1.25;
+        white-space: nowrap;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        justify-content: center;
+    }
+    .site-subtitle {
+        margin: 2px 0 0;            /* 与 brand 拉近，整体块更紧凑 */
+        font-size: 11.5px;          /* 缩小，避免在窄屏占两行 */
+        line-height: 1.3;
+        text-align: center;
+        color: var(--color-fg-mute);
+        white-space: nowrap;        /* 一行展示，溢出 ellipsis 防换行破坏 header 高度 */
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    /* 右侧空位让博客名真正水平居中（与左侧 44px 汉堡按钮槽对称） */
+    .header-inner::after {
+        content: "";
+        flex: 0 0 44px;
+        order: 3;
+        align-self: center;
+    }
+    /* 默认隐藏菜单；触发 .show 后换行铺满第二行 */
+    .site-nav {
+        display: none;
+        flex: 0 0 100%;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        background: #fff;
+        border-radius: var(--radius-card);
+        margin: 0;
+        padding: var(--gap-sm);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
+        box-sizing: border-box;
+        order: 4;                   /* 始终在第二行起头 */
+    }
+    .site-nav.show {
+        display: flex;
+    }
+    .menu {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 2px;
+    }
+    .menu-item a {
+        padding: 12px 14px;
+        font-size: 15px;
+        justify-content: flex-start;
+    }
+    /* 移动端搜索框：占满一行，紧跟菜单底部；它是 .site-nav 的子元素，
+     * 由父 .site-nav (flex-direction:column) 自然排在 .menu 下方 */
+    .site-search {
+        flex: 0 0 100%;
+        width: 100%;
+        margin-left: 0;
+        margin-top: var(--gap-sm);
+        padding-top: var(--gap-sm);
+        border-top: 1px solid var(--color-border-soft);
+    }
+    /* 手机端：sidebar 与悬浮切换按钮一律隐藏（信息已聚焦于 header / 正文 / footer） */
+    .sidebar,
+    .sidebar-toggle {
+        display: none !important;
+    }
+    /* 文章正文字号略增，提高可读性 */
+    .post-title { font-size: 19px; }
+    .post-body { font-size: 15px; }
+
+    /* ====== 移动端归档：单列横排（日期 + 标题），优化"时间显示不下" ======
+     * 设计：
+     *   - 保留主干线 + 圆点的时间轴结构（与 PC 一致，避免风格断裂）
+     *   - flex-wrap:nowrap 强制 [MM-DD] 和标题同行
+     *   - 日期块固定 48px + nowrap，杜绝"05-/04"被压成两行
+     *   - 标题 1 行 ellipsis，超长省略，节省纵向空间 */
+    .posts-collapse .post-header {
+        flex-wrap: nowrap;
+        gap: 10px;
+        align-items: baseline;
+    }
+    .posts-collapse .post-meta {
+        flex: 0 0 48px;
+        font-size: 12px;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+        color: var(--color-link);    /* 移动端给日期上色，与标题区分更清晰 */
+        font-weight: 600;
+    }
+    .posts-collapse .post-title {
+        font-size: 14.5px;
+        line-height: 1.5;
+        min-width: 0;
+    }
+    .posts-collapse .post-title a,
+    .posts-collapse .post-title-link {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ====== 移动端分类页：两列网格 ======
+     * 让一屏多看到一倍分类；卡片内布局自然收紧 */
+    .category-list {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .category-list-link {
+        grid-template-columns: 36px 1fr auto;
+        column-gap: 8px;
+        padding: 10px;
+    }
+    .cat-icon { width: 36px; height: 36px; border-radius: 9px; }
+    .cat-icon svg { width: 18px; height: 18px; }
+    .cat-name { font-size: 14px; }
+    .cat-sub  { font-size: 11px; }
+    .cat-count {
+        min-width: 24px;
+        height: 20px;
+        font-size: 11px;
+        padding: 0 6px;
+    }
+    /* 移动端两列窄，箭头省略；点击转跳由整张卡 <a> 完成 */
+    .cat-arrow { display: none; }
+
+    /* ====== 移动端文章 meta 紧凑化 ======
+     * 设计：只保留 [图标][数字]，文字（"发表于 / 分类于 / 评论 / 阅读"）一律隐藏；
+     *      整行 flex-wrap:wrap + 减小 item 间距，确保大概率单行展示。
+     * 不动模板 DOM（多页面复用），全部 CSS 接管。 */
+    .posts-expand .post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        font-size: 13px;
+    }
+    /* 外层每个 <span> 设 font-size:0 屏蔽模板里硬编码的 "&nbsp; | &nbsp;" 文本节点；
+       内部真正展示的图标/数字/时间用嵌套子元素重置回 13px。 */
+    .posts-expand .post-meta > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        font-size: 0;               /* 抹掉外层匿名文本（含 "| 发表于" 等纯文本节点） */
+    }
+    .posts-expand .post-meta > span > * {
+        font-size: 13px;            /* 子元素一律恢复正常字号 */
+    }
+    .posts-expand .post-meta > span time {
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+    }
+    /* 移除"发表于 / 分类于 / 评论 / 阅读"等说明文字（也兜底了 .post-meta-unit） */
+    .posts-expand .post-meta .post-meta-item-text,
+    .posts-expand .post-meta .post-meta-unit {
+        display: none !important;
+    }
+
+    /* ====== 移动端：进一步收紧卡片间距 ======
+     * post-eof / post-footer 已在全局规则中处理；移动端再收紧 post-margin 与按钮上间距。 */
+    .posts-expand .post { margin-bottom: 18px; }
+    .post-more-link { margin-top: 12px; }
+    /* default 主题卡片在移动端收窄内边距 */
+    html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-theme="minimal-business"])
+        .posts-expand .post {
+        padding: 16px 16px;
+    }
+    /* 防 iOS 表单 focus 自动放大 */
+    .site-search input.st-search-input,
+    .site-search input[type="text"].st-search-input {
+        font-size: 16px;
+    }
+}
+
+/* 极窄屏：进一步压缩 */
+@media (max-width: 480px) {
+    .brand { font-size: 17px; }
+    .site-subtitle { font-size: 11px; }
+    .post-title { font-size: 17px; }
+}
+
+/* ============================================================
+ *  12. 打印样式（PDF / 打印预览友好）
+ * ============================================================ */
+@media print {
+    .header,
+    .footer,
+    .sidebar,
+    .site-search,
+    .site-nav-toggle,
+    .post-nav,
+    .back-to-top,
+    .pagination,
+    .blog-lightbox,
+    .comment-form-box {
+        display: none !important;
+    }
+    body { color: #000; background: #fff; }
+    a { color: #000; text-decoration: underline; }
+    .main-inner { display: block; }
+    .post { break-inside: avoid; }
+}

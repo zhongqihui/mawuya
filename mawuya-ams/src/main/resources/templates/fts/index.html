@@ -1,12 +1,12 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="theme-next mist use-motion"
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="use-motion"
       th:attr="data-theme=${currentTheme}">
 <head>
     <th:block th:replace="~{fts/common/seo-meta :: seo-meta}"></th:block>
     <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
 </head>
 <body lang="zh-Hans">
-<div class="container one-collumn sidebar-position-left page-home">
+<div class="container page-home">
     <div class="headband"></div>
     <th:block th:replace="~{fts/common/header :: header}"></th:block>
 
@@ -79,21 +79,24 @@
                                   - decoding=async：图片解码不阻塞主线程
                                   - alt：动态拼"标题 封面图"作为可读 fallback
                                 -->
+                                <!--
+                                  首页文章卡片封面图：
+                                  - 不再包外层 <a>：用户主诉"点击封面图希望放大而非跳详情"
+                                    用户进入详情的入口由「文章标题」/「阅读全文」按钮承担
+                                  - blog-base.js 的 setupImageLightbox() 会自动给 .post-thumb-fixed
+                                    （现在没有 a 包裹）绑定原生 lightbox（lightbox 已专门对其做白名单）
+                                -->
                                 <div class="post-thumb-wrap"
                                      th:if="${article.pictureUrl != null and !#strings.isEmpty(article.pictureUrl)}">
-                                    <a th:href="@{|/${article.sn}|}"
-                                       th:title="${article.articleTitle}"
-                                       th:aria-label="|阅读全文：${article.articleTitle}|">
-                                        <img class="post-thumb-fixed"
-                                             th:with="firstImg=${#strings.contains(article.pictureUrl, ';') ? #strings.substringBefore(article.pictureUrl, ';') : article.pictureUrl}"
-                                             th:src="${firstImg}"
-                                             th:alt="|${article.articleTitle} 封面图|"
-                                             width="800" height="450"
-                                             decoding="async"
-                                             th:attr="loading=${iter.index lt 2 ? 'eager' : 'lazy'},
-                                                      fetchpriority=${iter.index eq 0 ? 'high' : 'auto'}"
-                                             itemprop="image"/>
-                                    </a>
+                                    <img class="post-thumb-fixed post-thumb-zoom"
+                                         th:with="firstImg=${#strings.contains(article.pictureUrl, ';') ? #strings.substringBefore(article.pictureUrl, ';') : article.pictureUrl}"
+                                         th:src="${firstImg}"
+                                         th:alt="|${article.articleTitle} 封面图|"
+                                         width="800" height="450"
+                                         decoding="async"
+                                         th:attr="loading=${iter.index lt 2 ? 'eager' : 'lazy'},
+                                                  fetchpriority=${iter.index eq 0 ? 'high' : 'auto'}"
+                                         itemprop="image"/>
                                 </div>
                                 <div class="post-more-link text-center">
                                     <a class="btn"

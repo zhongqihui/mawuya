@@ -19,30 +19,21 @@ html[data-theme="gradient-vivid"] {
     --th-grad-btn:   linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
 }
 
-/* ---------- 全站底色 ---------- */
-/* 设计要点：
- *   - 渐变挂在 html，body 透明，避免「body fixed 渐变 + html 纯色」割裂；
- *   - 不用 background-attachment:fixed：iOS Safari 完全不支持、Android 多版本 fixed
- *     退化为 scroll 且 100vw×100vh 会在文档高度大于视口时只覆盖首屏，下方变成
- *     background-color 纯粉，造成"手机端上下色差"（用户主诉）；
- *   - 改用普通 scroll 背景 + background-size:100% 100% + html height:auto + min-height:100vh，
- *     让渐变随 html 整高拉伸到底，无论 PC/手机、长页/短页都是同一张渐变，绝无色差。
- *   - 同时释放 main.css 的 `html,body{height:100%}` 限制。 */
-html[data-theme="gradient-vivid"],
-html[data-theme="gradient-vivid"] body {
-    height: auto !important;
-    min-height: 100vh !important;
-}
+/* ---------- 全站底色 ----------
+ * 渐变挂在 html，body 透明：
+ *   - background-attachment 用 scroll 而非 fixed（iOS 完全不支持 fixed、Android 多版本退化）；
+ *   - background-size 100% 100% 让渐变随 html 整高拉伸，无论 PC/手机、长页/短页都是同一张渐变；
+ *   - blog-base.css 已不锁 html/body 高度，无需写 height:auto / min-height:100vh 修复。 */
 html[data-theme="gradient-vivid"] {
-    background-color: #fef3ff !important;
-    background-image: linear-gradient(135deg, #fef3ff 0%, #fff5e1 50%, #e0f2ff 100%) !important;
-    background-attachment: scroll !important;
-    background-repeat: no-repeat !important;
-    background-size: 100% 100% !important;
+    background-color: #fef3ff;
+    background-image: linear-gradient(135deg, #fef3ff 0%, #fff5e1 50%, #e0f2ff 100%);
+    background-attachment: scroll;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
 }
 html[data-theme="gradient-vivid"] body {
-    background: transparent !important;
-    color: var(--th-fg) !important;
+    background: transparent;
+    color: var(--th-fg);
 }
 
 /* ---------- 站点标题：渐变文字 ---------- */

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="theme-next mist use-motion"
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="use-motion"
       th:attr="data-theme=${currentTheme}">
 <head>
     <th:block th:replace="~{fts/common/seo-meta :: seo-meta}"></th:block>
     <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
 </head>
 <body lang="zh-Hans">
-<div class="container one-collumn sidebar-position-left page-post-detail">
+<div class="container page-post-detail">
     <div class="headband"></div>
     <th:block th:replace="~{fts/common/header :: header}"></th:block>
 
@@ -51,7 +51,11 @@
                                     <span class="post-category">&nbsp; | &nbsp;
                                         <a href="#comments" class="post-comments-link">
                                             <span class="post-meta-item-icon"><i class="fa fa-comments-o"></i></span>
-                                            <span class="post-meta-num" th:text="${article.reviewNum}"></span>
+                                            <!-- 关键：用 reviews 列表实际大小（仅"已通过"）作为评论计数显示，
+                                                 与下方"评论 (n)"以及实际渲染的 .comment-item 严格一致；
+                                                 避免出现"meta 显示 14 评论 / 下方却 (0) 暂无"的割裂感。 -->
+                                            <span class="post-meta-num"
+                                                  th:text="${reviews != null} ? ${#lists.size(reviews)} : 0">0</span>
                                             <span class="post-meta-item-text post-meta-unit"> 条评论</span>
                                         </a>
                                     </span>

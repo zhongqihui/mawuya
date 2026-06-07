@@ -16,13 +16,41 @@
             <!-- 1. 站点统计 -->
             <section class="site-overview sidebar-panel sidebar-panel-active" aria-labelledby="site-author">
                 <div class="site-author motion-element">
-                    <img class="site-author-image"
-                         th:src="@{/statics/images/avatars/avatar2.jpg}"
-                         th:attr="alt=${seoProperties.author} + ' 头像'"
-                         width="100" height="100"
-                         decoding="async" loading="lazy"/>
-                    <p id="site-author" class="site-author-name" th:text="${seoProperties.author}">Zhongqihui</p>
-                    <p class="site-description motion-element">分享技术 &amp; 生活，<br/>慢一点，做长远的事。</p>
+                    <!--
+                      作者头像 + 名字：当配置了 seoProperties.github 时整块外包一个 <a>
+                      target=_blank + rel=noopener 安全打开 GitHub 主页；
+                      未配置时回退为静态展示，保持兼容（不会出现指向空字符串的死链）。
+                    -->
+                    <a th:if="${!#strings.isEmpty(seoProperties.github)}"
+                       class="site-author-link"
+                       th:href="${seoProperties.github}"
+                       target="_blank" rel="noopener noreferrer me"
+                       th:title="|访问 ${seoProperties.author} 的 GitHub 主页|"
+                       th:aria-label="|访问 ${seoProperties.author} 的 GitHub 主页|">
+                        <img class="site-author-image"
+                             th:src="@{/statics/images/avatars/avatar2.jpg}"
+                             th:attr="alt=${seoProperties.author} + ' 头像'"
+                             width="100" height="100"
+                             decoding="async" loading="lazy"/>
+                        <p id="site-author" class="site-author-name">
+                            <span th:text="${seoProperties.author}">Zhongqihui</span>
+                            <!-- 小角标：提示这是 GitHub 链接 -->
+                            <svg class="site-author-github" viewBox="0 0 16 16" width="14" height="14"
+                                 aria-hidden="true" focusable="false">
+                                <path fill="currentColor" d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8.2 8 8 0 0 0 8 .2z"/>
+                            </svg>
+                        </p>
+                    </a>
+                    <!-- 未配置 github 时的回退展示 -->
+                    <th:block th:unless="${!#strings.isEmpty(seoProperties.github)}">
+                        <img class="site-author-image"
+                             th:src="@{/statics/images/avatars/avatar2.jpg}"
+                             th:attr="alt=${seoProperties.author} + ' 头像'"
+                             width="100" height="100"
+                             decoding="async" loading="lazy"/>
+                        <p id="site-author" class="site-author-name" th:text="${seoProperties.author}">Zhongqihui</p>
+                    </th:block>
+                    <p class="site-description motion-element">分享技术 &amp; 生活，慢一点，做长远的事。</p>
                 </div>
                 <nav class="site-state motion-element" aria-label="站点统计">
                     <div class="site-state-item site-state-posts">
@@ -69,7 +97,9 @@
                 <ul class="widget-recent-list">
                     <li th:each="r : ${latestReviews}">
                         <div class="recent-name">
-                            <i class="fa fa-user-o"></i>
+                            <!-- 用 CSS ::before 渲染统一的圆形头像首字母（避免 fa-user-o 字体未加载时变空盒子，导致名字不对齐） -->
+                            <span class="recent-avatar" aria-hidden="true"
+                                  th:text="${r.reviewName != null and !#strings.isEmpty(r.reviewName) ? #strings.substring(r.reviewName, 0, 1) : '·'}">A</span>
                             <strong th:text="${r.reviewName}">name</strong>
                         </div>
                         <div class="recent-content" th:text="${r.reviewContent}">content</div>

@@ -1,12 +1,12 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="theme-next mist use-motion"
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" class="use-motion"
       th:attr="data-theme=${currentTheme}">
 <head>
     <th:block th:replace="~{fts/common/seo-meta :: seo-meta}"></th:block>
     <th:block th:replace="~{fts/common/css-head :: css-head}"></th:block>
 </head>
 <body lang="zh-Hans">
-<div class="container one-collumn sidebar-position-left page-home">
+<div class="container page-home">
     <div class="headband"></div>
     <th:block th:replace="~{fts/common/header :: header}"></th:block>
 
@@ -23,12 +23,59 @@
 
                             <nav class="category-all" aria-label="分类导航">
                                 <ul class="category-list">
+                                    <!--
+                                      整张卡片是一个 <a>，三段布局：
+                                        .cat-icon  —— 渐变方块 + 语义化 line icon（按 data-cat-key 选择）
+                                        .cat-main  —— 分类名 + 副标题（X 篇文章）
+                                        .cat-count + .cat-arrow —— 右侧角标 + 箭头
+
+                                      语义图标系统：
+                                        - 5 个内联 SVG 都先渲染，每个加 .cat-svg-{key}
+                                        - .cat-icon 上挂 data-cat="${名称}"；CSS 用 [data-cat]
+                                          选择器只显示匹配的 svg，并切换渐变背景配色
+                                        - 没匹配到的分类自动 fallback 到 .cat-svg-folder
+                                    -->
                                     <li class="category-list-item" th:each="item : ${categoryList}">
                                         <a class="category-list-link"
                                            th:href="@{|/categories/${item.sn}|}"
-                                           th:title="|查看「${item.categoryName}」分类下所有文章|"
-                                           th:text="${item.categoryName}"></a>
-                                        <span class="category-list-count" th:text="${item.artSize}"></span>
+                                           th:title="|查看「${item.categoryName}」分类下所有文章|">
+                                            <span class="cat-icon" th:attr="data-cat=${item.categoryName}" aria-hidden="true">
+                                                <!-- 技术：芯片 / cpu -->
+                                                <svg class="cat-svg cat-svg-tech" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="5" y="5" width="14" height="14" rx="2"/>
+                                                    <rect x="9" y="9" width="6" height="6"/>
+                                                    <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>
+                                                </svg>
+                                                <!-- 读书：打开的书 -->
+                                                <svg class="cat-svg cat-svg-book" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M2 4.5C2 3.7 2.7 3 3.5 3H9a3 3 0 0 1 3 3v14a2.5 2.5 0 0 0-2.5-2.5H2v-13z"/>
+                                                    <path d="M22 4.5c0-.8-.7-1.5-1.5-1.5H15a3 3 0 0 0-3 3v14a2.5 2.5 0 0 1 2.5-2.5H22v-13z"/>
+                                                </svg>
+                                                <!-- 随笔：羽毛笔 / pen -->
+                                                <svg class="cat-svg cat-svg-essay" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                                                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                                                    <path d="M2 2l7.5 7.5"/>
+                                                    <circle cx="11" cy="11" r="2"/>
+                                                </svg>
+                                                <!-- 生活：咖啡杯 -->
+                                                <svg class="cat-svg cat-svg-life" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                                                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                                                    <path d="M6 1v3M10 1v3M14 1v3"/>
+                                                </svg>
+                                                <!-- 未分类 / fallback：文件夹 -->
+                                                <svg class="cat-svg cat-svg-folder" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>
+                                                </svg>
+                                            </span>
+                                            <span class="cat-main">
+                                                <span class="cat-name" th:text="${item.categoryName}">名称</span>
+                                                <span class="cat-sub" th:text="|${item.artSize} 篇文章|">0 篇文章</span>
+                                            </span>
+                                            <span class="cat-count" th:text="${item.artSize}" aria-label="文章数">0</span>
+                                            <span class="cat-arrow" aria-hidden="true">›</span>
+                                        </a>
                                     </li>
                                 </ul>
                             </nav>

@@ -42,33 +42,21 @@
 
     <!-- 字体 / 主样式：preload + 异步加载，关键路径只阻塞极小内联 CSS -->
     <link rel="stylesheet" type="text/css"
-          th:href="@{/statics/plugins/vendors/fancybox/source/jquery.fancybox8cbb.css(v=2.1.5)}"/>
-    <link rel="stylesheet" type="text/css"
           th:href="@{/statics/plugins/vendors/font-awesome/css/font-awesome.min93e3.css(v=4.4.0)}"/>
-    <link rel="stylesheet" type="text/css"
-          th:href="@{/statics/css/main5174.css(v=0.5.0)}"/>
+    <!-- 自研基础样式 blog-base.css：取代旧 NexT main5174.css，容器/字体/布局/响应式全部 token 化 -->
+    <link rel="stylesheet" th:href="@{/statics/css/blog-base.css(v=2.3)}"/>
     <link rel="stylesheet" th:href="@{/statics/plugins/editor.md/css/editormd.css}"/>
     <link rel="stylesheet" th:href="@{/statics/plugins/editor.md/css/editormd.preview.min.css}"/>
-    <!-- 站点定制样式：响应式增强 + 新组件 -->
-    <link rel="stylesheet" th:href="@{/statics/css/blog-extra.css(v=2.3)}"/>
+    <!-- 站点定制样式：业务级响应式微调 + NexT 替代规则（lightbox/back-to-top/use-motion） -->
+    <link rel="stylesheet" th:href="@{/statics/css/blog-extra.css(v=3.3)}"/>
     <!--
       一键换皮：始终加载 3 套备用主题 CSS（default 不出文件，原版即默认）。
       AMS 模板 <html data-theme="xxx"> 由 GlobalModelAttributes 注入，
       属性选择器命中对应皮肤。新增/切换主题只动 blog_info.theme_code 与此处。
     -->
-    <link rel="stylesheet" th:href="@{/statics/css/themes/tech-dark.css(v=2.3)}"/>
-    <link rel="stylesheet" th:href="@{/statics/css/themes/gradient-vivid.css(v=2.1)}"/>
-    <link rel="stylesheet" th:href="@{/statics/css/themes/minimal-business.css(v=2.2)}"/>
-
-    <script type="text/javascript" id="hexo.configuration">
-        var NexT = window.NexT || {};
-        var CONFIG = {
-            scheme: 'Mist',
-            sidebar: {"position": "left", "display": "post"},
-            fancybox: true,
-            motion: true
-        };
-    </script>
+    <link rel="stylesheet" th:href="@{/statics/css/themes/tech-dark.css(v=3.0)}"/>
+    <link rel="stylesheet" th:href="@{/statics/css/themes/gradient-vivid.css(v=3.0)}"/>
+    <link rel="stylesheet" th:href="@{/statics/css/themes/minimal-business.css(v=3.0)}"/>
 </th:block>
 </body>
 </html>
