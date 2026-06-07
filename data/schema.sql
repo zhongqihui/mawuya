@@ -140,7 +140,7 @@ CREATE TABLE `log_info` (
     `req_url`         VARCHAR(200)  DEFAULT NULL            COMMENT '请求 URL',
     `req_method`      VARCHAR(10)   DEFAULT NULL            COMMENT '请求方法（GET/POST/...）',
     `params`          VARCHAR(500)  DEFAULT NULL            COMMENT '请求参数',
-    `browser`         VARCHAR(100)  DEFAULT NULL            COMMENT 'User-Agent',
+    `browser`         VARCHAR(500)  DEFAULT NULL            COMMENT 'User-Agent 解析后的"OS,Browser"（含未识别 UA 截断）',
     `resp_status`     VARCHAR(1)    DEFAULT NULL            COMMENT '响应状态：0=成功 / 1=失败',
     `except_message`  VARCHAR(1000) DEFAULT NULL            COMMENT '异常信息（如有）',
     PRIMARY KEY (`sn`),

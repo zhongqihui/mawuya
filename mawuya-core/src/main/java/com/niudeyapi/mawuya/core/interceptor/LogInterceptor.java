@@ -151,7 +151,8 @@ public class LogInterceptor implements HandlerInterceptor {
         } else if (user.contains("iphone")) {
             os = "IPhone";
         } else {
-            os = "UnKnown, More-Info: " + userAgent;
+            // 未识别系统：仅记录 UA 前 60 字符，避免拼接整段 UA 撑爆字段
+            os = "Unknown-" + truncate(userAgent, 60);
         }
 
         try {
@@ -179,12 +180,26 @@ public class LogInterceptor implements HandlerInterceptor {
                 String IEVersion = (userAgent.substring(userAgent.indexOf("rv")).split(" ")[0]).replace("rv:", "-");
                 browser = "IE" + IEVersion.substring(0, IEVersion.length() - 1);
             } else {
-                browser = "UnKnown, More-Info: " + userAgent;
+                // 未识别浏览器：仅记录 UA 前 60 字符
+                browser = "Unknown-" + truncate(userAgent, 60);
             }
         } catch (Exception ex) {
-            browser = "UnKnown, More-Info: " + userAgent;
+            browser = "Unknown-" + truncate(userAgent, 60);
         }
 
-        return os + "," + browser;
+        // 最终防御：log_info.browser 字段限长（DDL 已扩到 500），仍兜底 480 字符截断
+        // 留 20 字符余量给"," + 极端 fallback 场景，杜绝任何写入失败
+        return truncate(os + "," + browser, 480);
+    }
+
+    /**
+     * 安全截断字符串到指定长度，保留前缀。null/短串原样返回。
+     * 用于 UA 等不可控外部输入，避免破坏 SQL 字段长度约束。
+     */
+    private static String truncate(String s, int maxLen) {
+        if (s == null || s.length() <= maxLen) {
+            return s;
+        }
+        return s.substring(0, maxLen);
     }
 }
