@@ -156,7 +156,14 @@
     function resetBlog() { /* no-op */ }
 
     function retArticleList() {
-        $('#content3').load(_u('/bms/article/list.do'));
+        // 就近查找当前 tab-pane，避免硬编码 #content3 在菜单 id 调整后失效
+        var $tab = $('#mod-article-form').closest('.tab-pane');
+        if ($tab.length === 0) {
+            // 极少数直接打开本页的兜底
+            window.location.href = _u('/bms/article/list.do');
+            return;
+        }
+        $tab.load(_u('/bms/article/list.do'));
     }
 </script>
 </body>

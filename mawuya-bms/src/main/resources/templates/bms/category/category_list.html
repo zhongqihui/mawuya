@@ -47,6 +47,26 @@
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
     /*]]>*/
 
+    /**
+     * 找到当前分类列表所在的 BMS tab-pane 容器。
+     *
+     * <p>之前硬编码 {@code #content2} 是错的（d72514f 一键换皮 commit 把
+     * "分类列表" link-li id 从 2 改成 3，但本文件没同步），所有 reload 都
+     * 落到一个不存在的容器上，silent 失败。改用就近查找彻底解耦菜单 id。</p>
+     */
+    function findCurrentTab() {
+        var $tab = $('#datatable-category').closest('.tab-pane');
+        return $tab.length ? $tab : null;
+    }
+    function reloadCurrentTab(url) {
+        var $tab = findCurrentTab();
+        if ($tab) {
+            $tab.load(url);
+        } else {
+            window.location.reload();
+        }
+    }
+
     $(function () {
         $('#datatable-category').dataTable();
     });
@@ -78,7 +98,7 @@
                                     skin: 'layui-layer-lan',
                                     icon: 1,
                                     end: function () {
-                                        $('#content2').load(_u('/bms/category/categoryList.do'));
+                                        reloadCurrentTab(_u('/bms/category/categoryList.do'));
                                     }
                                 });
                             } else {
@@ -111,7 +131,7 @@
                             skin: 'layui-layer-lan',
                             icon: 1,
                             end: function () {
-                                $('#content2').load(_u('/bms/category/categoryList.do'));
+                                reloadCurrentTab(_u('/bms/category/categoryList.do'));
                             }
                         });
                     } else {
@@ -151,7 +171,7 @@
                                     skin: 'layui-layer-lan',
                                     icon: 1,
                                     end: function () {
-                                        $('#content2').load(_u('/bms/category/categoryList.do'));
+                                        reloadCurrentTab(_u('/bms/category/categoryList.do'));
                                     }
                                 });
                             } else {

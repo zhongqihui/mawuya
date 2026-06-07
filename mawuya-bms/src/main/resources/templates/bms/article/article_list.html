@@ -112,22 +112,48 @@
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
     /*]]>*/
 
+    /**
+     * 找到当前博客列表所在的 BMS tab-pane 容器。
+     *
+     * <p>背景：之前硬编码 {@code #content3} 是错的（早期菜单 id=3，d72514f 一键换皮
+     * commit 把"博客列表"的 link-li id 改成 4，但本文件 #content3 没同步改），
+     * 导致点击"写博客 / 修改 / 删除 / 上传背景图 / 刷新"等任意按钮，
+     * jQuery 集合为空 → silent 无反应，正是用户主诉的 bug。</p>
+     *
+     * <p>修复：改用就近 DOM 查找 {@code .closest('.tab-pane')}，与 left.html 菜单
+     * id 完全解耦；未来再调整菜单顺序也不会再出现该类 ghost-click 问题。</p>
+     */
+    function findCurrentTab() {
+        var $tab = $('#datatable-article').closest('.tab-pane');
+        return $tab.length ? $tab : null;
+    }
+
+    /** 在当前 tab 容器内 load 指定 URL；找不到 tab 时兜底走整页刷新，避免 silent 失败。 */
+    function reloadCurrentTab(url) {
+        var $tab = findCurrentTab();
+        if ($tab) {
+            $tab.load(url);
+        } else {
+            window.location.reload();
+        }
+    }
+
     $(function () {
         $('#datatable-article').dataTable();
     });
 
     function toModBlogPage(sn) {
-        $('#content3').load(_u('/bms/article/toUpdate.do?sn=') + sn);
+        reloadCurrentTab(_u('/bms/article/toUpdate.do?sn=') + sn);
     }
 
     function toAddBlogPage() {
-        $('#content3').load(_u('/bms/article/toAdd.do?'));
+        reloadCurrentTab(_u('/bms/article/toAdd.do?'));
     }
 
     /** 刷新当前博客列表（不跳页面、保持 tab 容器） */
     function refreshArticleList() {
-        var $tab = $('#content3');
-        if ($tab.length === 0) {
+        var $tab = findCurrentTab();
+        if (!$tab) {
             // 兜底：未在 tab 容器中（极少数直接打开的场景）
             window.location.reload();
             return;
@@ -198,7 +224,7 @@
                     processData: false,
                     contentType: false,
                     dataType: 'json',
-                    success: function (res) {
+                        success: function (res) {
                         layer.close(load);
                         layer.close(index);
                         if (Api.isOk(res)) {
@@ -206,7 +232,7 @@
                                 skin: 'layui-layer-lan',
                                 icon: 1,
                                 end: function () {
-                                    $('#content3').load(_u('/bms/article/list.do'));
+                                    reloadCurrentTab(_u('/bms/article/list.do'));
                                 }
                             });
                         } else {
@@ -268,7 +294,7 @@
                             // 关掉外层"设置背景图片"弹窗（找当前最外层 layer）
                             layer.closeAll('page');
                             layer.msg(Api.msg(res, '背景图设置成功'), {icon: 1, time: 1000});
-                            $('#content3').load(_u('/bms/article/list.do'));
+                            reloadCurrentTab(_u('/bms/article/list.do'));
                         } else {
                             layer.alert(Api.msg(res, '设置背景图失败'),
                                         {skin: 'layui-layer-lan', icon: 2});
@@ -286,7 +312,17 @@
             window.__onImagePickerGotoLibrary = function () {
                 layer.close(pickerLayer);
                 layer.closeAll('page');
-                $('#content3').load(_u('/bms/image/library.do'));
+                // 跨 tab 跳转：复用 left.html 的菜单点击，由 BMS 主框架统一处理 tab 创建/激活，
+                // 比硬编码 #contentN 更稳（菜单 id 调整时不需要联动改）。
+                var $libLink = $('.link-li').filter(function () {
+                    return ($(this).attr('link-url') || '').indexOf('/bms/image/library.do') >= 0;
+                });
+                if ($libLink.length) {
+                    $libLink.trigger('click');
+                } else {
+                    // 兜底：未找到图片库菜单（权限被裁剪等场景），就近在当前 tab load
+                    reloadCurrentTab(_u('/bms/image/library.do'));
+                }
             };
         });
     }
@@ -376,13 +412,13 @@
                 cache: false,
                 dataType: 'json',
                 success: function (res) {
-                    layer.close(load);
+                        layer.close(load);
                     if (Api.isOk(res)) {
                         layer.alert(Api.msg(res, '删除成功'), {
                             skin: 'layui-layer-lan',
                             icon: 1,
                             end: function () {
-                                $('#content3').load(_u('/bms/article/list.do'));
+                                reloadCurrentTab(_u('/bms/article/list.do'));
                             }
                         });
                     } else {
