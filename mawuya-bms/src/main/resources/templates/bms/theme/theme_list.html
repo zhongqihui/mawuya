@@ -13,7 +13,7 @@
         <div style="background: #e7f3ff; border-left: 4px solid #3a8fcf; padding: 10px 14px; border-radius: 3px; color: #1f4d75;">
             <i class="fa fa-info-circle"></i>&nbsp;
             当前生效主题：<strong id="current-theme-code" th:text="${currentCode}">default</strong>
-            &nbsp;·&nbsp;切换后访问 <a href="http://localhost:8080/" target="_blank" style="color:#1f4d75;text-decoration:underline;">AMS 前台首页</a> 即可看到效果（强刷一次以清掉浏览器缓存）。
+            &nbsp;·&nbsp;切换后访问 <a th:href="${amsSiteUrl}" target="_blank" style="color:#1f4d75;text-decoration:underline;">AMS 前台首页</a> 即可看到效果（强刷一次以清掉浏览器缓存）。
         </div>
     </div>
 </div>
@@ -82,6 +82,21 @@
     /*]]>*/
 
     $(function () {
+        /**
+         * 找到当前主题列表所在的 BMS tab-pane 容器。
+         * 之前硬编码 #content5 是错的（#content5 是"图片库"菜单的容器，本页 link-li id=2
+         * 对应 #content2）。这里改用就近查找，避免与 left.html 菜单 id 的耦合：
+         *   - 用页内 DOM 节点 .closest('.tab-pane') 命中真正承载本页的 tab 容器
+         *   - 注意：BMS 首页 #content0 在 left.html 中静态写死带 `.cont`，但动态 append
+         *     的其他 tab（包括本页所在的 #content2）只有 `.tab-pane.active`，不带 `.cont`。
+         *     所以选择器不能加 `.cont`，否则会落空 → 兜底 reload 整个 BMS（即"主题切换页
+         *     被关掉、回到首页"的现象，用户主诉的 bug）。
+         */
+        function findCurrentTab() {
+            var $tab = $('#theme-card-row').closest('.tab-pane');
+            return $tab.length ? $tab : null;
+        }
+
         $('.apply-theme-btn').click(function () {
             var code = $(this).attr('data-code');
             var name = $(this).closest('.theme-card').find('div[style*="font-weight:600"]').first().text();
@@ -104,7 +119,14 @@
                                 skin: 'layui-layer-lan',
                                 icon: 1,
                                 end: function () {
-                                    $('#content5').load(_u('/bms/theme/list.do'));
+                                    // 立即刷新本页 tab 容器，让卡片高亮 / "生效中"角标 / "已应用"按钮重新渲染
+                                    var $tab = findCurrentTab();
+                                    if ($tab) {
+                                        $tab.load(_u('/bms/theme/list.do'));
+                                    } else {
+                                        // 兜底：未在 tab 容器中（极少数直接打开的场景）
+                                        window.location.reload();
+                                    }
                                 }
                             });
                         } else {

@@ -173,25 +173,106 @@
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ---------- 顶部搜索框 ---------- */
-.site-search { position: relative; margin-top: 8px; }
-.site-search-form { position: relative; display: flex; align-items: center; }
-.site-search input.st-search-input {
-    width: 100%;
-    padding: 6px 32px 6px 12px;
-    border: 1px solid rgba(255, 255, 255, .35);
-    background: rgba(255, 255, 255, .15);
-    color: #fff;
-    border-radius: 20px;
-    outline: none;
-    font-size: 13px;
-    transition: background .25s;
+/* ---------- 顶部搜索框（统一架构 + 主题可覆写）----------
+ * 设计要点：
+ *   1) 完全用 CSS 变量驱动颜色，三套主题各自覆写一组 token 即可换皮，无需重写结构；
+ *   2) 强力 reset NexT 原 main5174.css line 2554 的反人类规则：
+ *      - opacity:.5（会让深色主题下输入字符几乎不可见——用户主诉）
+ *      - background:url(svg)（搜索 icon 嵌在输入区，与现有 .fa.fa-search 按钮重复）
+ *      - border-bottom + border:none（与本主题"圆角胶囊"风格冲突）
+ *      - width:140px（固定宽度，移动端会撑出 header）
+ *   3) 移动端容器宽度自适应；输入区始终保留 36px 右内距给搜索按钮，按钮位置 absolute；
+ *   4) focus 时 box-shadow 形成主题色光圈，给出明确"已聚焦"反馈，避免用户找不到光标位置。 */
+
+/* 基础 token：默认走亮色主题（白/灰），三套主题各自覆写见各自 css 文件 */
+:root {
+    --search-bg:           #ffffff;
+    --search-bg-focus:     #ffffff;
+    --search-border:       #d1d5db;
+    --search-border-focus: #2563eb;
+    --search-fg:           #1f2937;
+    --search-placeholder:  #9ca3af;
+    --search-icon:         #6b7280;
+    --search-icon-hover:   #1f2937;
+    --search-focus-ring:   rgba(37, 99, 235, 0.15);
 }
-.site-search input.st-search-input::placeholder { color: rgba(255, 255, 255, .65); }
-.site-search input.st-search-input:focus { background: rgba(255, 255, 255, .25); }
+
+.site-search {
+    position: relative;
+    margin-top: 8px;
+}
+.site-search-form {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* 输入框：用 :where 与 !important 双重覆盖 main.css 的 opacity:.5 / svg / border-bottom 等
+   遗留规则；同时显式禁用 webkit 浏览器原生搜索框样式（避免 mobile Safari 加圆角阴影） */
+.site-search input.st-search-input,
+.site-search input[type="text"].st-search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 36px 7px 14px !important;
+    border: 1px solid var(--search-border) !important;
+    background: var(--search-bg) !important;
+    background-image: none !important;            /* 干掉 main.css 的 svg 放大镜底图 */
+    color: var(--search-fg) !important;
+    border-radius: 999px !important;
+    outline: none !important;
+    opacity: 1 !important;                         /* 干掉 main.css 的 opacity:.5 */
+    font-size: 13.5px;
+    line-height: 1.4;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.site-search input.st-search-input:focus,
+.site-search input[type="text"].st-search-input:focus {
+    border-color: var(--search-border-focus) !important;
+    background: var(--search-bg-focus) !important;
+    box-shadow: 0 0 0 3px var(--search-focus-ring) !important;
+    opacity: 1 !important;
+}
+.site-search input.st-search-input::placeholder,
+.site-search input[type="text"].st-search-input::placeholder {
+    color: var(--search-placeholder);
+    opacity: 1;          /* Firefox placeholder 默认有透明度，显式重置 */
+}
+/* 干掉 iOS Safari / Chrome 的输入框内自动放大镜清除按钮，避免与右侧搜索按钮重叠 */
+.site-search input.st-search-input::-webkit-search-decoration,
+.site-search input.st-search-input::-webkit-search-cancel-button,
+.site-search input.st-search-input::-webkit-search-results-button,
+.site-search input.st-search-input::-webkit-search-results-decoration {
+    display: none;
+}
+
+/* 搜索按钮：定位在输入框右内侧，主题色 icon */
 .site-search .search-submit {
-    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
-    background: transparent; border: 0; color: #fff; cursor: pointer; padding: 4px 8px;
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 0;
+    color: var(--search-icon);
+    cursor: pointer;
+    padding: 6px 10px;
+    line-height: 1;
+    border-radius: 999px;
+    transition: color .15s, background .15s;
+}
+.site-search .search-submit:hover {
+    color: var(--search-icon-hover);
+    background: rgba(0, 0, 0, 0.05);
+}
+.site-search .search-submit:focus {
+    outline: none;
+    color: var(--search-icon-hover);
+    box-shadow: 0 0 0 2px var(--search-focus-ring);
+}
+.site-search .search-submit .fa {
+    font-size: 14px;
 }
 
 /* ---------- 侧边栏新组件 ---------- */
@@ -418,6 +499,23 @@
     }
 }
 
+/* ---------- 站点副标题：取消主题 main5174.css line 2343 的 display:none ----------
+ * NexT 默认隐藏 .site-subtitle，但模板里已经写了文案"这是一个疯子的世界..."，
+ * 用户希望它显示出来。这里在 header 区域显式显示：
+ *   - 桌面端：站点标题下方居中淡灰，与标题保持视觉层级
+ *   - 移动端：blog-extra.css 在 ≤767/≤480 还有专门微调（字号/换行），此处只解锁 display
+ *   - 极窄屏（≤480px 第 825 行）保持 display:none 不变，避免 header 过挤 */
+.header .site-subtitle {
+    display: block !important;
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 400;
+    text-align: inherit;
+    /* 颜色不写死，交给各主题（minimal / tech-dark / gradient-vivid）单独覆写，
+       默认走主题原有的 site-subtitle 颜色规则 */
+}
+
 /* ---------- 平板（768-991px）：容器铺到 92vw + sidebar 强制内嵌 ---------- */
 @media (min-width: 768px) and (max-width: 991px) {
     .container .main-inner,
@@ -617,17 +715,17 @@
         color: inherit !important;  /* 继承 a 的颜色，不再独立蓝色 */
     }
 
-    /* 6. 移动端搜索框：菜单展开时位于浅灰背景上，需要换成深色边框/文字 */
-    .site-nav .site-search { padding: 10px 14px 14px; }
-    .site-nav .site-search input.st-search-input {
-        padding: 7px 32px 7px 12px;
-        font-size: 13px;
-        background: #fff;
-        border: 1px solid #ddd;
-        color: #333;
+    /* 6. 移动端搜索框：菜单展开时作为独立块出现 ----------------
+     * 只调整布局/字号；颜色完全交给 :root / 主题覆写的 CSS 变量驱动，
+     * 杜绝旧版"无论什么主题都强制白底灰边黑字"的视觉割裂。 */
+    .site-nav .site-search {
+        padding: 12px 14px 14px;
     }
-    .site-nav .site-search input.st-search-input::placeholder { color: #999; }
-    .site-nav .site-search .search-submit { color: #666; }
+    .site-nav .site-search input.st-search-input,
+    .site-nav .site-search input[type="text"].st-search-input {
+        font-size: 14px;
+        padding: 9px 38px 9px 14px !important;
+    }
 
     /* 7. 主内容区 --------------------------------------------- */
     /*
@@ -823,6 +921,17 @@
     .header-inner { padding: 8px 14px !important; }
     .site-title { font-size: 16px !important; }
     .site-subtitle { display: none; }
+}
+
+/* ---------- 触屏设备搜索框防自动缩放 ----------
+ * iOS Safari 在 input 字号 <16px 且获得焦点时会自动放大整屏（防止误触），
+ * 会破坏移动端 header 布局。这里限定「触屏 + 窄屏」场景把搜索框字号强提到 16px。
+ * 桌面用 hover/pointer 媒体特性，无 hover、coarse pointer 即触屏。 */
+@media (hover: none) and (pointer: coarse) and (max-width: 767px) {
+    .site-search input.st-search-input,
+    .site-search input[type="text"].st-search-input {
+        font-size: 16px !important;
+    }
 }
 
 /* ---------- 打印样式（PDF / 打印预览 友好） ---------- */

@@ -43,6 +43,10 @@ mybatis:
     map-underscore-to-camel-case: true
 
 mawuya:
+  # AMS 前台站点根地址（含 scheme，无尾斜杠）。BMS 模板中所有跳前台的链接都从这里读，
+  # 杜绝硬编码 http://localhost:8080。上线请通过环境变量 MAWUYA_AMS_SITE_URL 覆盖。
+  ams:
+    site-url: ${MAWUYA_AMS_SITE_URL:http://localhost:8080}
   upload:
     dir: ${user.home}/mawuya/upload/
     url-prefix: /upload

@@ -101,12 +101,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .logoutRequestMatcher(new AntPathRequestMatcher("/bms/logout"))
                 .logoutSuccessUrl("/bms/login.do?logout=1")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-            .and()
+                .deleteCookies("JSESSIONID");
 
-            .sessionManagement()
-                .maximumSessions(1) // 同账号同时只能在一处登录
-                .expiredUrl("/bms/login.do?expired=1");
+        /*
+         * 关于「同账户单点登录」：
+         *   早期配置了 .sessionManagement().maximumSessions(1).expiredUrl(...) 想实现
+         *   "同账号同时只能一处登录"，但未注册 HttpSessionEventPublisher + SessionRegistry Bean，
+         *   Spring Security 内部 SessionRegistry 与实际 HttpSession 生命周期会不同步。
+         *
+         *   表现：
+         *     1) 本地开发服务重启后，浏览器旧 JSESSIONID 带回来 → 被判定为"新会话" →
+         *        与 SecurityContext 里残留的同 username 一对比，旧会话立刻被踢；
+         *     2) 同账号打开多 tab（含 AMS 前台、BMS 多页签）也会偶发误踢；
+         *   现象：用户在主题切换等 /bms/api/** ajax 上随机命中 401，被前端 ajaxError 兜底
+         *        重定向到 /bms/login.do?expired=1，提示"登录已过期"。
+         *
+         *   决策：BMS 是单管理员博客后台，"单点登录"并非强需求。直接移除该限制，避免因
+         *        SessionRegistry 同步问题带来的误踢。如未来需要严格单点登录，请配合：
+         *          - 注册 ServletListenerRegistrationBean<HttpSessionEventPublisher>
+         *          - .sessionManagement().sessionAuthenticationStrategy(...)
+         *        一并补全。
+         */
 
         // 把 JWT filter 插在 UsernamePasswordAuthenticationFilter 之前，让 API 请求先尝试 JWT
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

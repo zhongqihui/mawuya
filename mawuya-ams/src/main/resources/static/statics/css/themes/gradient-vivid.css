@@ -248,3 +248,16 @@ html[data-theme="gradient-vivid"] .footer,
 html[data-theme="gradient-vivid"] .footer-inner {
     color: var(--th-fg-muted) !important;
 }
+
+/* ---------- 搜索框：覆写 blog-extra.css 的 token，与卡片同款圆角胶囊 + 渐变 focus 环 ---------- */
+html[data-theme="gradient-vivid"] {
+    --search-bg:           #ffffff;
+    --search-bg-focus:     #ffffff;
+    --search-border:       #fce7f3;       /* 浅粉边 */
+    --search-border-focus: var(--th-pink);
+    --search-fg:           var(--th-fg);
+    --search-placeholder:  #9ca3af;
+    --search-icon:         var(--th-purple);
+    --search-icon-hover:   var(--th-pink);
+    --search-focus-ring:   rgba(236, 72, 153, 0.18);
+}

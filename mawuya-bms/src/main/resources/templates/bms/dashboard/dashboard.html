@@ -406,6 +406,8 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     var __ctx = /*[[@{/}]]*/ '/';
+    // AMS 前台站点 base URL（无尾斜杠），由 BmsGlobalModelAttributes 从 mawuya.ams.site-url 注入
+    var __amsSiteUrl = /*[[${amsSiteUrl}]]*/ 'http://localhost:8080';
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
     /*]]>*/
 
@@ -504,7 +506,7 @@
             var rk = (i < 3) ? 'r' + (i + 1) : '';
             html += '<li>'
                  +  '  <span class="rank ' + rk + '">' + (i + 1) + '</span>'
-                 +  '  <a class="title" target="_blank" href="http://localhost:8080/' + a.sn + '" '
+                 +  '  <a class="title" target="_blank" href="' + __amsSiteUrl + '/' + a.sn + '" '
                  +  '     title="' + escHtml(a.title || '') + '">'
                  +       escHtml(a.title || '(无标题)') + '</a>'
                  +  '  <span class="meta"><i class="fa fa-eye"></i> ' + (a.readNum || 0)

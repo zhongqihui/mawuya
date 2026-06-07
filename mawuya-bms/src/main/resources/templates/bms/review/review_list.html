@@ -80,7 +80,7 @@
                                 <span th:if="${r.articleTitle == null}" style="color:#bbb;">（文章不存在）</span>
                                 <br/>
                                 <a th:if="${r.articleSn != null}"
-                                   th:href="@{|http://localhost:8080/${r.articleSn}|}"
+                                   th:href="@{|${amsSiteUrl}/${r.articleSn}|}"
                                    target="_blank" style="font-size:12px; color:#5b9bd5;">
                                     <i class="fa fa-external-link"></i> 查看原文
                                 </a>

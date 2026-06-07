@@ -78,6 +78,8 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     var __ctx = /*[[@{/}]]*/ '/';
+    // AMS 前台站点 base URL（无尾斜杠），由 BmsGlobalModelAttributes 从 mawuya.ams.site-url 注入
+    var __amsSiteUrl = /*[[${amsSiteUrl}]]*/ 'http://localhost:8080';
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
     var __libPath = /*[[@{/statics/plugins/editor.md/lib/}]]*/ '/statics/plugins/editor.md/lib/';
     var __imgUploadUrl = /*[[@{/bms/api/article/editor/img-upload}]]*/ '/bms/api/article/editor/img-upload';
@@ -137,7 +139,7 @@
                         }, function (index) {
                             layer.close(index);
                             retArticleList();
-                            window.open('http://localhost:8080/' + sn);
+                            window.open(__amsSiteUrl + '/' + sn);
                         }, function (index) {
                             layer.close(index);
                             retArticleList();

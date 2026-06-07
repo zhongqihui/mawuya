@@ -1,37 +1,69 @@
 /* ============================================================
- *  tech-dark —— 深色科技风
+ *  tech-dark —— Aurora Tech（极光科技）
  * ------------------------------------------------------------
- *  深空蓝底 + 青色霓虹强调 + 磨砂玻璃卡片 + 细发光边
+ *  设计理念：
+ *    深空蓝黑底 + 极光三色渐变 (青绿→紫→洋红) + 玻璃拟态卡片 + 克制的发光
  *  作用域：html[data-theme="tech-dark"]
  *  说明：仅覆盖颜色 / 边框 / 阴影 / 圆角 / 字重等"皮肤层"属性，
  *       不动 display/margin/padding/响应式断点（避免破坏既有移动端修复）。
  * ============================================================ */
 
 html[data-theme="tech-dark"] {
-    --th-bg:           #0a0e1a;        /* 主背景 */
-    --th-bg-card:      rgba(15, 20, 34, 0.72);  /* 卡片半透明底 */
-    --th-bg-sidebar:   #0d1426;
-    --th-fg:           #e2e8f0;        /* 主文字 */
-    --th-fg-muted:     #94a3b8;        /* 次要文字 */
-    --th-accent:       #06b6d4;        /* 主强调（青） */
-    --th-accent-2:     #7dd3fc;        /* 副强调（浅冰蓝） */
-    --th-link:         #22d3ee;
-    --th-link-hover:   #67e8f9;
-    --th-border:       #1e293b;
+    /* ---- 表层结构 ---- */
+    --th-bg:              #070b14;
+    --th-bg-grad-from:    #0f1830;
+    --th-bg-grad-to:      #070b14;
+    --th-bg-elev-1:       rgba(20, 28, 48, 0.72);
+    --th-bg-elev-2:       rgba(28, 38, 62, 0.85);
+    --th-bg-sidebar:      rgba(15, 22, 40, 0.80);
+    --th-bg-code:         #0a1228;
+
+    /* ---- 文字 ----
+       深色模式视觉疲劳的元凶是「亮度过高 + 字距过宽 + 笔画过细」，而非"不够亮"。
+       这里把主文字降到 #d6dde9（13:1→10:1 对比度，仍远高于 WCAG AA 4.5:1），
+       正文用更暗的 #b3bdcc，减弱深底高亮的眩光感。 */
+    --th-fg:              #d6dde9;   /* 主文字（标题、白色锚点） */
+    --th-fg-body:         #b3bdcc;   /* 正文（首选，低于主文字） */
+    --th-fg-muted:        #8b96ad;   /* 次要 */
+    --th-fg-faint:        #5a6478;   /* 极淡（footer/disabled） */
+
+    /* ---- 强调色 / 极光渐变 ---- */
+    --th-accent:          #5eead4;   /* 主青绿（柔和、非荧光） */
+    --th-accent-2:        #818cf8;   /* 紫色辅助 */
+    --th-accent-3:        #f472b6;   /* 洋红点缀 */
+    --th-grad-brand:      linear-gradient(135deg, #5eead4 0%, #818cf8 50%, #f472b6 100%);
+    --th-link:            #7aa7e0;   /* 链接：低饱和冰蓝，与正文亮度更协调，不抢戏 */
+    --th-link-hover:      #a8c5ec;
+
+    /* ---- 边框 / 分割 ---- */
+    --th-border:          rgba(148, 163, 184, 0.12);
+    --th-border-strong:   rgba(148, 163, 184, 0.22);
+
+    /* ---- 阴影 ---- */
+    --th-shadow-card:     0 2px 4px rgba(0, 0, 0, 0.20), 0 8px 24px rgba(0, 0, 0, 0.40);
+    --th-shadow-hover:    0 4px 8px rgba(0, 0, 0, 0.30), 0 16px 40px rgba(94, 234, 212, 0.08),
+                          0 0 0 1px rgba(129, 140, 248, 0.18);
+
+    /* ---- 圆角 ---- */
+    --th-radius:          12px;
+    --th-radius-sm:       6px;
+    --th-radius-pill:     999px;
 }
 
-/* ---------- 全站底色 ---------- */
-/* 渐变挂在 html 上并以视口为基准 fixed（100vw×100vh），body 透明。
-   避免「body 渐变 fixed + html 纯色」在长页/短页切换时出现颜色断层割裂。
-   同时释放 main.css 的 `html, body { height: 100% }`，让 html 可随内容延展。 */
+/* ---------- 全站底色 ----------
+   渐变挂在 html 上 + scroll attachment + height:auto 让背景随文档延展。
+   避免「body 渐变 fixed + html 纯色」在长页/短页切换出现颜色断层。 */
 html[data-theme="tech-dark"],
 html[data-theme="tech-dark"] body {
     height: auto !important;
     min-height: 100vh !important;
 }
 html[data-theme="tech-dark"] {
-    background-color: #0a0e1a !important;
-    background-image: radial-gradient(ellipse at top, #111a2e 0%, #0a0e1a 60%) !important;
+    background-color: var(--th-bg) !important;
+    background-image:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(94, 234, 212, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(244, 114, 182, 0.05) 0%, transparent 50%),
+        linear-gradient(180deg, var(--th-bg-grad-from) 0%, var(--th-bg-grad-to) 60%) !important;
     background-attachment: scroll !important;
     background-repeat: no-repeat !important;
     background-size: 100% 100% !important;
@@ -39,73 +71,162 @@ html[data-theme="tech-dark"] {
 html[data-theme="tech-dark"] body {
     background: transparent !important;
     color: var(--th-fg) !important;
+    /* 深底笔画过细会闪烁、过宽字距会让眼睛追字累，
+       这里把字距收紧到 0、字重 400→正文 segment 用 weight:420 不到，靠平台字体粗体调度，
+       浏览器在 macOS 会自动启用 antialiased 笔画。 */
+    font-size: 15px;
+    line-height: 1.78;
+    letter-spacing: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* ---------- 站点标题 ---------- */
+/* ---------- 站点标题：渐变文字 + 克制发光 ---------- */
 html[data-theme="tech-dark"] .site-title,
 html[data-theme="tech-dark"] .site-subtitle {
-    color: var(--th-accent-2) !important;
-    text-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+    background: var(--th-grad-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent !important;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+html[data-theme="tech-dark"] .site-subtitle {
+    font-weight: 500;
+    opacity: 0.85;
 }
 
-/* ---------- 主容器 / 卡片 ---------- */
+/* ---------- 主容器 / 文章卡片：玻璃拟态（无可见 border，靠阴影定义卡片）---------- */
 html[data-theme="tech-dark"] .main-inner,
 html[data-theme="tech-dark"] .header-inner {
     background: transparent !important;
 }
 html[data-theme="tech-dark"] .post-block,
 html[data-theme="tech-dark"] .posts-expand .post {
-    background: var(--th-bg-card) !important;
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--th-border);
-    border-radius: 8px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(34, 211, 238, 0.08);
+    background: var(--th-bg-elev-1) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    backdrop-filter: blur(20px) saturate(140%);
+    border: none !important;
+    border-radius: var(--th-radius);
+    /* 用 box-shadow 的 0 0 0 1px 内描边代替 border，色彩极淡，融入背景，
+       同时保留两层柔阴影定义"漂浮在深空中"的层级感 */
+    box-shadow:
+        0 0 0 1px rgba(148, 163, 184, 0.06),
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        0 12px 32px rgba(0, 0, 0, 0.35);
+    padding: 28px 32px;
+    transition: transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s;
+}
+html[data-theme="tech-dark"] .post-block:hover,
+html[data-theme="tech-dark"] .posts-expand .post:hover {
+    transform: translateY(-2px);
+    /* hover 时极淡内描边换成更靠近极光色调，营造"被点亮"的反馈 */
+    box-shadow:
+        0 0 0 1px rgba(129, 140, 248, 0.18),
+        0 4px 8px rgba(0, 0, 0, 0.30),
+        0 20px 48px rgba(94, 234, 212, 0.10);
 }
 
-/* ---------- 文章标题 ---------- */
+/* ---------- 文章标题：白色 + hover 极光下划线 ---------- */
 html[data-theme="tech-dark"] .posts-expand .post-title,
 html[data-theme="tech-dark"] .posts-expand .post-title-link {
     color: var(--th-fg) !important;
+    font-weight: 600;
+    letter-spacing: -0.01em;
 }
-html[data-theme="tech-dark"] .posts-expand .post-title-link:hover,
-html[data-theme="tech-dark"] .posts-expand .post-title-link:hover::before {
+html[data-theme="tech-dark"] .posts-expand .post-title-link:hover {
     color: var(--th-accent) !important;
-    background-color: var(--th-accent) !important;
+}
+html[data-theme="tech-dark"] .posts-expand .post-title-link::before {
+    background: var(--th-grad-brand) !important;
+    height: 2px !important;
 }
 
-/* ---------- 链接 ---------- */
+/* ---------- 链接：默认不发光，hover 才出现下划线动效 ---------- */
 html[data-theme="tech-dark"] a {
     color: var(--th-link) !important;
+    text-decoration: none;
+    transition: color .15s;
 }
 html[data-theme="tech-dark"] a:hover {
     color: var(--th-link-hover) !important;
-    text-shadow: 0 0 8px rgba(103, 232, 249, 0.6);
 }
 
-/* ---------- 正文 ---------- */
+/* ---------- 正文（采用 --th-fg-body：比标题更暗，避免长时间阅读的眩光疲劳）---------- */
 html[data-theme="tech-dark"] .posts-expand .post-body,
 html[data-theme="tech-dark"] .posts-expand .post-body p {
-    color: #cbd5e1 !important;
+    color: var(--th-fg-body) !important;
+    font-size: 15.5px;
+    line-height: 1.78;
+    letter-spacing: 0;
 }
 html[data-theme="tech-dark"] .posts-expand .post-body h1,
 html[data-theme="tech-dark"] .posts-expand .post-body h2,
 html[data-theme="tech-dark"] .posts-expand .post-body h3,
 html[data-theme="tech-dark"] .posts-expand .post-body h4 {
-    color: var(--th-accent-2) !important;
-    border-bottom-color: var(--th-border) !important;
+    color: var(--th-fg) !important;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border-bottom: 1px solid var(--th-border) !important;
+    padding-bottom: 8px;
 }
-html[data-theme="tech-dark"] .posts-expand .post-body code,
+html[data-theme="tech-dark"] .posts-expand .post-body h2 {
+    /* 二级标题左侧加 3px 极光色条，作为内容分节锚点 */
+    border-left: 3px solid var(--th-accent);
+    padding-left: 12px;
+    border-bottom: none !important;
+}
+/* 段落首字符在大段文字中提供呼吸感（含中文段间距） */
+html[data-theme="tech-dark"] .posts-expand .post-body p {
+    margin: 0 0 1.1em 0;
+}
+/* 强调文字（strong/b）在深底容易"溢出"，用主色避免过亮 */
+html[data-theme="tech-dark"] .posts-expand .post-body strong,
+html[data-theme="tech-dark"] .posts-expand .post-body b {
+    color: var(--th-fg) !important;
+    font-weight: 600;
+}
+
+/* ---------- 代码 / 代码块 ---------- */
+html[data-theme="tech-dark"] .posts-expand .post-body code {
+    background: var(--th-bg-code) !important;
+    color: #5eead4 !important;
+    border: 1px solid var(--th-border);
+    border-radius: var(--th-radius-sm);
+    padding: 1px 8px;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 0.92em;
+}
 html[data-theme="tech-dark"] .posts-expand .post-body pre {
-    background: #0f172a !important;
+    background: var(--th-bg-code) !important;
     color: #e0f2fe !important;
     border: 1px solid var(--th-border);
+    border-radius: var(--th-radius-sm);
+    border-left: 3px solid var(--th-accent-2);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+html[data-theme="tech-dark"] .posts-expand .post-body pre code {
+    background: transparent !important;
+    border: none;
+    padding: 0;
+}
+
+/* ---------- 引用 ---------- */
+html[data-theme="tech-dark"] .posts-expand .post-body blockquote {
+    background: rgba(94, 234, 212, 0.04);
+    border-left: 3px solid var(--th-accent) !important;
+    border-radius: 0 var(--th-radius-sm) var(--th-radius-sm) 0;
+    padding: 12px 18px;
+    color: var(--th-fg-muted) !important;
 }
 
 /* ---------- post-meta ---------- */
 html[data-theme="tech-dark"] .posts-expand .post-meta {
     color: var(--th-fg-muted) !important;
     border-bottom-color: var(--th-border) !important;
+    font-size: 13px;
+    letter-spacing: 0.02em;
 }
 html[data-theme="tech-dark"] .post-meta .post-meta-item-icon,
 html[data-theme="tech-dark"] .post-meta .post-meta-num {
@@ -115,14 +236,32 @@ html[data-theme="tech-dark"] .post-meta .post-meta-num {
 /* ---------- 标签 ---------- */
 html[data-theme="tech-dark"] .posts-expand .post-tags a {
     color: var(--th-accent-2) !important;
+    background: rgba(129, 140, 248, 0.08);
+    border: 1px solid rgba(129, 140, 248, 0.18);
+    padding: 3px 12px;
+    border-radius: var(--th-radius-pill);
+    font-size: 12px;
+    margin-right: 6px;
+    transition: all .2s;
 }
 html[data-theme="tech-dark"] .posts-expand .post-tags a:hover {
-    color: var(--th-accent) !important;
+    background: var(--th-accent-2) !important;
+    color: #fff !important;
+    border-color: var(--th-accent-2);
 }
 
-/* ---------- 侧边栏 ---------- */
+/* ---------- 侧边栏：玻璃面板（无可见 border） ---------- */
 html[data-theme="tech-dark"] .sidebar {
     background: var(--th-bg-sidebar) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    backdrop-filter: blur(20px) saturate(140%);
+    border: none !important;
+    border-radius: var(--th-radius);
+    box-shadow:
+        0 0 0 1px rgba(148, 163, 184, 0.06),
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        0 12px 32px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
 }
 html[data-theme="tech-dark"] .sidebar,
 html[data-theme="tech-dark"] .sidebar p,
@@ -139,56 +278,78 @@ html[data-theme="tech-dark"] .site-author-name,
 html[data-theme="tech-dark"] .site-description {
     color: var(--th-fg) !important;
 }
+/* sidebar 内各 widget 分隔 */
+html[data-theme="tech-dark"] .sidebar .sidebar-panel + .sidebar-panel,
+html[data-theme="tech-dark"] .sidebar .widget + .widget {
+    border-top: 1px solid var(--th-border);
+    margin-top: 16px;
+    padding-top: 16px;
+}
 
 /* ---------- 标签云 ---------- */
 html[data-theme="tech-dark"] .tagcloud a,
 html[data-theme="tech-dark"] .links-of-blogroll-item a {
     color: var(--th-accent-2) !important;
-    background: rgba(30, 41, 59, 0.6);
-    padding: 2px 8px;
-    border-radius: 12px;
-    margin: 2px;
+    background: rgba(129, 140, 248, 0.10);
+    border: 1px solid rgba(129, 140, 248, 0.20);
+    padding: 3px 10px;
+    border-radius: var(--th-radius-pill);
+    margin: 3px;
+    font-size: 12.5px;
     transition: all .2s;
+    display: inline-block;
 }
 html[data-theme="tech-dark"] .tagcloud a:hover {
-    background: var(--th-accent) !important;
-    color: #0a0e1a !important;
-    box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+    background: var(--th-grad-brand) !important;
+    color: #fff !important;
+    border-color: transparent;
+    transform: translateY(-1px);
 }
 
-/* ---------- 按钮 ---------- */
+/* ---------- 按钮：渐变填充 + 微动效 ---------- */
 html[data-theme="tech-dark"] .btn {
-    background: var(--th-accent) !important;
-    border-color: var(--th-accent) !important;
-    color: #0a0e1a !important;
+    background: var(--th-grad-brand) !important;
+    background-size: 200% 100% !important;
+    border: none !important;
+    color: #ffffff !important;
     font-weight: 600;
-    border-radius: 6px;
-    transition: all .2s;
+    border-radius: var(--th-radius-sm) !important;
+    padding: 8px 22px !important;
+    box-shadow: 0 4px 14px rgba(129, 140, 248, 0.30);
+    transition: all .25s cubic-bezier(.4,0,.2,1);
 }
 html[data-theme="tech-dark"] .btn:hover {
-    background: var(--th-link-hover) !important;
-    box-shadow: 0 0 16px rgba(34, 211, 238, 0.5);
+    background-position: 100% 0 !important;
+    box-shadow: 0 8px 24px rgba(94, 234, 212, 0.35), 0 0 0 1px rgba(129, 140, 248, 0.3);
+    transform: translateY(-1px);
+}
+html[data-theme="tech-dark"] .btn:active {
+    transform: translateY(0) scale(0.98);
 }
 
 /* ---------- 菜单 / nav ---------- */
 html[data-theme="tech-dark"] .menu-item a,
 html[data-theme="tech-dark"] .post-nav-item a {
     color: var(--th-fg) !important;
+    transition: color .2s;
 }
 html[data-theme="tech-dark"] .menu-item a:hover {
     color: var(--th-accent) !important;
 }
 
-/* ---------- 分隔线 / 边框 ---------- */
+/* ---------- 分隔线 ---------- */
 html[data-theme="tech-dark"] .posts-expand .post-eof {
-    background: linear-gradient(90deg, transparent, var(--th-accent), transparent) !important;
+    background: linear-gradient(90deg, transparent, var(--th-accent-2) 50%, transparent) !important;
     opacity: 0.4;
+    height: 1px !important;
 }
 html[data-theme="tech-dark"] hr {
-    border-color: var(--th-border) !important;
+    border: none;
+    height: 1px;
+    background: var(--th-border) !important;
 }
 
-/* ---------- 评论区 ---------- */
+/* ---------- 评论区 / 表单 ---------- */
 html[data-theme="tech-dark"] #comments,
 html[data-theme="tech-dark"] .comment-list,
 html[data-theme="tech-dark"] .review-form {
@@ -196,13 +357,59 @@ html[data-theme="tech-dark"] .review-form {
 }
 html[data-theme="tech-dark"] input[type="text"],
 html[data-theme="tech-dark"] textarea {
-    background: #0f172a !important;
+    background: var(--th-bg-code) !important;
     border: 1px solid var(--th-border) !important;
+    border-radius: var(--th-radius-sm) !important;
     color: var(--th-fg) !important;
+    padding: 8px 12px;
+    transition: border-color .15s, box-shadow .15s;
+}
+html[data-theme="tech-dark"] input[type="text"]:focus,
+html[data-theme="tech-dark"] textarea:focus {
+    border-color: var(--th-accent) !important;
+    box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.12);
+    outline: none;
 }
 
 /* ---------- footer ---------- */
 html[data-theme="tech-dark"] .footer,
 html[data-theme="tech-dark"] .footer-inner {
     color: var(--th-fg-muted) !important;
+}
+html[data-theme="tech-dark"] .footer a {
+    color: var(--th-fg-muted) !important;
+}
+html[data-theme="tech-dark"] .footer a:hover {
+    color: var(--th-accent-2) !important;
+}
+
+/* ---------- 搜索框：覆写 blog-extra.css 的 token，与玻璃拟态视觉一致 ---------- */
+html[data-theme="tech-dark"] {
+    --search-bg:           rgba(15, 22, 40, 0.55);
+    --search-bg-focus:     rgba(15, 22, 40, 0.85);
+    --search-border:       rgba(148, 163, 184, 0.18);
+    --search-border-focus: var(--th-accent);
+    --search-fg:           var(--th-fg);
+    --search-placeholder:  var(--th-fg-muted);
+    --search-icon:         var(--th-fg-muted);
+    --search-icon-hover:   var(--th-accent);
+    --search-focus-ring:   rgba(94, 234, 212, 0.18);
+}
+/* tech-dark 的 input[type=text] 全局深底规则会渗到搜索框，这里精准排除 */
+html[data-theme="tech-dark"] .site-search input.st-search-input,
+html[data-theme="tech-dark"] .site-search input[type="text"].st-search-input {
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
+    background: var(--search-bg) !important;
+    border-color: var(--search-border) !important;
+    color: var(--search-fg) !important;
+}
+
+/* ---------- 移动端：收紧卡片内边距 ---------- */
+@media (max-width: 767px) {
+    html[data-theme="tech-dark"] .post-block,
+    html[data-theme="tech-dark"] .posts-expand .post {
+        padding: 18px 16px;
+        border-radius: 10px;
+    }
 }
