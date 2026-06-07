@@ -231,6 +231,22 @@
     /*<![CDATA[*/
     var __ctx = /*[[@{/}]]*/ '/';
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+
+    // ------------------------------------------------------------
+    // 自包含 mini Api：picker 作为独立 iframe 不能依赖父页面 js-footer
+    // 注入的 window.Api（它在父 window 不在 iframe window，引用会 ReferenceError）。
+    // 这里复刻 isOk/data/msg 三个最小方法，契约与父页面 Api 完全一致：
+    //   - 成功 code = '00000'（与后端 ResultCodeEnum.SUCCESS 对齐）
+    // ------------------------------------------------------------
+    var Api = {
+        CODE_SUCCESS: '00000',
+        isOk: function (res) { return !!res && res.code === '00000'; },
+        data: function (res) { return res && res.data; },
+        msg:  function (res, fallback) {
+            if (res && typeof res.message === 'string' && res.message.length > 0) return res.message;
+            return fallback || '';
+        }
+    };
     /*]]>*/
 
     /**

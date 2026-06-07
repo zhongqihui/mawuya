@@ -405,6 +405,11 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
     box-sizing: border-box;
 }
 .post-body img {
+    /*
+     * 此处仅保留最基础的兜底（max-width / height:auto）。
+     * 真正的"对齐首页 16:9 cover 卡片化"样式在 blog-extra.css 第 1 段统一管理，
+     * 那里用更高优先级选择器 + !important 覆盖 editormd 自带规则。
+     */
     max-width: 100%;
     height: auto;
 }

@@ -82,7 +82,6 @@
     var __amsSiteUrl = /*[[${amsSiteUrl}]]*/ 'http://localhost:8080';
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
     var __libPath = /*[[@{/statics/plugins/editor.md/lib/}]]*/ '/statics/plugins/editor.md/lib/';
-    var __imgUploadUrl = /*[[@{/bms/api/article/editor/img-upload}]]*/ '/bms/api/article/editor/img-upload';
     /*]]>*/
 
     $(function () {
@@ -97,15 +96,20 @@
             codeFold: true,
             syncScrolling: "single",
             path: __libPath,
-            imageUpload: true,
+            // 关闭 editormd 自带的"本地上传 → 后端落 DB"。
+            // 我们要的是"从资源库选择"：保留 image 工具按钮的可见性，
+            // 在 onload 钩子里拦截它的 click，弹出 /bms/image/picker.do 走资源库。
+            imageUpload: false,
             imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
-            imageUploadURL: __imgUploadUrl,
             emoji: true,
             taskList: true,
             tocm: true,
             tex: true,
             flowChart: true,
-            sequenceDiagram: true
+            sequenceDiagram: true,
+            onload: function () {
+                bindImageLibraryPicker(this);
+            }
         });
 
         $("#mod_blog_btn").click(function () {
@@ -164,6 +168,157 @@
             return;
         }
         $tab.load(_u('/bms/article/list.do'));
+    }
+
+    // ================================================================
+    // editormd 「添加图片」按钮 → 从资源库选择 适配层
+    // ----------------------------------------------------------------
+    // 与 write_article.html 共用一套实现，详情见 write_article.html 同名注释。
+    // 之所以不抽 .js 公共文件：本系统并无 bms 端的统一 js 入口，
+    // 两个模板复用同份代码、便于阅读 + Thymeleaf 改造时本地可见。
+    // ================================================================
+    // ================================================================
+    // editormd 「添加图片」按钮 → 从资源库选择 适配层
+    // 详细注释见 write_article.html 同名函数。核心策略：
+    //   - 全局 click 捕获：拦 .fa-picture-o 或 a[name="image"]
+    //   - MutationObserver 兜底：监听 editormd dialog 被 append 即移除并补弹 picker
+    //   - 通过 textContent 含 "添加图片" 二次确认是图片对话框
+    // ================================================================
+    var __currentEditor = null;
+    function bindImageLibraryPicker(editor) {
+        __currentEditor = editor;
+        if (window._libPickerBound) return;
+        window._libPickerBound = true;
+
+        document.addEventListener('click', function (e) {
+            var t = e.target;
+            while (t && t !== document) {
+                if (t.nodeType === 1 && t.classList && t.classList.contains('fa-picture-o')) {
+                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                    if (__currentEditor) openImagePicker(__currentEditor);
+                    return false;
+                }
+                if (t.tagName === 'A' && t.getAttribute && t.getAttribute('name') === 'image') {
+                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                    if (__currentEditor) openImagePicker(__currentEditor);
+                    return false;
+                }
+                t = t.parentNode;
+            }
+        }, true /* useCapture */);
+
+        try {
+            var lastIntercept = 0;
+            var mo = new MutationObserver(function (records) {
+                for (var i = 0; i < records.length; i++) {
+                    var added = records[i].addedNodes;
+                    for (var j = 0; j < added.length; j++) {
+                        var n = added[j];
+                        if (n.nodeType !== 1) continue;
+                        var dlg = matchImageDialog(n);
+                        if (!dlg) continue;
+                        var now = Date.now();
+                        if (now - lastIntercept < 500) {
+                            removeDialogTree(dlg);
+                            continue;
+                        }
+                        lastIntercept = now;
+                        removeDialogTree(dlg);
+                        if (__currentEditor) openImagePicker(__currentEditor);
+                    }
+                }
+            });
+            mo.observe(document.body, {childList: true, subtree: true});
+        } catch (e) { /* ignore */ }
+    }
+
+    function matchImageDialog(n) {
+        if (isImageDialog(n)) return n;
+        if (n.querySelector) {
+            var c = n.querySelector('.editormd-dialog-image, .editormd-dialog');
+            if (c && isImageDialog(c)) return c;
+            var all = n.querySelectorAll && n.querySelectorAll('div, span, h1, h2, h3, header');
+            if (all) {
+                for (var i = 0; i < all.length; i++) {
+                    if ((all[i].textContent || '').indexOf('添加图片') >= 0) {
+                        var p = all[i];
+                        while (p && p !== document.body) {
+                            if (p.className && /editormd-dialog|dialog|modal|popup/.test(p.className)) {
+                                return p;
+                            }
+                            p = p.parentNode;
+                        }
+                        return all[i].closest ? (all[i].closest('div') || all[i]) : all[i];
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    function isImageDialog(el) {
+        if (!el || el.nodeType !== 1 || !el.className) return false;
+        var cls = String(el.className);
+        if (/editormd-dialog-image/.test(cls)) return true;
+        if (/editormd-dialog/.test(cls)) {
+            var txt = el.textContent || '';
+            if (txt.indexOf('添加图片') >= 0 || /add\s*image/i.test(txt)) return true;
+        }
+        return false;
+    }
+    function removeDialogTree(dlg) {
+        if (!dlg) return;
+        try {
+            var masks = document.querySelectorAll('.editormd-mask, .editormd-dialog-mask');
+            for (var i = 0; i < masks.length; i++) {
+                if (masks[i].parentNode) masks[i].parentNode.removeChild(masks[i]);
+            }
+        } catch (e) { /* ignore */ }
+        if (dlg.parentNode) dlg.parentNode.removeChild(dlg);
+    }
+
+    function openImagePicker(editor) {
+        var isMobile = window.innerWidth <= 600;
+        var iw = Math.min(window.innerWidth - 40, 1100);
+        var ih = Math.min(window.innerHeight - 40, 720);
+        var areaW = isMobile ? '100%' : iw + 'px';
+        var areaH = isMobile ? '100%' : ih + 'px';
+
+        var pickerLayer = layer.open({
+            type: 2,
+            title: '从图片库选择',
+            skin: 'layui-layer-lan',
+            shadeClose: false,
+            maxmin: !isMobile,
+            area: [areaW, areaH],
+            content: _u('/bms/image/picker.do')
+        });
+
+        window.__onImagePicked = function (item) {
+            if (!item || !item.url) {
+                layer.msg('选择失败', {icon: 2});
+                return;
+            }
+            var alt = (item.name || '图片').replace(/\]/g, '\\]');
+            var url = String(item.url).replace(/\)/g, '%29');
+            var md = '![' + alt + '](' + url + ')\n';
+            editor.insertValue(md);
+            layer.close(pickerLayer);
+            layer.msg('已插入图片', {icon: 1, time: 800});
+        };
+        window.__onImagePickerCancel = function () {
+            layer.close(pickerLayer);
+        };
+        window.__onImagePickerGotoLibrary = function () {
+            layer.close(pickerLayer);
+            var $libLink = $('.link-li').filter(function () {
+                return ($(this).attr('link-url') || '').indexOf('/bms/image/library.do') >= 0;
+            });
+            if ($libLink.length) {
+                $libLink.trigger('click');
+            } else {
+                layer.msg('未找到图片库菜单，请联系管理员', {icon: 7});
+            }
+        };
     }
 </script>
 </body>

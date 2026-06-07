@@ -58,6 +58,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
             // 禁用 CSRF：form-login 不依赖 token；JWT 接口本身在 header
             .csrf().disable()
+            // X-Frame-Options：Spring Security 默认 DENY 会阻止"同源 iframe 弹层"
+            // （如 /bms/image/picker.do 被 layer.open type:2 加载到 iframe）。
+            // 改为 SAMEORIGIN：同源 iframe 放行、跨源仍阻止，安全与可用性兼顾。
+            .headers().frameOptions().sameOrigin()
+            .and()
             // 接口统一 JSON 响应：未登录的 API 路径返回 401 + BaseResponse，而不是重定向到登录页
             .exceptionHandling()
                 .defaultAuthenticationEntryPointFor(

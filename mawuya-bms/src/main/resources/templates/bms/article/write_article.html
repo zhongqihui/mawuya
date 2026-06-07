@@ -77,7 +77,6 @@
     var __amsSiteUrl = /*[[${amsSiteUrl}]]*/ 'http://localhost:8080';
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
     var __libPath = /*[[@{/statics/plugins/editor.md/lib/}]]*/ '/statics/plugins/editor.md/lib/';
-    var __imgUploadUrl = /*[[@{/bms/api/article/editor/img-upload}]]*/ '/bms/api/article/editor/img-upload';
     /*]]>*/
 
     $(function () {
@@ -92,15 +91,21 @@
             codeFold: true,
             syncScrolling: "single",
             path: __libPath,
-            imageUpload: true,
+            // 关闭 editormd 自带的"本地上传 → 后端落 DB"。
+            // 我们要的是"从资源库选择"：保留 image 工具按钮的可见性，
+            // 在 onload 钩子里拦截它的 click，弹出 /bms/image/picker.do 走资源库。
+            imageUpload: false,
             imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
-            imageUploadURL: __imgUploadUrl,
             emoji: true,
             taskList: true,
             tocm: true,
             tex: true,
             flowChart: true,
-            sequenceDiagram: true
+            sequenceDiagram: true,
+            // editormd 工具栏渲染完成后才能拿到 image 按钮 DOM，必须在 onload 里拦截
+            onload: function () {
+                bindImageLibraryPicker(this);
+            }
         });
 
         $("#publish_blog").click(function () {
@@ -159,6 +164,188 @@
             return;
         }
         $tab.load(_u('/bms/article/list.do'));
+    }
+
+    // ================================================================
+    // editormd 「添加图片」按钮 → 从资源库选择 适配层
+    // ----------------------------------------------------------------
+    // 多次踩坑后的最终策略：editormd 1.5.x 的 dialog 不一定带 `editormd-dialog-image`
+    // 标志类，按钮的 `name` attribute 也不一定是 "image" —— 不同版本/构建产物差异巨大。
+    //
+    // 因此放弃从"按钮"侧拦截，改从"对话框出现"侧拦截：
+    //   1) 用 MutationObserver 全局监听 body 子树新增节点
+    //   2) 凡是命中以下任一特征，认为是 editormd 的"添加图片"对话框：
+    //        a. class 含 editormd-dialog（editormd 所有弹窗的统一前缀）
+    //        b. 内部文本含 "添加图片" / "Add Image"
+    //        c. 含 <input> 且 placeholder/label 暗示图片地址
+    //   3) 找到后立刻 remove，并改弹我们的图片库 picker
+    //   4) 选中后 editor.insertValue("![alt](url)\n") 写入光标
+    //
+    // 同时绑了一道全局 click 捕获拦截 + .fa-picture-o 检测，作为更早一层的拦截，
+    // 大概率能在对话框还没渲染时就 short-circuit。
+    // ================================================================
+    var __currentEditor = null;
+    function bindImageLibraryPicker(editor) {
+        __currentEditor = editor;
+        if (window._libPickerBound) return;
+        window._libPickerBound = true;
+
+        // ----------- 第一道防线：全局 click 捕获 -----------
+        // 点击事件命中 .fa-picture-o（图片按钮图标）或 a[name="image"] 时拦截
+        document.addEventListener('click', function (e) {
+            var t = e.target;
+            while (t && t !== document) {
+                if (t.nodeType === 1 && t.classList && t.classList.contains('fa-picture-o')) {
+                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                    if (__currentEditor) openImagePicker(__currentEditor);
+                    return false;
+                }
+                if (t.tagName === 'A' && t.getAttribute && t.getAttribute('name') === 'image') {
+                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                    if (__currentEditor) openImagePicker(__currentEditor);
+                    return false;
+                }
+                t = t.parentNode;
+            }
+        }, true /* useCapture：先于 jQuery 委托 */);
+
+        // ----------- 第二道防线：监听 editormd dialog 被渲染 -----------
+        // editormd 所有弹窗都用 `.editormd-dialog` 类前缀；
+        // 内部标题中文版含"添加图片"、英文版含"Image"。
+        try {
+            var lastIntercept = 0;
+            var mo = new MutationObserver(function (records) {
+                for (var i = 0; i < records.length; i++) {
+                    var added = records[i].addedNodes;
+                    for (var j = 0; j < added.length; j++) {
+                        var n = added[j];
+                        if (n.nodeType !== 1) continue;
+
+                        var dlg = matchImageDialog(n);
+                        if (!dlg) continue;
+
+                        // 防抖：editormd 内部短时间内可能 append 多个节点（dialog + mask），
+                        // 只触发一次 picker
+                        var now = Date.now();
+                        if (now - lastIntercept < 500) {
+                            // 还在抑制窗口，仅清理 dialog 节点不再弹 picker
+                            removeDialogTree(dlg);
+                            continue;
+                        }
+                        lastIntercept = now;
+                        removeDialogTree(dlg);
+                        if (__currentEditor) openImagePicker(__currentEditor);
+                    }
+                }
+            });
+            mo.observe(document.body, {childList: true, subtree: true});
+        } catch (e) { /* 老浏览器无 MutationObserver，忽略 */ }
+    }
+
+    /** 判断一个新加入的 DOM 节点是不是 editormd 的"添加图片"对话框，返回对话框根节点 or null */
+    function matchImageDialog(n) {
+        // 自身命中
+        if (isImageDialog(n)) return n;
+        // 子树命中
+        if (n.querySelector) {
+            // 优先按 class 命中
+            var c = n.querySelector('.editormd-dialog-image, .editormd-dialog');
+            if (c && isImageDialog(c)) return c;
+            // 兜底：按标题文本命中"添加图片"
+            var all = n.querySelectorAll && n.querySelectorAll('div, span, h1, h2, h3, header');
+            if (all) {
+                for (var i = 0; i < all.length; i++) {
+                    if ((all[i].textContent || '').indexOf('添加图片') >= 0) {
+                        // 向上找最近的 dialog 根
+                        var p = all[i];
+                        while (p && p !== document.body) {
+                            if (p.className && /editormd-dialog|dialog|modal|popup/.test(p.className)) {
+                                return p;
+                            }
+                            p = p.parentNode;
+                        }
+                        // 找不到 dialog 根，就把含这个标题的最外层节点作为目标
+                        return all[i].closest ? (all[i].closest('div') || all[i]) : all[i];
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    function isImageDialog(el) {
+        if (!el || el.nodeType !== 1 || !el.className) return false;
+        var cls = String(el.className);
+        if (/editormd-dialog-image/.test(cls)) return true;
+        // editormd-dialog 通用类，需要再用文本特征二次确认是图片对话框
+        if (/editormd-dialog/.test(cls)) {
+            var txt = el.textContent || '';
+            if (txt.indexOf('添加图片') >= 0 || /add\s*image/i.test(txt)) return true;
+        }
+        return false;
+    }
+
+    function removeDialogTree(dlg) {
+        if (!dlg) return;
+        // editormd dialog 通常配套有遮罩层 .editormd-mask，一并清理
+        try {
+            var masks = document.querySelectorAll('.editormd-mask, .editormd-dialog-mask');
+            for (var i = 0; i < masks.length; i++) {
+                if (masks[i].parentNode) masks[i].parentNode.removeChild(masks[i]);
+            }
+        } catch (e) { /* ignore */ }
+        if (dlg.parentNode) dlg.parentNode.removeChild(dlg);
+    }
+
+    function openImagePicker(editor) {
+        // 弹窗尺寸：移动端铺满，桌面端最大 1100×720 但不超出视口
+        var isMobile = window.innerWidth <= 600;
+        var iw = Math.min(window.innerWidth - 40, 1100);
+        var ih = Math.min(window.innerHeight - 40, 720);
+        var areaW = isMobile ? '100%' : iw + 'px';
+        var areaH = isMobile ? '100%' : ih + 'px';
+
+        var pickerLayer = layer.open({
+            type: 2,
+            title: '从图片库选择',
+            skin: 'layui-layer-lan',
+            shadeClose: false,
+            maxmin: !isMobile,
+            area: [areaW, areaH],
+            content: _u('/bms/image/picker.do')
+        });
+
+        // picker iframe 内调 parent.__onImagePicked(item) 回调
+        window.__onImagePicked = function (item) {
+            if (!item || !item.url) {
+                layer.msg('选择失败', {icon: 2});
+                return;
+            }
+            // 生成 markdown 图片语法，使用 file_name 作为 alt（兜底"图片"）
+            // 注意把 alt 与 url 内可能的 ] / ) 做转义，避免破坏 markdown 语法
+            var alt = (item.name || '图片').replace(/\]/g, '\\]');
+            var url = String(item.url).replace(/\)/g, '%29');
+            var md = '![' + alt + '](' + url + ')\n';
+            // editormd 公开 API：在光标位置插入文本并保留焦点
+            editor.insertValue(md);
+            layer.close(pickerLayer);
+            layer.msg('已插入图片', {icon: 1, time: 800});
+        };
+        window.__onImagePickerCancel = function () {
+            layer.close(pickerLayer);
+        };
+        window.__onImagePickerGotoLibrary = function () {
+            layer.close(pickerLayer);
+            // 文章编辑页跳出到图片库 tab（沿用 article_list 同款 link-li click 路径）
+            var $libLink = $('.link-li').filter(function () {
+                return ($(this).attr('link-url') || '').indexOf('/bms/image/library.do') >= 0;
+            });
+            if ($libLink.length) {
+                $libLink.trigger('click');
+            } else {
+                layer.msg('未找到图片库菜单，请联系管理员', {icon: 7});
+            }
+        };
     }
 </script>
 

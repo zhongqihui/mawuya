@@ -139,7 +139,7 @@ services:
       MYSQL_DATABASE: "${MYSQL_DATABASE:-blog}"
       MYSQL_USER: "${MYSQL_USER:-mawuya}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD:-ChangeMe_App_2026}"
-    command: ["--character-set-server=utf8mb4","--collation-server=utf8mb4_unicode_ci"]
+    command: ["--character-set-server=utf8mb4","--collation-server=utf8mb4_unicode_ci","--max-allowed-packet=67108864"]
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:

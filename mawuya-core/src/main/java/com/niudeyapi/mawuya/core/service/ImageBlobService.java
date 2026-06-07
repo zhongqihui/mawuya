@@ -8,7 +8,10 @@ import com.niudeyapi.mawuya.core.dataobject.ImageDO;
 import com.niudeyapi.mawuya.core.enums.ResultCodeEnum;
 import com.niudeyapi.mawuya.core.exception.BusinessException;
 import com.niudeyapi.mawuya.core.mapper.ImageBlobMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
@@ -23,6 +26,8 @@ import java.util.List;
  */
 @Service
 public class ImageBlobService {
+
+    private static final Logger log = LoggerFactory.getLogger(ImageBlobService.class);
 
     /** SHA-256 算法名 */
     private static final String SHA_256 = "SHA-256";
@@ -65,8 +70,39 @@ public class ImageBlobService {
                 .setData(data)
                 .setSha256(sha)
                 .setSourceUrl(sourceUrl == null ? null : truncate(sourceUrl, MAX_SOURCE_URL));
-        imageBlobMapper.insert(entity);
+        try {
+            imageBlobMapper.insert(entity);
+        } catch (TransientDataAccessResourceException e) {
+            // 典型场景：单条 INSERT 包大小 > MySQL 服务端 max_allowed_packet（默认仅 4MB）
+            // 翻译成业务级 4xx，避免直接给前端 500，并在日志里给出排查指引
+            if (isPacketTooBig(e)) {
+                log.warn("[image-blob] insert failed: PacketTooBig, byteSize={}B (~{}KB). " +
+                        "Server max_allowed_packet 太小，请在 MySQL 配置 my.cnf 设置 " +
+                        "[mysqld] max_allowed_packet=64M 后重启容器；或临时执行 " +
+                        "SET GLOBAL max_allowed_packet=67108864（仅作用于新连接）。",
+                        data.length, data.length / 1024);
+                throw new BusinessException(ResultCodeEnum.UPLOAD_TOO_LARGE,
+                        "图片过大（" + (data.length / 1024 / 1024) + "MB），数据库 max_allowed_packet 限制不足，" +
+                        "请联系管理员调大该参数或压缩图片后重试");
+            }
+            throw e;
+        }
         return entity.getSn();
+    }
+
+    /** 递归判断异常链里是否含 PacketTooBigException（不直接 import 以避免 core 模块强依赖 mysql 驱动类）。 */
+    private static boolean isPacketTooBig(Throwable t) {
+        for (Throwable cur = t; cur != null; cur = cur.getCause()) {
+            String name = cur.getClass().getName();
+            if (name.endsWith("PacketTooBigException")) {
+                return true;
+            }
+            String msg = cur.getMessage();
+            if (msg != null && msg.contains("max_allowed_packet")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** 已存在的 sourceUrl 直接复用 sn（迁移用，避免重复下载/入库）。 */

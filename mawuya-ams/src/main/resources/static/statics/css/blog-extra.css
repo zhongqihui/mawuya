@@ -22,26 +22,71 @@
 
 /* ============================================================
  *  1. 文章图片增强
- *     - 全部图片：max-width / 阴影 / hover 反馈 / 缩放鼠标指针
- *     - 首页/列表卡片缩略图：固定 16:9，object-fit:cover 防 CLS
+ *
+ *  设计目标：与首页文章卡片缩略图（.post-thumb-fixed）对齐——
+ *  统一 16:9 cover 裁切，无论 markdown 里塞了什么尺寸/比例的图，
+ *  都能像首页一样呈现规整的"杂志式"宽屏图块，避免单张超高竖图
+ *  把正文挤成"一图一屏"。
+ *
+ *  实现关键：
+ *    1) aspect-ratio:16/9 + width:100% → 容器恒定 16:9
+ *    2) object-fit:cover → 原图自动按比例填满并裁切，不变形
+ *    3) max-height:520px → PC 端给个绝对上限，避免超宽屏时图块过大
+ *    4) cursor:zoom-in + lightbox 已绑定（show_article.html bindLightbox）
+ *       → 用户仍能点击看原图全貌，零信息损失
+ *    5) 卡片化样式：圆角 / 阴影 / hover 反馈 → 与首页缩略图视觉一致
+ *
+ *  注意：本段刻意 import 多个选择器并 !important，是为了覆盖
+ *  editormd.preview.min.css 自带的 .editormd-html-preview img 规则。
  * ============================================================ */
 .posts-expand .post-body img,
 .post-body img,
 .editormd-html-preview img,
 #articleContentDiv img {
+    /* —— 比例 & 填充：对齐首页 .post-thumb-fixed —— */
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    /* PC 端绝对上限：1080p 视口下不超过约 50% 高度 */
     max-width: 100%;
-    height: auto;
+    max-height: 520px;
+    /* —— 卡片化展示 —— */
     box-sizing: border-box;
-    border-radius: 4px;
+    border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
-    margin: 1em auto;
+    margin: 16px auto;
     display: block;
     cursor: zoom-in;
-    transition: box-shadow .2s;
+    transition: box-shadow .2s, transform .2s;
 }
 .post-body img:hover,
-.editormd-html-preview img:hover {
+.editormd-html-preview img:hover,
+#articleContentDiv img:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
+}
+
+/* 显式标 no-zoom 的图片（如 emoji / 装饰）保持默认光标 + 自然尺寸，不裁切 */
+.post-body img.no-zoom,
+.editormd-html-preview img.no-zoom,
+#articleContentDiv img.no-zoom {
+    width: auto !important;
+    aspect-ratio: auto;
+    object-fit: contain;
+    max-height: none;
+    cursor: default;
+    box-shadow: none;
+}
+
+/* 移动端：把图块比例略放方一些（4:3），同时收紧上限，避免 16:9 在窄屏上太矮看不清 */
+@media (max-width: 768px) {
+    .posts-expand .post-body img,
+    .post-body img,
+    .editormd-html-preview img,
+    #articleContentDiv img {
+        aspect-ratio: 4 / 3;
+        max-height: 50vh;
+    }
 }
 
 /* ============================================================
@@ -818,3 +863,36 @@ html.use-motion.is-motion-ready .sidebar     { animation-delay: 250ms; }
 }
 [data-theme="tech-dark"] .breadcrumb-item a { color: #aaa; }
 [data-theme="tech-dark"] .breadcrumb-item a:hover { color: #fff; }
+
+/* ===================================================================
+ * 文章正文末尾的版权声明（©著作权归作者所有）
+ *
+ * 设计：
+ *   - 右对齐：版权声明是辅助信息，符合中文阅读习惯放在正文右下角
+ *   - 字号缩小 (--fs-xs 约 12px)、灰色低对比：与正文主内容拉开权重
+ *   - 与上方正文留出适度间距，避免视觉粘连
+ *   - 链接当前指向 # 仅为占位，hover 时给个轻微强调反馈
+ * =================================================================== */
+.copyright-txt {
+    margin-top: 14px;
+    text-align: right;
+    font-size: var(--fs-xs);
+    color: #999;
+    line-height: 1.6;
+}
+.copyright-txt a {
+    color: #999;
+    text-decoration: none;
+}
+.copyright-txt a:hover {
+    color: #555;
+    text-decoration: underline;
+}
+.copyright-txt .fa-copyright {
+    margin-right: 4px;
+}
+
+/* 暗色主题适配：底色更深，灰阶相应调亮一档保持可读 */
+[data-theme="tech-dark"] .copyright-txt,
+[data-theme="tech-dark"] .copyright-txt a { color: #777; }
+[data-theme="tech-dark"] .copyright-txt a:hover { color: #bbb; }
