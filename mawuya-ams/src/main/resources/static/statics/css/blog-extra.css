@@ -44,6 +44,72 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
 }
 
+/* ============================================================
+ *  editormd 渲染容器 .editormd-html-preview 横向溢出修复
+ * ------------------------------------------------------------
+ *  editormd 自带 css 设了:
+ *    .editormd-html-preview { width: 100%; padding: 20px; overflow: auto; }
+ *  默认 box-sizing:content-box → 实际占宽 = 父级 + 40px，再叠 .post 卡片
+ *  padding 后必然横向溢出。移动端尤其明显：用户主诉"博客详情页展示不全"，
+ *  正文文字被卡片右沿生切（无 ellipsis、无换行）。
+ *
+ *  修复策略（!important 强制覆盖 editormd.css 自带规则）：
+ *    1) box-sizing:border-box → padding 计入 100% 内
+ *    2) padding:0 → editormd 默认 20px 多余且会导致溢出
+ *    3) width / max-width:100% → 兜底
+ *    4) overflow:visible → 关掉 editormd 默认 auto 滚动
+ *    5) overflow-wrap:break-word + word-break:break-word → 长 URL/英文换行
+ *    6) 所有子元素显式 max-width:100% → 杜绝任何元素撑爆容器
+ *    7) pre / table 等天生可能很宽：单独允许横向滚动
+ * ============================================================ */
+.editormd-html-preview,
+#articleContentDiv,
+.markdown-body {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+/* 关键：所有正文直系/嵌套子元素一律不得超出父宽 */
+.editormd-html-preview *,
+#articleContentDiv *,
+.markdown-body * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+.editormd-html-preview p,
+#articleContentDiv p,
+.editormd-html-preview li,
+#articleContentDiv li,
+.editormd-html-preview blockquote,
+#articleContentDiv blockquote,
+.editormd-html-preview h1,
+.editormd-html-preview h2,
+.editormd-html-preview h3,
+.editormd-html-preview h4,
+.editormd-html-preview h5,
+.editormd-html-preview h6 {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+/* 代码块 / 表格 / 长图等不可换行内容：允许横向滚动，不让它撑爆整篇正文 */
+.editormd-html-preview pre,
+#articleContentDiv pre,
+.editormd-html-preview table,
+#articleContentDiv table {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+}
+.editormd-html-preview pre code,
+#articleContentDiv pre code {
+    white-space: pre;
+}
+
 /* 首页文章卡片缩略图：固定 16:9
  * 行为：点击触发 blog-base.js 的原生 lightbox 放大；详情入口走标题 / "阅读全文"按钮 */
 .posts-expand .post-thumb-fixed,
@@ -358,7 +424,7 @@ html.use-motion.is-motion-ready .sidebar     { animation-delay: 250ms; }
     border-top: 1px solid #eee;
 }
 .comment-section h3 {
-    font-size: 16px;
+    font-size: var(--fs-md);
     margin: 0 0 16px;
 }
 .comment-list {
@@ -434,7 +500,7 @@ html.use-motion.is-motion-ready .sidebar     { animation-delay: 250ms; }
 }
 .comment-form-box h4 {
     margin: 0 0 12px;
-    font-size: 14px;
+    font-size: var(--fs-base);
     color: #333;
 }
 .comment-form-box .form-row { margin-bottom: 10px; }
@@ -583,7 +649,7 @@ html.use-motion.is-motion-ready .sidebar     { animation-delay: 250ms; }
 .breadcrumb-nav {
     margin: 0 0 12px;
     padding: 8px 0;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: #999;
     border-bottom: 1px solid #f0f0f0;
 }
@@ -617,16 +683,16 @@ html.use-motion.is-motion-ready .sidebar     { animation-delay: 250ms; }
  *  10. 相关阅读
  * ============================================================ */
 .related-posts {
-    margin: 32px 0 16px;
-    padding: 16px 20px;
+    margin: 28px 0 16px;
+    padding: 14px 18px;
     background: #fafafa;
     border-left: 4px solid #5b9bd5;
     border-radius: 4px;
 }
 .related-posts h3 {
-    margin: 0 0 12px;
+    margin: 0 0 10px;
     padding: 0;
-    font-size: 16px;
+    font-size: var(--fs-md);            /* 原 16px → token */
     color: #333;
     border: 0;
 }
@@ -640,10 +706,10 @@ html.use-motion.is-motion-ready .sidebar     { animation-delay: 250ms; }
     padding: 0;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 4px;
 }
 @media (min-width: 768px) {
-    .related-list { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 18px; }
+    .related-list { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 18px; }
 }
 .related-list li {
     line-height: 1.6;
@@ -655,11 +721,13 @@ html.use-motion.is-motion-ready .sidebar     { animation-delay: 250ms; }
     color: #555;
     text-decoration: none;
     transition: color .15s;
-    display: block;        /* 改 block：让 a 占满 li 宽度，nowrap+ellipsis 才能命中 */
+    display: block;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: var(--fs-sm);            /* 新增：列表项字号缩到 13px，与其它列表统一 */
+    padding: 3px 0;
 }
 .related-list a::before { content: "› "; color: #aaa; }
 .related-list a:hover { color: #5b9bd5; }

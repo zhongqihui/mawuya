@@ -28,8 +28,19 @@
     /* 字体 */
     --font-family-base:   "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
     --font-family-mono:   "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    --font-size-base:     15px;
-    --line-height-base:   1.78;
+    --font-size-base:     14.5px;
+    --line-height-base:   1.7;
+
+    /* ----- 字号分级 token（Type Scale 系统）-----
+     * 桌面端默认值；移动端在 @media (max-width:767px) 里整体下调 1~2 级。
+     * 所有页面字号都应通过 var(--fs-*) 取值，而不是硬编码 px，便于全局调权。 */
+    --fs-xs:              12px;        /* meta、辅助信息、时间戳 */
+    --fs-sm:              13px;        /* 副标题、徽标、面包屑 */
+    --fs-base:            14.5px;      /* 正文、列表项 */
+    --fs-md:              15.5px;      /* 卡片标题、强调文字 */
+    --fs-lg:              17px;        /* 区段 / 模块标题（h3） */
+    --fs-xl:              20px;        /* 章节大标题（h2） */
+    --fs-xxl:             24px;        /* 页面主标题（h1） */
 
     /* 全局色（默认 default 主题，深色/渐变主题在自己 css 里覆写） */
     --color-bg:           #ffffff;
@@ -63,10 +74,17 @@
 html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    /* 移动端横向溢出终极兜底：任何子元素若意外宽于 viewport，html 层裁掉，
+     * 杜绝 Safari iOS 出现可横向滑动的"宽页"现象。
+     * 与 body 联动一起设置，避免单设 body 时 iOS 仍可"橡皮筋"横向拉。 */
+    max-width: 100%;
+    overflow-x: hidden;
 }
 body {
     margin: 0;
     padding: 0;
+    max-width: 100%;
+    overflow-x: hidden;
     font: var(--font-size-base) / var(--line-height-base) var(--font-family-base);
     color: var(--color-fg-mid);
     background: var(--color-bg);
@@ -98,12 +116,12 @@ h1, h2, h3, h4, h5, h6 {
     line-height: 1.35;
     margin: 1.6em 0 0.6em;
 }
-h1 { font-size: 26px; }
-h2 { font-size: 22px; }
-h3 { font-size: 19px; }
-h4 { font-size: 16px; }
-h5 { font-size: 15px; }
-h6 { font-size: 14px; }
+h1 { font-size: var(--fs-xxl); }
+h2 { font-size: var(--fs-xl); }
+h3 { font-size: var(--fs-lg); }
+h4 { font-size: var(--fs-md); }
+h5 { font-size: var(--fs-base); }
+h6 { font-size: var(--fs-sm); }
 
 p { margin: 0 0 1.05em; }
 
@@ -154,9 +172,15 @@ p { margin: 0 0 1.05em; }
 .content-wrap {
     flex: 1 1 auto;
     min-width: 0; /* 防止 flex 子项内容溢出 */
+    max-width: 100%;            /* 兜底：移动端 flex column 下子内容若撑出，钳制不超过 .main-inner 宽 */
+    overflow: hidden;           /* 防止 .content-wrap 自身被撑出 viewport */
+    box-sizing: border-box;
 }
 .content {
     width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 /* ============================================================
@@ -298,6 +322,9 @@ p { margin: 0 0 1.05em; }
     margin: 0 0 var(--gap-lg);
     padding: 0;
     border: none;
+    max-width: 100%;
+    overflow: hidden;               /* 兜底：editormd 渲染内容若意外超宽不会撑爆 .content-wrap */
+    box-sizing: border-box;
 }
 
 /* default 主题（非 tech-dark/gradient-vivid/minimal-business）的文章列表：
@@ -373,6 +400,9 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
 .post-body {
     color: var(--color-fg-mid);
     line-height: var(--line-height-base);
+    max-width: 100%;
+    overflow: hidden;               /* 兜底：长 URL/大图/超宽代码块不撑爆 .post 卡片 */
+    box-sizing: border-box;
 }
 .post-body img {
     max-width: 100%;
@@ -1094,7 +1124,7 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
 }
 .archive-page-counter {
     color: var(--color-fg-mute);
-    font-size: 13px;
+    font-size: var(--fs-sm);
 }
 
 /* ---- 归档树形结构 ----
@@ -1125,8 +1155,8 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
     position: relative;
     margin: 24px 0 12px -28px;
     padding: 0 0 0 28px;
-    font-size: 20px;
-    font-weight: 800;
+    font-size: var(--fs-lg);        /* 原 20px → token，移动端再降 */
+    font-weight: 700;
     color: var(--color-fg);
     letter-spacing: -0.01em;
 }
@@ -1179,7 +1209,7 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
 .posts-collapse .post-meta {
     display: inline-block;
     color: var(--color-fg-mute);
-    font-size: 12.5px;
+    font-size: var(--fs-xs);
     margin: 0;
     font-variant-numeric: tabular-nums;
     flex: 0 0 48px;                /* 之前 38px 在中文字号下 "MM-DD" 会被压成两行；改 48px */
@@ -1188,7 +1218,7 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
 .posts-collapse .post-title {
     display: block;                 /* flex 子项要 min-width:0 收缩生效，display 不能是 inline */
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-base);      /* 原 15px → token，更紧凑 */
     font-weight: 500;
     flex: 1 1 auto;
     min-width: 0;
@@ -1209,7 +1239,7 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
 
 .archive-page-title {
     margin: 0 0 6px;
-    font-size: 22px;
+    font-size: var(--fs-xl);        /* 原 22px → token 20，移动端再降 */
     font-weight: 700;
     letter-spacing: -0.01em;
 }
@@ -1252,13 +1282,42 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
         --content-padding: 14px;
         --gap-lg: 28px;
         --gap-xl: 40px;
+        /* 移动端整体下调字号一级，提升信息密度 */
+        --fs-xs:          11px;
+        --fs-sm:          12px;
+        --fs-base:        13.5px;
+        --fs-md:          14.5px;
+        --fs-lg:          15.5px;
+        --fs-xl:          17.5px;
+        --fs-xxl:         20px;
+        --font-size-base: 13.5px;
+        --line-height-base: 1.65;
+    }
+    /* 顶层大容器：相对 viewport 锁死，杜绝任何渲染场景下的横向溢出
+     * 注意：这一层最大值是 100vw，让 viewport 宽即上限。 */
+    html, body,
+    .container,
+    .main, .header, .footer {
+        max-width: 100vw !important;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+    /* 内层容器：相对父级 100% 锁死。
+     * 不要用 100vw —— 否则会"吃掉" .main-inner 的 padding，让 .post 卡片贴满屏幕右沿。
+     * 这里要的是"严格不超过父级内容区宽度"。 */
+    .header-inner, .main-inner, .footer-inner,
+    .content-wrap, .content,
+    .posts-expand, .posts-collapse,
+    .posts-expand .post,
+    .post-body, #articleContentDiv {
+        max-width: 100% !important;
+        box-sizing: border-box;
     }
     .header-inner,
     .main-inner,
     .footer-inner {
-        max-width: none;
-        width: 100%;
-        padding: 0 var(--content-padding);
+        width: 100% !important;
+        padding: 0 var(--content-padding) !important;
     }
     .main-inner {
         flex-direction: column;
@@ -1388,8 +1447,9 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
         display: none !important;
     }
     /* 文章正文字号略增，提高可读性 */
-    .post-title { font-size: 19px; }
-    .post-body { font-size: 15px; }
+    /* 文章列表卡片标题 / 正文：移动端基于 token 再略调 */
+    .post-title { font-size: var(--fs-md); font-weight: 700; }
+    .post-body { font-size: var(--fs-base); }
 
     /* ====== 移动端归档：单列横排（日期 + 标题），优化"时间显示不下" ======
      * 设计：
@@ -1403,15 +1463,15 @@ html:not([data-theme="tech-dark"]):not([data-theme="gradient-vivid"]):not([data-
         align-items: baseline;
     }
     .posts-collapse .post-meta {
-        flex: 0 0 48px;
-        font-size: 12px;
+        flex: 0 0 46px;
+        font-size: var(--fs-xs);
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
         color: var(--color-link);    /* 移动端给日期上色，与标题区分更清晰 */
         font-weight: 600;
     }
     .posts-collapse .post-title {
-        font-size: 14.5px;
+        font-size: var(--fs-sm);
         line-height: 1.5;
         min-width: 0;
     }
