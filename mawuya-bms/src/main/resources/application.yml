@@ -59,3 +59,27 @@ mawuya:
       secret: dev-only-PLEASE-CHANGE-this-32-byte-secret-string-9527-okxx
       # 默认 8 小时（28800 秒）
       expires-seconds: 28800
+  # ===========================================================================
+  # 定时清理任务
+  #   log-info：访客日志表清理，防止 log_info 无限增长拖垮 DB
+  #     - enabled        是否启用，默认 true
+  #     - cron           执行周期，默认每天凌晨 03:00（业务低峰）
+  #     - retain-days    保留天数，默认 30（删除 req_time < now-30d 的数据）
+  #     - batch-size     单批 DELETE 行数，默认 1000，避免长事务
+  #     - max-batches    单次任务最多批次数，默认 200（一次最多删 20w 条，剩余下个周期继续）
+  #     - batch-sleep-ms 批间睡眠毫秒，默认 200，给主从同步留缓冲
+  #     - max-retry      单批失败重试次数，默认 2（共最多 3 次尝试）
+  #     - retry-backoff-ms 重试退避基数毫秒，默认 1000；实际延迟 = base*2^attempt
+  #     - alert-enabled  失败告警开关，默认 true，失败时打 ERROR + [ALERT] 关键字
+  # ===========================================================================
+  cleanup:
+    log-info:
+      enabled: true
+      cron: "0 0 3 * * ?"
+      retain-days: 30
+      batch-size: 1000
+      max-batches: 200
+      batch-sleep-ms: 200
+      max-retry: 2
+      retry-backoff-ms: 1000
+      alert-enabled: true

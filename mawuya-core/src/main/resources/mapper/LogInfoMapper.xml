@@ -144,4 +144,23 @@
         </where>
     </select>
 
+    <!--
+      日志清理：定时任务专用，按 req_time 字符串比较 + idx_log_req_time 索引，分批 LIMIT 删除。
+      安全要点：
+        1) reqTimeBefore 由后端拼装（now - retainDays），不接受外部入参，无注入风险；
+        2) LIMIT 由配置项 batch-size 控制（默认 1000），service 层做了上下界收敛；
+        3) MySQL 不支持 DELETE ... ORDER BY req_time LIMIT 时若无显式 ORDER BY 也允许，
+           这里加 ORDER BY req_time ASC 让每批删到最旧的一批，配合索引扫描更可控。
+    -->
+    <delete id="deleteOlderThan">
+        DELETE FROM log_info
+        WHERE req_time &lt; #{reqTimeBefore}
+        ORDER BY req_time ASC
+        LIMIT #{limit}
+    </delete>
+
+    <select id="countOlderThan" resultType="int">
+        SELECT count(sn) FROM log_info WHERE req_time &lt; #{reqTimeBefore}
+    </select>
+
 </mapper>
