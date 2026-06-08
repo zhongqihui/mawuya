@@ -1,0 +1,46 @@
+-- ============================================================================
+-- 2026-06-07-mysql-max-allowed-packet
+--
+-- 背景：上传 8.8MB 图片时报错
+--   PacketTooBigException: Packet for query is too large (9,262,324 > 4,194,304)
+--   You can change this value on the server by setting the 'max_allowed_packet'.
+--
+-- 根因：MySQL 服务端 max_allowed_packet 默认 4MB；单条 SQL 包（含 BLOB 二进制
+--      + 协议头 + 转义开销）必须小于这个值。
+--      业务允许 10MB 图片 + image_blob.data 为 MEDIUMBLOB (16MB)，唯一卡点就是
+--      这个 server 参数。
+--
+-- ============================================================================
+-- 修复路径（按部署形态二选一，建议都做）：
+-- ----------------------------------------------------------------------------
+-- 【路径 A：本机 / 容器临时立即生效（不重启）】
+--   * SET GLOBAL 只对【新连接】生效，已存在的连接池连接需要"换"才会用到；
+--     Druid 连接的最简办法是重启应用进程。
+--   * 此值是 readonly 系统变量在 8.x 之前不能 SET SESSION，只能 SET GLOBAL。
+--
+--   推荐执行：
+--       SET GLOBAL max_allowed_packet = 67108864;     -- 64MB
+--   验证：
+--       SHOW VARIABLES LIKE 'max_allowed_packet';
+--
+-- 【路径 B：持久化（推荐生产，重启 mysql 后仍生效）】
+--   * docker 部署：编辑 deploy/03-docker-deploy.sh 已经把
+--       --max-allowed-packet=67108864
+--     塞进 mysql 容器 command:，重启容器即可：
+--       docker compose -f /home/.../docker-compose.yml restart mysql
+--   * 本机 brew/yum/apt 部署：编辑 my.cnf [mysqld] 节：
+--       max_allowed_packet = 64M
+--     重启 MySQL：brew services restart mysql  /  systemctl restart mysqld
+--
+-- ----------------------------------------------------------------------------
+-- 选 64MB 的依据：
+--   - 业务上限 10MB（MAX_IMG_BYTES）
+--   - BLOB 二进制在 wire 协议里大致 ×1（无 base64 膨胀）
+--   - 留 5-6 倍冗余覆盖未来批量插入 / 复制场景，又不至于浪费内存
+-- ============================================================================
+
+-- 立即把当前 server 的上限抬到 64MB（仅作用于后续新连接）
+SET GLOBAL max_allowed_packet = 67108864;
+
+-- 验证（mysql client 输出可查）
+SHOW VARIABLES LIKE 'max_allowed_packet';

@@ -36,7 +36,7 @@ public class AboutController extends BaseController {
                 .setCanonical(seoProperties.getSiteUrl() + "/about")
                 .setImage(SeoUtils.toAbsoluteUrl(seoProperties.getSiteUrl(), seoProperties.getDefaultOgImage()))
                 .addJsonLd(buildAboutJsonLd());
-        seo.addBreadcrumb("首页", seoProperties.getSiteUrl() + "/")
+        seo.addBreadcrumb("首页", "/")
                 .addBreadcrumb("关于", null);
         model.addAttribute("seo", seo);
         return "fts/about";

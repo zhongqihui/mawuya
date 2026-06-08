@@ -1,26 +1,307 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="description" content="404页面"/>
-    <meta name="author" content="zqh"/>
-    <title>Zqh's blog</title>
-    <link rel="shortcut icon" th:href="@{/statics/images/favicon.ico}"/>
-    <link rel="stylesheet" th:href="@{/statics/plugins/bootstrap/dist/css/bootstrap.css}"/>
-    <link rel="stylesheet" th:href="@{/statics/css/style.css}"/>
-</head>
-<body class="texture">
-<div id="cl-wrapper" class="error-container">
-    <div class="page-error">
-        <h1 class="number text-center">404</h1>
-        <h2 class="description text-center">Sorry, this page doesn't exists!</h2>
-        <h3 class="text-center">Would you like to go <a th:href="@{/}">home</a>?</h3>
-    </div>
-    <div class="text-center copy">&copy; 2013 <a href="#">Your Company</a></div>
-</div>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta name="robots" content="noindex,nofollow"/>
+    <meta name="description" content="404 - 您访问的页面不存在"/>
+    <meta name="theme-color" content="#5b9bd5"/>
 
-<script type="text/javascript" th:src="@{/statics/plugins/jquery.js}"></script>
-<script type="text/javascript" th:src="@{/statics/plugins/behaviour/general.js}"></script>
+    <title th:text="${@environment.getProperty('mawuya.seo.site-name', 'My Blog')} + ' · 404'">My Blog · 404</title>
+    <link rel="shortcut icon" th:href="@{/statics/images/myfavicon.ico}"/>
+
+    <style>
+        /* ---------- 重置 + 基础变量 ---------- */
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            font-family: "PingFang SC", "Microsoft YaHei",
+                         -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+                         Roboto, "Segoe UI", sans-serif;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeLegibility;
+            color: #2c3e50;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f6f9fc 0%, #eaf3fb 100%);
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        /* ---------- 装饰背景：柔和的圆形光斑 ---------- */
+        .bg-decoration {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-decoration::before,
+        .bg-decoration::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: .35;
+        }
+        .bg-decoration::before {
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, #5b9bd5, transparent 70%);
+            top: -120px; left: -100px;
+            animation: float-1 18s ease-in-out infinite;
+        }
+        .bg-decoration::after {
+            width: 380px; height: 380px;
+            background: radial-gradient(circle, #b6d4f0, transparent 70%);
+            bottom: -80px; right: -60px;
+            animation: float-2 22s ease-in-out infinite;
+        }
+
+        @keyframes float-1 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(40px, 30px); }
+        }
+        @keyframes float-2 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, -40px); }
+        }
+
+        /* ---------- 主卡片 ---------- */
+        .err-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 560px;
+            padding: clamp(28px, 5vw, 48px) clamp(20px, 4vw, 40px);
+            background: rgba(255, 255, 255, .85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, .6);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px -10px rgba(91, 155, 213, .25),
+                        0 0 0 1px rgba(91, 155, 213, .04);
+            text-align: center;
+            animation: fade-up .6s ease-out both;
+        }
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---------- SVG 插画 ---------- */
+        .err-illust {
+            width: clamp(160px, 28vw, 220px);
+            height: auto;
+            margin-bottom: 8px;
+        }
+        .err-illust .draw {
+            stroke-dasharray: 600;
+            stroke-dashoffset: 600;
+            animation: draw 1.6s ease-out .2s forwards;
+        }
+        @keyframes draw {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* ---------- 错误码大数字 ---------- */
+        .err-code {
+            font-size: clamp(72px, 16vw, 128px);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -.04em;
+            margin: 8px 0 4px;
+            background: linear-gradient(135deg, #5b9bd5 0%, #4a7fa8 60%, #3d5a80 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: float-y 4s ease-in-out infinite;
+        }
+        @keyframes float-y {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-6px); }
+        }
+
+        /* ---------- 文案 ---------- */
+        .err-title {
+            font-size: clamp(20px, 3.4vw, 26px);
+            font-weight: 600;
+            margin: 0 0 8px;
+            color: #2c3e50;
+            letter-spacing: -.01em;
+        }
+        .err-desc {
+            font-size: clamp(13px, 2.2vw, 15px);
+            line-height: 1.7;
+            color: #7a8a99;
+            margin: 0 0 28px;
+        }
+        .err-desc .en {
+            display: block;
+            font-size: 12px;
+            color: #aab4bf;
+            font-family: "SF Mono", Menlo, Consolas, monospace;
+            letter-spacing: .02em;
+            margin-top: 4px;
+        }
+
+        /* ---------- 按钮组 ---------- */
+        .err-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 11px 22px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+            user-select: none;
+        }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary {
+            background: linear-gradient(135deg, #5b9bd5 0%, #4a87bf 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(91, 155, 213, .35);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(91, 155, 213, .5);
+            transform: translateY(-2px);
+        }
+        .btn-ghost {
+            background: rgba(255, 255, 255, .6);
+            color: #5b9bd5;
+            border-color: rgba(91, 155, 213, .3);
+        }
+        .btn-ghost:hover {
+            background: rgba(91, 155, 213, .08);
+            border-color: rgba(91, 155, 213, .5);
+            transform: translateY(-2px);
+        }
+        .btn .arrow {
+            transition: transform .2s ease;
+            font-size: 16px;
+            line-height: 1;
+        }
+        .btn:hover .arrow { transform: translateX(3px); }
+
+        /* ---------- 页脚提示 ---------- */
+        .err-footer {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px dashed rgba(91, 155, 213, .15);
+            font-size: 12px;
+            color: #aab4bf;
+        }
+        .err-footer a {
+            color: #5b9bd5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .err-footer a:hover { text-decoration: underline; }
+
+        /* ---------- 响应式：移动端微调 ---------- */
+        @media (max-width: 480px) {
+            .err-card {
+                border-radius: 16px;
+                padding: 28px 20px;
+            }
+            .err-actions { gap: 8px; }
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+                flex: 1 1 calc(50% - 4px);
+                justify-content: center;
+            }
+        }
+
+        /* ---------- 暗色环境兼容（系统偏好为暗色时柔化背景）---------- */
+        @media (prefers-color-scheme: dark) {
+            body { background: linear-gradient(135deg, #0f1c2c 0%, #1a2942 100%); color: #cbd5e0; }
+            .err-card {
+                background: rgba(26, 41, 66, .7);
+                border-color: rgba(91, 155, 213, .18);
+                box-shadow: 0 20px 60px -10px rgba(0, 0, 0, .5);
+            }
+            .err-title { color: #e2e8f0; }
+            .err-desc  { color: #94a3b8; }
+            .err-desc .en { color: #64748b; }
+            .err-footer { border-top-color: rgba(91, 155, 213, .15); color: #64748b; }
+            .btn-ghost { background: rgba(91, 155, 213, .08); }
+        }
+
+        /* ---------- 用户偏好：减少动效 ---------- */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-decoration" aria-hidden="true"></div>
+
+<main class="err-card" role="main">
+    <!-- 走丢的指南针 SVG 插画（纯线性，描边动画 draw-in） -->
+    <svg class="err-illust" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+        <circle class="draw" cx="100" cy="100" r="78"
+                stroke="#5b9bd5" stroke-width="2.5" stroke-linecap="round" opacity=".35"/>
+        <circle class="draw" cx="100" cy="100" r="62"
+                stroke="#5b9bd5" stroke-width="2.5" stroke-linecap="round" style="animation-delay:.2s"/>
+        <!-- 指针：朝东南方向"迷失" -->
+        <path class="draw" d="M100 50 L114 100 L100 150 L86 100 Z"
+              stroke="#4a87bf" stroke-width="2" stroke-linejoin="round" fill="rgba(91,155,213,.15)"
+              transform="rotate(35 100 100)" style="animation-delay:.4s"/>
+        <circle cx="100" cy="100" r="4" fill="#5b9bd5"/>
+        <!-- 4 个方向标 -->
+        <text x="100" y="38"  text-anchor="middle" fill="#7a8a99" font-size="12" font-weight="600">N</text>
+        <text x="170" y="105" text-anchor="middle" fill="#aab4bf" font-size="12">E</text>
+        <text x="100" y="178" text-anchor="middle" fill="#aab4bf" font-size="12">S</text>
+        <text x="30"  y="105" text-anchor="middle" fill="#aab4bf" font-size="12">W</text>
+    </svg>
+
+    <div class="err-code" aria-hidden="true">404</div>
+
+    <h1 class="err-title">页面走丢了</h1>
+    <p class="err-desc">
+        您访问的页面可能已被删除、地址有误，或暂时无法访问。
+        <span class="en">The page you're looking for doesn't exist.</span>
+    </p>
+
+    <div class="err-actions">
+        <a class="btn btn-primary" th:href="@{/}">
+            <span>返回首页</span>
+            <span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="btn btn-ghost" href="javascript:void(0)" onclick="history.length>1?history.back():location.href='/';return false;">
+            <span class="arrow" aria-hidden="true" style="transform:rotate(180deg);">→</span>
+            <span>上一页</span>
+        </a>
+    </div>
+
+    <div class="err-footer">
+        如有问题请
+        <a th:href="@{/about}">联系站长</a>
+        ，或返回
+        <a th:href="@{/}">首页</a>
+        重新探索 ☕
+    </div>
+</main>
+
 </body>
 </html>

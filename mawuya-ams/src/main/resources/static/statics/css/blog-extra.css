@@ -582,7 +582,16 @@ html.use-motion.is-motion-ready .sidebar     { animation-delay: 250ms; }
 /* ============================================================
  *  6. 标签徽标 / 文章卡片标签
  * ============================================================ */
-.article-tags { margin-top: 6px; }
+.article-tags {
+    /*
+     * 文章 header 末尾的标签徽标块，与下方正文（.post-body）之间需要充足留白：
+     *   - margin-top:6px 保留与上方 meta 行的小距
+     *   - margin-bottom:22px 给正文 h1/h2 一级标题一个明确的"开始"信号
+     * 之前没有 bottom margin，导致 # 标签 紧贴 ## 标题，视觉上像挤在一起
+     */
+    margin-top: 6px;
+    margin-bottom: 22px;
+}
 .article-tag {
     display: inline-block;
     padding: 2px 8px;

@@ -51,7 +51,7 @@ public class TagController extends BaseController {
                 .setOgType("website")
                 .setCanonical(seoProperties.getSiteUrl() + "/tags")
                 .setImage(SeoUtils.toAbsoluteUrl(seoProperties.getSiteUrl(), seoProperties.getDefaultOgImage()));
-        seo.addBreadcrumb("首页", seoProperties.getSiteUrl() + "/")
+        seo.addBreadcrumb("首页", "/")
                 .addBreadcrumb("标签", null);
         model.addAttribute("seo", seo);
         return "fts/tag_list";
@@ -82,8 +82,8 @@ public class TagController extends BaseController {
                 .setOgType("website")
                 .setCanonical(seoProperties.getSiteUrl() + "/tags/" + sn)
                 .setImage(SeoUtils.toAbsoluteUrl(seoProperties.getSiteUrl(), seoProperties.getDefaultOgImage()));
-        seo.addBreadcrumb("首页", seoProperties.getSiteUrl() + "/")
-                .addBreadcrumb("标签", seoProperties.getSiteUrl() + "/tags")
+        seo.addBreadcrumb("首页", "/")
+                .addBreadcrumb("标签", "/tags")
                 .addBreadcrumb(tag.getTagName(), null);
         model.addAttribute("seo", seo);
         return "fts/tag";

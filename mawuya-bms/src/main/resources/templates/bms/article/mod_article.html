@@ -16,7 +16,7 @@
         <li>博客管理</li>
         <li>博客列表</li>
         <li class="active">博客修改</li>
-        <span style="float: right;"><a onclick="retArticleList()">&lt;返回</a></span>
+        <span style="float: right;"><a href="javascript:void(0)" style="cursor:pointer;" onclick="retArticleList()">&lt;返回</a></span>
     </ol>
 </div>
 
@@ -160,14 +160,27 @@
     function resetBlog() { /* no-op */ }
 
     function retArticleList() {
-        // 就近查找当前 tab-pane，避免硬编码 #content3 在菜单 id 调整后失效
+        // 优先方案：在当前 tab 容器内 reload 博客列表（保持 tab 不变）
         var $tab = $('#mod-article-form').closest('.tab-pane');
-        if ($tab.length === 0) {
-            // 极少数直接打开本页的兜底
-            window.location.href = _u('/bms/article/list.do');
+        if ($tab.length) {
+            $tab.load(_u('/bms/article/list.do'));
             return;
         }
-        $tab.load(_u('/bms/article/list.do'));
+
+        // 兜底方案：未在 tab 容器中 → 触发左侧"博客列表"菜单 click，
+        // 让 BMS 主框架（js-footer.html 里的 link-li handler）统一处理 tab 切换。
+        // 这样不会走 window.location 整页跳转，从而避免 session 边界场景跳登录页。
+        var $libLink = $('.link-li', window.parent ? window.parent.document : document)
+            .filter(function () {
+                return ($(this).attr('link-url') || '').indexOf('/bms/article/list.do') >= 0;
+            });
+        if ($libLink.length) {
+            $libLink.trigger('click');
+            return;
+        }
+
+        // 极端兜底：左侧菜单都找不到（如直接在新窗口打开本页）才走整页跳转
+        window.location.href = _u('/bms/article/list.do');
     }
 
     // ================================================================

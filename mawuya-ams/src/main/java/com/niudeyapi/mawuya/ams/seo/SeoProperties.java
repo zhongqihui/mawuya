@@ -21,10 +21,13 @@ public class SeoProperties {
 
     /** 站点对外可访问的根 URL（必须含 scheme，不带尾斜杠），用于拼接绝对地址 / canonical / sitemap loc */
     private String siteUrl = "http://localhost:8080";
-    /** 站点显示名（OG site_name、JSON-LD WebSite name） */
-    private String siteName = "Zqh's Blog";
-    /** 站点默认标题（首页 title 后缀） */
-    private String defaultTitle = "Zqh's Blog - 分享技术与生活";
+    /** 站点显示名（OG site_name、JSON-LD WebSite name）。
+     *  整站所有页面 brand / title / footer 都从此读取；
+     *  AMS 和 BMS 都消费这一项（BMS 通过 @Value 同一 key 注入）。
+     *  生产环境务必通过 application.yml 或环境变量 MAWUYA_SEO_SITE_NAME 覆盖 */
+    private String siteName = "My Blog";
+    /** 站点默认标题（首页 title 后缀）。{siteName} 占位会被替换为 siteName 当前值 */
+    private String defaultTitle = "My Blog - 分享技术与生活";
     /** 站点默认描述（meta description 兜底） */
     private String defaultDescription = "Mawuya Blog - 一个分享 Java、Spring Boot、MySQL 等后端技术与生活随笔的小站。";
     /** 站点默认关键字（meta keywords 兜底） */

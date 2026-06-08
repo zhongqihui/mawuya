@@ -71,6 +71,18 @@ public class SeoModel {
         return m;
     }
 
+    /**
+     * 追加一项面包屑节点。
+     *
+     * @param name 显示文本（如"首页"、"分类"、当前页标题）
+     * @param url  跳转地址。**约定使用站内绝对路径**（如 {@code "/"}、{@code "/categories"}），
+     *             不要传 {@code seoProperties.getSiteUrl() + "/xxx"} 这样的绝对 URL：
+     *             否则在 localhost 访问时会跳到生产域名，破坏本机/灰度调试。
+     *             浏览器会基于当前 host 解析相对路径，跨环境天然兼容。
+     *             末项（当前页）传 {@code null} 即可，模板会渲染为不可点击的纯文本。
+     *             BreadcrumbList JSON-LD 由 Controller 单独构造（item.id 才需要绝对 URL），
+     *             与这里的 url 是两路独立数据，互不影响。
+     */
     public SeoModel addBreadcrumb(String name, String url) {
         this.breadcrumbs.put(name, url);
         return this;

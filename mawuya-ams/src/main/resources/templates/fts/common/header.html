@@ -9,7 +9,7 @@
                      而不是 /index，更符合"网页本来的入口地址" -->
                 <a th:href="@{/}" class="brand" rel="start">
                     <span class="logo-line-before"><i></i></span>
-                    <span class="site-title">Zqh's Blog</span>
+                    <span class="site-title" th:text="${seoProperties.siteName}">My Blog</span>
                     <span class="logo-line-after"><i></i></span>
                 </a>
             </div>

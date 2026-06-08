@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="shortcut icon" th:href="@{/statics/images/favicon.ico}"/>
-    <title>zqh's Blog · 登录</title>
+    <title th:text="${siteName} + ' · 登录'">My Blog · 登录</title>
     <link rel="stylesheet" th:href="@{/statics/plugins/bootstrap/dist/css/bootstrap.css}"/>
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.6.0/css/font-awesome.min.css"/>
     <link rel="stylesheet" th:href="@{/statics/css/style.css}"/>
@@ -128,7 +128,7 @@
             <div class="header">
                 <h3 class="text-center">
                     <img class="logo-img" th:src="@{/statics/images/favicon.ico}" alt="logo"/>
-                    <span>Zqh's Blog</span>
+                    <span th:text="${siteName}">My Blog</span>
                 </h3>
             </div>
             <form style="margin-bottom: 0 !important;" class="form-horizontal" method="post"

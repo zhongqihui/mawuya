@@ -64,7 +64,7 @@ public class SearchController extends BaseController {
                 .setCanonical(seoProperties.getSiteUrl() + "/search")
                 .setImage(SeoUtils.toAbsoluteUrl(seoProperties.getSiteUrl(), seoProperties.getDefaultOgImage()))
                 .setNoindex(true);
-        seo.addBreadcrumb("首页", seoProperties.getSiteUrl() + "/")
+        seo.addBreadcrumb("首页", "/")
                 .addBreadcrumb("搜索", null);
         model.addAttribute("seo", seo);
         return "fts/search";

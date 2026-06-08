@@ -1,14 +1,362 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
 <head>
-    <meta charset="utf-8"/>
-    <title>Zqh's blog - 500</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta name="robots" content="noindex,nofollow"/>
+    <meta name="description" content="500 - 服务器内部错误"/>
+    <meta name="theme-color" content="#e57373"/>
+
+    <title th:text="${@environment.getProperty('mawuya.seo.site-name', 'My Blog')} + ' · 500'">My Blog · 500</title>
+    <link rel="shortcut icon" th:href="@{/statics/images/myfavicon.ico}"/>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            font-family: "PingFang SC", "Microsoft YaHei",
+                         -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+                         Roboto, "Segoe UI", sans-serif;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeLegibility;
+            color: #2c3e50;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #fdf6f3 0%, #fce8e1 100%);
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .bg-decoration {
+            position: fixed; inset: 0;
+            overflow: hidden; pointer-events: none;
+            z-index: 0;
+        }
+        .bg-decoration::before,
+        .bg-decoration::after {
+            content: ''; position: absolute;
+            border-radius: 50%;
+            filter: blur(80px); opacity: .4;
+        }
+        .bg-decoration::before {
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, #f4a698, transparent 70%);
+            top: -120px; left: -100px;
+            animation: float-1 18s ease-in-out infinite;
+        }
+        .bg-decoration::after {
+            width: 380px; height: 380px;
+            background: radial-gradient(circle, #fdcdc1, transparent 70%);
+            bottom: -80px; right: -60px;
+            animation: float-2 22s ease-in-out infinite;
+        }
+        @keyframes float-1 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(40px, 30px); }
+        }
+        @keyframes float-2 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, -40px); }
+        }
+
+        .err-card {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 560px;
+            padding: clamp(28px, 5vw, 48px) clamp(20px, 4vw, 40px);
+            background: rgba(255, 255, 255, .85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, .6);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px -10px rgba(229, 115, 115, .25),
+                        0 0 0 1px rgba(229, 115, 115, .04);
+            text-align: center;
+            animation: fade-up .6s ease-out both;
+        }
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .err-illust {
+            width: clamp(160px, 28vw, 220px);
+            height: auto;
+            margin-bottom: 8px;
+        }
+        .err-illust .draw {
+            stroke-dasharray: 600;
+            stroke-dashoffset: 600;
+            animation: draw 1.6s ease-out .2s forwards;
+        }
+        @keyframes draw {
+            to { stroke-dashoffset: 0; }
+        }
+        /* 工具图标做轻微抖动，传递"系统颠簸"的故障语义 */
+        .err-illust .wrench {
+            transform-origin: 100px 100px;
+            animation: wobble 3s ease-in-out 1.6s infinite;
+        }
+        @keyframes wobble {
+            0%, 100% { transform: rotate(0deg); }
+            25%      { transform: rotate(-8deg); }
+            75%      { transform: rotate(8deg); }
+        }
+
+        .err-code {
+            font-size: clamp(72px, 16vw, 128px);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -.04em;
+            margin: 8px 0 4px;
+            background: linear-gradient(135deg, #e57373 0%, #d65a5a 60%, #a04545 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: float-y 4s ease-in-out infinite;
+        }
+        @keyframes float-y {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-6px); }
+        }
+
+        .err-title {
+            font-size: clamp(20px, 3.4vw, 26px);
+            font-weight: 600;
+            margin: 0 0 8px;
+            color: #2c3e50;
+            letter-spacing: -.01em;
+        }
+        .err-desc {
+            font-size: clamp(13px, 2.2vw, 15px);
+            line-height: 1.7;
+            color: #7a8a99;
+            margin: 0 0 24px;
+        }
+        .err-desc .en {
+            display: block;
+            font-size: 12px;
+            color: #aab4bf;
+            font-family: "SF Mono", Menlo, Consolas, monospace;
+            letter-spacing: .02em;
+            margin-top: 4px;
+        }
+
+        /* 错误信息徽章：展示故障时间，便于用户上报 */
+        .err-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            margin: 0 0 24px;
+            background: rgba(229, 115, 115, .08);
+            border: 1px solid rgba(229, 115, 115, .2);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #c97070;
+            font-family: "SF Mono", Menlo, Consolas, monospace;
+        }
+        .err-meta .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #e57373;
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: .35; }
+        }
+
+        .err-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 11px 22px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+            user-select: none;
+        }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary {
+            background: linear-gradient(135deg, #e57373 0%, #d65a5a 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(229, 115, 115, .35);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(229, 115, 115, .5);
+            transform: translateY(-2px);
+        }
+        .btn-ghost {
+            background: rgba(255, 255, 255, .6);
+            color: #d65a5a;
+            border-color: rgba(229, 115, 115, .3);
+        }
+        .btn-ghost:hover {
+            background: rgba(229, 115, 115, .08);
+            border-color: rgba(229, 115, 115, .5);
+            transform: translateY(-2px);
+        }
+        /* 重试图标转一圈 */
+        .btn .reload {
+            display: inline-block;
+            transition: transform .4s ease;
+            font-size: 16px;
+            line-height: 1;
+        }
+        .btn:hover .reload { transform: rotate(180deg); }
+        .btn .arrow {
+            transition: transform .2s ease;
+            font-size: 16px;
+            line-height: 1;
+        }
+        .btn:hover .arrow { transform: translateX(3px); }
+
+        .err-footer {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px dashed rgba(229, 115, 115, .15);
+            font-size: 12px;
+            color: #aab4bf;
+        }
+        .err-footer a {
+            color: #d65a5a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .err-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 480px) {
+            .err-card {
+                border-radius: 16px;
+                padding: 28px 20px;
+            }
+            .err-actions { gap: 8px; }
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+                flex: 1 1 calc(50% - 4px);
+                justify-content: center;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body { background: linear-gradient(135deg, #1f1612 0%, #2a1d18 100%); color: #cbd5e0; }
+            .err-card {
+                background: rgba(42, 29, 24, .7);
+                border-color: rgba(229, 115, 115, .18);
+                box-shadow: 0 20px 60px -10px rgba(0, 0, 0, .5);
+            }
+            .err-title { color: #e2e8f0; }
+            .err-desc  { color: #94a3b8; }
+            .err-desc .en { color: #64748b; }
+            .err-footer { border-top-color: rgba(229, 115, 115, .15); color: #64748b; }
+            .err-meta { background: rgba(229, 115, 115, .12); }
+            .btn-ghost { background: rgba(229, 115, 115, .08); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
 </head>
 <body>
-<div style="text-align:center;margin-top:100px;">
-    <h1>500</h1>
-    <h2>服务器开小差了，稍后再试。</h2>
-    <p><a th:href="@{/}">返回首页</a></p>
-</div>
+
+<div class="bg-decoration" aria-hidden="true"></div>
+
+<main class="err-card" role="main">
+    <!-- 故障扳手 SVG 插画（纯线性，描边动画 + 抖动） -->
+    <svg class="err-illust" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+        <!-- 外围的故障警示圈（虚线，带描边动画） -->
+        <circle class="draw" cx="100" cy="100" r="80"
+                stroke="#e57373" stroke-width="2.5" stroke-linecap="round"
+                stroke-dasharray="6 8" opacity=".5"/>
+        <!-- 中心的扳手图标，工具刚被砸坏的拟态 -->
+        <g class="wrench" stroke="#d65a5a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M75 75 L125 125" />
+            <path d="M70 80 L65 75 L60 80 L55 75 L50 80 L55 85 L60 80 L65 85 L70 80 Z"
+                  fill="rgba(229, 115, 115, .15)"/>
+            <circle cx="125" cy="125" r="8" fill="rgba(229, 115, 115, .15)"/>
+        </g>
+        <!-- 4 个外散的"故障火花" -->
+        <circle cx="40"  cy="60"  r="3" fill="#e57373" opacity=".6"/>
+        <circle cx="160" cy="50"  r="2" fill="#e57373" opacity=".5"/>
+        <circle cx="155" cy="155" r="3" fill="#e57373" opacity=".6"/>
+        <circle cx="50"  cy="150" r="2" fill="#e57373" opacity=".5"/>
+    </svg>
+
+    <div class="err-code" aria-hidden="true">500</div>
+
+    <h1 class="err-title">服务器开小差了</h1>
+    <p class="err-desc">
+        我们正在抢修，请稍后再试；如果问题持续出现，欢迎反馈给我们。
+        <span class="en">Internal server error. Please try again later.</span>
+    </p>
+
+    <!-- 错误时间徽章：服务端用 #dates.format 渲染，便于用户复制上报；JS 兜底当前时间 -->
+    <div class="err-meta">
+        <span class="dot" aria-hidden="true"></span>
+        <span>故障时间：</span>
+        <span id="err-time"
+              th:text="${#dates.format(#dates.createNow(), 'yyyy-MM-dd HH:mm:ss')}">2026-06-08 16:40:00</span>
+    </div>
+
+    <div class="err-actions">
+        <a class="btn btn-primary" href="javascript:void(0)" onclick="location.reload();return false;">
+            <span class="reload" aria-hidden="true">↻</span>
+            <span>重试</span>
+        </a>
+        <a class="btn btn-ghost" th:href="@{/}">
+            <span>返回首页</span>
+            <span class="arrow" aria-hidden="true">→</span>
+        </a>
+    </div>
+
+    <div class="err-footer">
+        持续故障可
+        <a th:href="@{/about}">联系站长</a>
+        ，或稍后再访问
+        <a th:href="@{/}">首页</a>
+        ，给服务器一点喘息时间 🛠️
+    </div>
+</main>
+
+<script>
+    /*
+     * 兜底：极端场景下 #dates 渲染失败（如直接 GET /pub/500.html 静态访问），
+     * 用浏览器本地时间填上，避免徽章空白。
+     */
+    (function () {
+        var el = document.getElementById('err-time');
+        if (!el) return;
+        var t = (el.textContent || '').trim();
+        // 如果服务端没渲染（保留了占位符 yyyy-MM-dd 之类），用客户端时间替换
+        if (!t || /[a-zA-Z]/.test(t)) {
+            var d = new Date();
+            var pad = function (n) { return n < 10 ? '0' + n : n; };
+            el.textContent = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+                + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        }
+    })();
+</script>
+
 </body>
 </html>

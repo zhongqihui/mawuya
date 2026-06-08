@@ -160,7 +160,7 @@ public class IndexController extends BaseController {
                 .setOgType("website")
                 .setCanonical(seoProperties.getSiteUrl() + "/archive")
                 .setImage(SeoUtils.toAbsoluteUrl(seoProperties.getSiteUrl(), seoProperties.getDefaultOgImage()));
-        seo.addBreadcrumb("首页", seoProperties.getSiteUrl() + "/")
+        seo.addBreadcrumb("首页", "/")
                 .addBreadcrumb("归档", null);
         model.addAttribute("seo", seo);
         return "fts/archive";
@@ -180,7 +180,7 @@ public class IndexController extends BaseController {
                 .setOgType("website")
                 .setCanonical(seoProperties.getSiteUrl() + "/categories")
                 .setImage(SeoUtils.toAbsoluteUrl(seoProperties.getSiteUrl(), seoProperties.getDefaultOgImage()));
-        seo.addBreadcrumb("首页", seoProperties.getSiteUrl() + "/")
+        seo.addBreadcrumb("首页", "/")
                 .addBreadcrumb("分类", null);
         model.addAttribute("seo", seo);
         return "fts/category_list";
@@ -212,8 +212,8 @@ public class IndexController extends BaseController {
                 .setCanonical(seoProperties.getSiteUrl() + "/categories/" + sn)
                 .setImage(SeoUtils.toAbsoluteUrl(seoProperties.getSiteUrl(), seoProperties.getDefaultOgImage()))
                 .addJsonLd(buildCollectionJsonLd(category, sn));
-        seo.addBreadcrumb("首页", seoProperties.getSiteUrl() + "/")
-                .addBreadcrumb("分类", seoProperties.getSiteUrl() + "/categories")
+        seo.addBreadcrumb("首页", "/")
+                .addBreadcrumb("分类", "/categories")
                 .addBreadcrumb(category.getCategoryName(), null);
         model.addAttribute("seo", seo);
         return "fts/category";
@@ -308,9 +308,9 @@ public class IndexController extends BaseController {
                 .setArticleTags(tagNames)
                 .addJsonLd(buildArticleJsonLd(info, c, tagNames, desc, image));
 
-        seo.addBreadcrumb("首页", seoProperties.getSiteUrl() + "/");
+        seo.addBreadcrumb("首页", "/");
         if (c != null) {
-            seo.addBreadcrumb(c.getCategoryName(), seoProperties.getSiteUrl() + "/categories/" + c.getSn());
+            seo.addBreadcrumb(c.getCategoryName(), "/categories/" + c.getSn());
         }
         seo.addBreadcrumb(info.getArticleTitle(), null);
         return seo;

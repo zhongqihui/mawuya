@@ -55,11 +55,13 @@ mawuya:
   # 优先通过环境变量 MAWUYA_AMS_SEO_SITE_URL 覆盖，本机开发不需要设置。
   # 预发 / 灰度环境务必把 robots-index 设为 false，避免不正式内容被搜索引擎收录。
   seo:
-    site-url: ${MAWUYA_AMS_SEO_SITE_URL:http://localhost:80}
-    site-name: Zqh's Blog
-    default-title: Zqh's Blog - 分享技术与生活
-    default-description: Mawuya Blog - 一个分享 Java、Spring Boot、MySQL 等后端技术与生活随笔的小站。
-    default-keywords: Java,Spring Boot,MySQL,Mybatis,博客,技术分享
+    site-url: ${MAWUYA_AMS_SEO_SITE_URL:https://mawuya.niudeyapi.com}
+    # 站点显示名：整个项目（AMS + BMS）所有页面 brand / title / footer 的唯一数据源；
+    # BMS application.yml 必须保持此值一致；上线通过环境变量 MAWUYA_SEO_SITE_NAME 覆盖。
+    site-name: ${MAWUYA_SEO_SITE_NAME:码无涯}
+    default-title: ${MAWUYA_SEO_SITE_NAME:码无涯} - 分享技术与生活
+    default-description: 码无涯 - 一个分享 Java、Spring Boot、MySQL 等后端技术与生活随笔的小站。
+    default-keywords: Java,Go,微服务,Spring,Mybatis,博客,技术分享
     default-og-image: /statics/images/avatars/avatar2.jpg
     author: Zhongqihui
     locale: zh_CN
