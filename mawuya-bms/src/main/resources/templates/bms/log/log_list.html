@@ -460,14 +460,28 @@
                     ['响应时间',    d.respTime],
                     ['耗时',        d.consumeTime],
                     ['浏览器/UA',   d.browser],
+                    ['请求头',      d.reqHeaders],
                     ['异常信息',    d.exceptMessage]
                 ];
                 var html = '<div style="padding:14px 16px; max-height:70vh; overflow:auto;">'
                          + '<table class="log-detail-table">';
                 rows.forEach(function (r) {
-                    html += '<tr><th>' + escHtml(r[0]) + '</th><td>'
-                          + (r[1] == null || r[1] === '' ? '<span style="color:#bbb;">—</span>' : escHtml(r[1]))
-                          + '</td></tr>';
+                    var label = r[0];
+                    var val   = r[1];
+                    // 「请求头」内容含换行，需要用 <pre> 渲染才能保留多行格式，
+                    // 同时仍然走 escHtml 防 XSS。
+                    var valCell;
+                    if (val == null || val === '') {
+                        valCell = '<span style="color:#bbb;">—</span>';
+                    } else if (label === '请求头') {
+                        valCell = '<pre style="margin:0; padding:6px 8px; background:#f7f9fb;'
+                                + ' border:1px solid #eee; border-radius:3px; max-height:260px;'
+                                + ' overflow:auto; white-space:pre-wrap; word-break:break-all;'
+                                + ' font-size:12px; color:#333;">' + escHtml(val) + '</pre>';
+                    } else {
+                        valCell = escHtml(val);
+                    }
+                    html += '<tr><th>' + escHtml(label) + '</th><td>' + valCell + '</td></tr>';
                 });
                 html += '</table></div>';
 

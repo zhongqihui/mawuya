@@ -305,9 +305,11 @@
 
     <div class="err-code" aria-hidden="true">500</div>
 
-    <h1 class="err-title">服务器开小差了</h1>
+    <h1 class="err-title" th:text="${errTitle != null ? errTitle : '服务器开小差了'}">服务器开小差了</h1>
     <p class="err-desc">
-        我们正在抢修，请稍后再试；如果问题持续出现，欢迎反馈给我们。
+        <span th:text="${errDesc != null ? errDesc : '我们正在抢修，请稍后再试；如果问题持续出现，欢迎反馈给我们。'}">
+            我们正在抢修，请稍后再试；如果问题持续出现，欢迎反馈给我们。
+        </span>
         <span class="en">Internal server error. Please try again later.</span>
     </p>
 

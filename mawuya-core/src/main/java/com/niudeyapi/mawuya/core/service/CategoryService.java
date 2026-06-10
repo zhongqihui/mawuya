@@ -45,7 +45,9 @@ public class CategoryService extends BaseService<CategoryDO, Integer> {
     }
 
     /**
-     * 列出所有分类，并填充每个分类下的文章数（{@code artSize}）。
+     * 列出所有分类，并填充每个分类下「已发布」文章数（{@code artSize}）。
+     *
+     * <p>AMS 端分类列表展示用，只统计 status=1，避免对外暴露未发布文章数。</p>
      */
     public List<CategoryDO> listAllWithArtSize() {
         Map<String, Object> map = new HashMap<>(CONDITION_MAP_CAPACITY);
@@ -56,6 +58,7 @@ public class CategoryService extends BaseService<CategoryDO, Integer> {
                 // mapper.xml 使用 OGNL @StringUtils@isNotEmpty(categorySn) 判空，
                 // 该方法只接受 CharSequence；此处必须用 String 传入。
                 condition.put("categorySn", String.valueOf(c.getSn()));
+                condition.put("status", ArticleService.STATUS_PUBLISHED);
                 int i = articleInfoMapper.selectCount(condition);
                 c.setArtSize(i);
             }
@@ -64,7 +67,7 @@ public class CategoryService extends BaseService<CategoryDO, Integer> {
     }
 
     /**
-     * 取分类详情，并填充该分类下的所有文章。
+     * 取分类详情，并填充该分类下「已发布」的所有文章。
      */
     public CategoryDO getDetailWithArtsBySn(Integer sn) {
         CategoryDO category = categoryMapper.selectById(sn);
@@ -72,6 +75,7 @@ public class CategoryService extends BaseService<CategoryDO, Integer> {
             Map<String, Object> map = new HashMap<>(CONDITION_MAP_CAPACITY);
             // 同上：需以 String 形式传入，避免 OGNL 类型转换失败
             map.put("categorySn", String.valueOf(category.getSn()));
+            map.put("status", ArticleService.STATUS_PUBLISHED);
             List<ArticleDO> infos = articleInfoMapper.selectList(map);
             category.setArts(infos);
         }

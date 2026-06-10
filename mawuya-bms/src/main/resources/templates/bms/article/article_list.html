@@ -26,6 +26,104 @@
         box-shadow: 0 1px 3px rgba(0, 184, 212, .25);
     }
     .btn-write-blog .fa { margin-right: 4px; }
+
+    /* —— 状态筛选 tab —— */
+    .article-status-tabs {
+        margin: 0 0 12px 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        border-bottom: 1px solid #e5e9ef;
+    }
+    .article-status-tabs li {
+        position: relative;
+    }
+    .article-status-tabs a {
+        display: inline-block;
+        padding: 8px 16px;
+        color: #5a6c80;
+        text-decoration: none;
+        border-radius: 4px 4px 0 0;
+        font-size: 13px;
+        transition: background .15s ease, color .15s ease;
+    }
+    .article-status-tabs a:hover {
+        background: #f5f7fa;
+        color: #2494f2;
+    }
+    .article-status-tabs li.active a {
+        color: #2494f2;
+        background: #fff;
+        border: 1px solid #e5e9ef;
+        border-bottom: 1px solid #fff;
+        margin-bottom: -1px;
+        font-weight: 500;
+    }
+    .article-status-tabs .tab-count {
+        display: inline-block;
+        margin-left: 4px;
+        min-width: 18px;
+        padding: 0 5px;
+        height: 18px;
+        line-height: 18px;
+        text-align: center;
+        font-size: 11px;
+        color: #fff;
+        background: #b8c4d3;
+        border-radius: 9px;
+    }
+    .article-status-tabs li.active .tab-count {
+        background: #2494f2;
+    }
+
+    /* —— 状态徽章 —— */
+    .article-status-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.5;
+        white-space: nowrap;
+    }
+    .article-status-badge.status-0 {
+        color: #8c7900;
+        background: #fff8d6;
+        border: 1px solid #ffe66e;
+    }
+    .article-status-badge.status-1 {
+        color: #1d8b3a;
+        background: #e6f7ea;
+        border: 1px solid #a3deb1;
+    }
+    .article-status-badge.status-2 {
+        color: #a13d3d;
+        background: #fbeaea;
+        border: 1px solid #e9b4b4;
+    }
+
+    /* —— 文章列表的标签徽章 —— */
+    .article-tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 8px;
+        margin: 2px 4px 2px 0;
+        border-radius: 10px;
+        border: 1px solid currentColor;
+        background: rgba(255,255,255,.5);
+        font-size: 12px;
+        line-height: 1.6;
+        white-space: nowrap;
+    }
+    .article-tag-pill .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
 </style>
 
 <div class="page-head">
@@ -48,13 +146,44 @@
     <div class="col-md-12">
         <div class="block-flat">
             <div class="content">
+                <!--
+                    状态筛选 tab：通过 ?status=all/0/1/2 重新加载本页。
+                    各 tab 的计数通过 Thymeleaf 在服务端直接遍历 articleList 之外
+                    再做一次"全量+分状态"统计成本较高；这里改为在前端 JS 里基于
+                    当前已渲染列表的全量 ajax 重新拉取并填充，简洁可靠。
+                -->
+                <ul class="article-status-tabs" id="article-status-tabs">
+                    <li th:classappend="${currentStatus == 'all'} ? 'active'">
+                        <a href="javascript:void(0)" data-status="all">
+                            全部<span class="tab-count" data-count="all">0</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentStatus == '1'} ? 'active'">
+                        <a href="javascript:void(0)" data-status="1">
+                            已发布<span class="tab-count" data-count="1">0</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentStatus == '0'} ? 'active'">
+                        <a href="javascript:void(0)" data-status="0">
+                            草稿<span class="tab-count" data-count="0">0</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentStatus == '2'} ? 'active'">
+                        <a href="javascript:void(0)" data-status="2">
+                            已撤回<span class="tab-count" data-count="2">0</span>
+                        </a>
+                    </li>
+                </ul>
+
                 <div class="table-responsive">
                     <table class="table table-bordered" id="datatable-article">
                         <thead>
                         <tr>
                             <th>序号</th>
                             <th>博客标题</th>
+                            <th>状态</th>
                             <th>博客分类</th>
+                            <th>标签</th>
                             <th>阅读次数</th>
                             <th>评论次数</th>
                             <th>背景图片</th>
@@ -68,11 +197,32 @@
                             <td th:text="${status.count}"></td>
                             <td th:text="${item.articleTitle}"></td>
                             <td>
+                                <!-- 状态徽章：0=草稿 / 1=已发布 / 2=已撤回 -->
+                                <span th:if="${item.status == 0}"
+                                      class="article-status-badge status-0">草稿</span>
+                                <span th:if="${item.status == 1 or item.status == null}"
+                                      class="article-status-badge status-1">已发布</span>
+                                <span th:if="${item.status == 2}"
+                                      class="article-status-badge status-2">已撤回</span>
+                            </td>
+                            <td>
                                 <span th:if="${item.categorySn == 0}">暂无分类</span>
                                 <th:block th:if="${item.categorySn != 0}">
                                     <th:block th:each="c : ${categoryList}">
                                         <span th:if="${c.sn == item.categorySn}" th:text="${c.categoryName}"></span>
                                     </th:block>
+                                </th:block>
+                            </td>
+                            <!-- 标签徽章：与 AMS 右侧栏标签云数据来源一致（tag_info + article_tag） -->
+                            <td style="max-width:240px;">
+                                <th:block th:with="ts=${articleTagMap != null ? articleTagMap.get(item.sn) : null}">
+                                    <span th:if="${ts == null or ts.isEmpty()}" style="color:#bbb;">—</span>
+                                    <span th:each="t : ${ts}"
+                                          class="article-tag-pill"
+                                          th:style="|color:${t.tagColor != null ? t.tagColor : '#2494f2'};|">
+                                        <span class="dot" aria-hidden="true"></span>
+                                        <span th:text="${t.tagName}">tag</span>
+                                    </span>
                                 </th:block>
                             </td>
                             <td th:text="${item.readNum}"></td>
@@ -87,13 +237,33 @@
                                 <span th:if="${item.pictureUrl == null or #strings.isEmpty(item.pictureUrl)}"
                                       style="color:#bbb;">—</span>
                             </td>
-                            <td th:text="${item.insertTime}"></td>
+                            <td>
+                                <!-- 草稿尚未发布时 insert_time 为空，避免显示"null" -->
+                                <span th:if="${item.insertTime != null}" th:text="${item.insertTime}"></span>
+                                <span th:if="${item.insertTime == null}" style="color:#bbb;">—</span>
+                            </td>
                             <td th:text="${item.updateTime}"></td>
-                            <td class="center">
+                            <td class="center" style="white-space:nowrap;">
                                 <i class="fa fa-cloud-upload" title="上传背景图"
                                    th:attr="onclick=|uploadPicture('${item.sn}')|"></i>&nbsp;&nbsp;
-                                <i class="fa fa-pencil" title="修改"
+                                <i class="fa fa-pencil"
+                                   th:title="${item.status == 0} ? '继续编辑草稿' : '修改'"
                                    th:attr="onclick=|toModBlogPage('${item.sn}')|"></i>&nbsp;&nbsp;
+                                <!-- 撤回：仅已发布可见 -->
+                                <i th:if="${item.status == 1 or item.status == null}"
+                                   class="fa fa-undo" title="撤回到可编辑状态"
+                                   style="color:#a13d3d;"
+                                   th:attr="onclick=|withdrawBlog('${item.sn}')|"></i>
+                                <!-- 重新发布：仅已撤回可见 -->
+                                <i th:if="${item.status == 2}"
+                                   class="fa fa-share-square-o" title="重新发布"
+                                   style="color:#1d8b3a;"
+                                   th:attr="onclick=|republishBlog('${item.sn}')|"></i>
+                                <!-- 发布草稿：仅草稿可见 -->
+                                <i th:if="${item.status == 0}"
+                                   class="fa fa-paper-plane" title="发布草稿"
+                                   style="color:#1d8b3a;"
+                                   th:attr="onclick=|publishDraft('${item.sn}')|"></i>&nbsp;&nbsp;
                                 <i class="fa fa-trash-o" title="删除"
                                    th:attr="onclick=|delBlog('${item.sn}')|"></i>
                             </td>
@@ -109,6 +279,7 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     var __ctx = /*[[@{/}]]*/ '/';
+    var __currentStatus = /*[[${currentStatus}]]*/ 'all';
     function _u(p) { return __ctx.replace(/\/$/, '') + p; }
     /*]]>*/
 
@@ -138,9 +309,53 @@
         }
     }
 
+    /** 构造列表 URL，附带 status 过滤参数（用于 tab 切换与各种操作后的 reload） */
+    function listUrlWithStatus(st) {
+        var base = _u('/bms/article/list.do');
+        if (!st || st === 'all') return base;
+        return base + '?status=' + encodeURIComponent(st);
+    }
+
     $(function () {
         $('#datatable-article').dataTable();
+
+        // tab 点击切换：直接重载当前 tab 容器内容
+        $('#article-status-tabs').on('click', 'a[data-status]', function () {
+            var st = $(this).attr('data-status');
+            reloadCurrentTab(listUrlWithStatus(st));
+        });
+
+        // 异步取分状态计数（避免 backend 每次列表请求都跑 4 次 count）
+        loadStatusCounts();
     });
+
+    /**
+     * 拉一次"全部"列表用于本地分类计数。
+     *
+     * <p>这里复用现有的 list.do 接口（HTML 渲染），通过解析返回 DOM 中的状态徽章数量来计数。
+     * 之所以不新增 JSON 端点：实现成本最低、零额外维护；BMS 列表不在性能敏感路径。
+     * 若未来列表数据量超 1k，可改为新增 {@code /bms/api/article/statusCounts} 端点。</p>
+     */
+    function loadStatusCounts() {
+        $.ajax({
+            type: 'get',
+            url: _u('/bms/article/list.do'),
+            dataType: 'html',
+            success: function (html) {
+                var counts = {all: 0, '0': 0, '1': 0, '2': 0};
+                var $rows = $(html).find('#datatable-article tbody tr');
+                counts.all = $rows.length;
+                $rows.each(function () {
+                    if ($(this).find('.status-0').length) counts['0']++;
+                    else if ($(this).find('.status-2').length) counts['2']++;
+                    else counts['1']++; // 未带徽章的旧数据按已发布算
+                });
+                Object.keys(counts).forEach(function (k) {
+                    $('#article-status-tabs .tab-count[data-count="' + k + '"]').text(counts[k]);
+                });
+            }
+        });
+    }
 
     function toModBlogPage(sn) {
         reloadCurrentTab(_u('/bms/article/toUpdate.do?sn=') + sn);
@@ -150,16 +365,15 @@
         reloadCurrentTab(_u('/bms/article/toAdd.do?'));
     }
 
-    /** 刷新当前博客列表（不跳页面、保持 tab 容器） */
+    /** 刷新当前博客列表（保留当前状态筛选） */
     function refreshArticleList() {
         var $tab = findCurrentTab();
         if (!$tab) {
-            // 兜底：未在 tab 容器中（极少数直接打开的场景）
             window.location.reload();
             return;
         }
         var load = layer.load(0, {shade: [0.1, '#fff']});
-        $tab.load(_u('/bms/article/list.do'), function () {
+        $tab.load(listUrlWithStatus(__currentStatus), function () {
             layer.close(load);
             layer.msg('已刷新', {icon: 1, time: 800});
         });
@@ -232,7 +446,7 @@
                                 skin: 'layui-layer-lan',
                                 icon: 1,
                                 end: function () {
-                                    reloadCurrentTab(_u('/bms/article/list.do'));
+                                    reloadCurrentTab(listUrlWithStatus(__currentStatus));
                                 }
                             });
                         } else {
@@ -294,7 +508,7 @@
                             // 关掉外层"设置背景图片"弹窗（找当前最外层 layer）
                             layer.closeAll('page');
                             layer.msg(Api.msg(res, '背景图设置成功'), {icon: 1, time: 1000});
-                            reloadCurrentTab(_u('/bms/article/list.do'));
+                            reloadCurrentTab(listUrlWithStatus(__currentStatus));
                         } else {
                             layer.alert(Api.msg(res, '设置背景图失败'),
                                         {skin: 'layui-layer-lan', icon: 2});
@@ -418,7 +632,7 @@
                             skin: 'layui-layer-lan',
                             icon: 1,
                             end: function () {
-                                reloadCurrentTab(_u('/bms/article/list.do'));
+                                reloadCurrentTab(listUrlWithStatus(__currentStatus));
                             }
                         });
                     } else {
@@ -428,6 +642,97 @@
                 }
             });
         });
+    }
+
+    /** 撤回博客：让用户填写撤回原因（可空），状态由已发布 → 已撤回 */
+    function withdrawBlog(sn) {
+        layer.prompt({
+            formType: 2,
+            title: '撤回原因（可选，便于事后回溯）',
+            skin: 'layui-layer-lan',
+            maxlength: 200,
+            value: ''
+        }, function (remark, index) {
+            var load = layer.load(0, {shade: [0.1, '#fff']});
+            $.ajax({
+                type: 'post',
+                url: _u('/bms/api/article/withdraw'),
+                data: {sn: sn, remark: remark || ''},
+                cache: false,
+                dataType: 'json',
+                success: function (res) {
+                    layer.close(load);
+                    layer.close(index);
+                    if (Api.isOk(res)) {
+                        layer.msg(Api.msg(res, '已撤回'), {icon: 1, time: 1200});
+                        reloadCurrentTab(listUrlWithStatus(__currentStatus));
+                    } else {
+                        layer.alert(Api.msg(res, '撤回失败'),
+                                    {skin: 'layui-layer-lan', icon: 2});
+                    }
+                },
+                error: function () {
+                    layer.close(load);
+                    layer.alert('网络异常，撤回失败', {icon: 2});
+                }
+            });
+        });
+    }
+
+    /** 重新发布：已撤回 → 已发布 */
+    function republishBlog(sn) {
+        layer.confirm('确认重新发布这篇博客？发布后将对外可见。',
+            {btn: ['确认重新发布', '取消'], skin: 'layui-layer-lan'},
+            function (index) {
+                var load = layer.load(0, {shade: [0.1, '#fff']});
+                $.ajax({
+                    type: 'post',
+                    url: _u('/bms/api/article/republish'),
+                    data: {sn: sn},
+                    cache: false,
+                    dataType: 'json',
+                    success: function (res) {
+                        layer.close(load);
+                        layer.close(index);
+                        if (Api.isOk(res)) {
+                            layer.msg(Api.msg(res, '已重新发布'), {icon: 1, time: 1200});
+                            reloadCurrentTab(listUrlWithStatus(__currentStatus));
+                        } else {
+                            layer.alert(Api.msg(res, '重新发布失败'),
+                                        {skin: 'layui-layer-lan', icon: 2});
+                        }
+                    }
+                });
+            }
+        );
+    }
+
+    /** 发布草稿：草稿 → 已发布 */
+    function publishDraft(sn) {
+        layer.confirm('确认发布这篇草稿？',
+            {btn: ['确认发布', '取消'], skin: 'layui-layer-lan'},
+            function (index) {
+                var load = layer.load(0, {shade: [0.1, '#fff']});
+                $.ajax({
+                    type: 'post',
+                    url: _u('/bms/api/article/publish'),
+                    data: {sn: sn},
+                    cache: false,
+                    dataType: 'json',
+                    success: function (res) {
+                        layer.close(load);
+                        layer.close(index);
+                        if (Api.isOk(res)) {
+                            layer.msg(Api.msg(res, '已发布'), {icon: 1, time: 1200});
+                            reloadCurrentTab(listUrlWithStatus(__currentStatus));
+                        } else {
+                            layer.alert(Api.msg(res, '发布失败'),
+                                        {skin: 'layui-layer-lan', icon: 2});
+                        }
+                    }
+                });
+            }
+        );
     }
 </script>
 </body>

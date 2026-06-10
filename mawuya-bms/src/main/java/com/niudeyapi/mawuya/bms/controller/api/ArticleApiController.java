@@ -6,7 +6,9 @@ package com.niudeyapi.mawuya.bms.controller.api;
 
 import com.niudeyapi.mawuya.bms.dto.request.ArticleCoverFromLibraryRequest;
 import com.niudeyapi.mawuya.bms.dto.request.ArticleCreateRequest;
+import com.niudeyapi.mawuya.bms.dto.request.ArticleDraftRequest;
 import com.niudeyapi.mawuya.bms.dto.request.ArticleUpdateRequest;
+import com.niudeyapi.mawuya.bms.dto.request.ArticleWithdrawRequest;
 import com.niudeyapi.mawuya.bms.dto.request.SnRequest;
 import com.niudeyapi.mawuya.bms.dto.response.ImageUploadResponse;
 import com.niudeyapi.mawuya.core.common.BaseResponse;
@@ -19,6 +21,8 @@ import com.niudeyapi.mawuya.core.service.ImageBlobService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,8 +42,12 @@ import java.util.Set;
  *
  * <h3>API 列表</h3>
  * <ul>
- *   <li>{@code POST /bms/api/article/create}                创建文章</li>
- *   <li>{@code POST /bms/api/article/update}                更新文章</li>
+ *   <li>{@code POST /bms/api/article/create}                创建文章（立即发布）</li>
+ *   <li>{@code POST /bms/api/article/saveDraft}             保存为草稿（新建或更新）</li>
+ *   <li>{@code POST /bms/api/article/publish}               草稿 / 已撤回 → 发布</li>
+ *   <li>{@code POST /bms/api/article/withdraw}              已发布 → 已撤回（对外不可见）</li>
+ *   <li>{@code POST /bms/api/article/republish}             已撤回 → 已发布（重新发布）</li>
+ *   <li>{@code POST /bms/api/article/update}                更新文章（保持当前状态）</li>
  *   <li>{@code POST /bms/api/article/delete}                删除文章及其评论</li>
  *   <li>{@code POST /bms/api/article/cover/upload}          上传新封面图（multipart）</li>
  *   <li>{@code POST /bms/api/article/cover/from-library}    从图片库挑选封面</li>
@@ -66,8 +74,14 @@ public class ArticleApiController {
     @Autowired
     private ImageBlobService imageBlobService;
 
+    /**
+     * 创建并立即发布文章。
+     *
+     * <p>与历史契约保持一致：标题 / 正文必填。需要保存草稿请走 {@link #saveDraft}。
+     * 响应 {@code data} 含新文章 {@code sn}，供前端紧接着发起「标签绑定」等后续动作。</p>
+     */
     @PostMapping("create")
-    public BaseResponse<Void> create(@Valid ArticleCreateRequest req) {
+    public BaseResponse<Map<String, Object>> create(@Valid ArticleCreateRequest req) {
         ArticleDO a = new ArticleDO()
                 .setArticleTitle(req.getArticleTitle())
                 .setArticleSummary(req.getArticleSummary())
@@ -75,25 +89,106 @@ public class ArticleApiController {
         if (req.getCategorySn() != null) {
             a.setCategorySn(req.getCategorySn());
         }
-        if (articleService.save(a) <= 0) {
+        if (articleService.savePublished(a, currentOperator()) <= 0) {
             throw new BusinessException("文章创建失败");
         }
-        return BaseResponse.success("发布成功", null);
+        Map<String, Object> data = new LinkedHashMap<>(2);
+        data.put("sn", a.getSn());
+        data.put("status", ArticleService.STATUS_PUBLISHED);
+        return BaseResponse.success("发布成功", data);
     }
 
+    /**
+     * 保存为草稿。
+     * <ul>
+     *   <li>{@code sn} 为空 → 新建一篇 status=DRAFT 的文章；</li>
+     *   <li>{@code sn} 非空 → 更新已有草稿（只允许在 DRAFT 状态下「保存为草稿」）。</li>
+     * </ul>
+     * 已发布 / 已撤回的文章不能"退回"草稿——请走 {@link #withdraw} 或 {@link #update}。
+     */
+    @PostMapping("saveDraft")
+    public BaseResponse<Map<String, Object>> saveDraft(@Valid ArticleDraftRequest req) {
+        String operator = currentOperator();
+        ArticleDO a = new ArticleDO()
+                .setArticleTitle(req.getArticleTitle())
+                .setArticleSummary(req.getArticleSummary())
+                .setArticleContent(req.getArticleContent() == null ? "" : req.getArticleContent());
+        if (req.getCategorySn() != null) {
+            a.setCategorySn(req.getCategorySn());
+        }
+
+        Map<String, Object> data = new LinkedHashMap<>(2);
+        if (req.getSn() == null) {
+            // 新建草稿
+            if (articleService.saveDraft(a, operator) <= 0) {
+                throw new BusinessException("草稿保存失败");
+            }
+            data.put("sn", a.getSn());
+            data.put("status", ArticleService.STATUS_DRAFT);
+            return BaseResponse.success("草稿已保存", data);
+        }
+
+        // 更新已有草稿
+        a.setSn(req.getSn());
+        if (articleService.updateAsDraft(a, operator) <= 0) {
+            throw new BusinessException("草稿保存失败");
+        }
+        data.put("sn", req.getSn());
+        data.put("status", ArticleService.STATUS_DRAFT);
+        return BaseResponse.success("草稿已保存", data);
+    }
+
+    /**
+     * 草稿 / 已撤回 → 已发布（状态机迁移）。
+     *
+     * <p>常见用法：在编辑页打开一篇草稿，先 {@link #update} 提交最新内容，再调本接口"发布"。
+     * 也可单纯传 sn 即把草稿/撤回稿原样发布，不修改内容。</p>
+     */
+    @PostMapping("publish")
+    public BaseResponse<Void> publish(@Valid SnRequest req) {
+        if (articleService.publish(req.getSn(), currentOperator()) <= 0) {
+            throw new BusinessException("发布失败");
+        }
+        return BaseResponse.success("已发布", null);
+    }
+
+    /**
+     * 已发布 → 已撤回。
+     * <p>撤回后博客对外不可见（AMS 端 404），编辑后可重新发布。</p>
+     */
+    @PostMapping("withdraw")
+    public BaseResponse<Void> withdraw(@Valid ArticleWithdrawRequest req) {
+        if (articleService.withdraw(req.getSn(), currentOperator(), req.getRemark()) <= 0) {
+            throw new BusinessException("撤回失败");
+        }
+        return BaseResponse.success("已撤回，可编辑后重新发布", null);
+    }
+
+    /** 已撤回 → 已发布。 */
+    @PostMapping("republish")
+    public BaseResponse<Void> republish(@Valid SnRequest req) {
+        if (articleService.republish(req.getSn(), currentOperator()) <= 0) {
+            throw new BusinessException("重新发布失败");
+        }
+        return BaseResponse.success("已重新发布", null);
+    }
+
+    /**
+     * 更新文章：保持当前状态（已发布仍是已发布、已撤回仍是已撤回、草稿仍是草稿）。
+     *
+     * <p>不会改变 status。如需流转，请显式调 {@link #publish} / {@link #withdraw} / {@link #republish}。</p>
+     */
     @PostMapping("update")
     public BaseResponse<Void> update(@Valid ArticleUpdateRequest req) {
-        ArticleDO dbArticle = articleService.getById(req.getSn());
-        if (dbArticle == null) {
-            throw new BusinessException(ResultCodeEnum.NOT_FOUND, "文章不存在");
-        }
-        dbArticle.setArticleContent(req.getArticleContent())
+        ArticleDO patch = new ArticleDO()
+                .setSn(req.getSn())
+                .setArticleContent(req.getArticleContent())
                 .setArticleSummary(req.getArticleSummary())
                 .setArticleTitle(req.getArticleTitle());
         if (req.getCategorySn() != null) {
-            dbArticle.setCategorySn(req.getCategorySn());
+            patch.setCategorySn(req.getCategorySn());
         }
-        if (articleService.updateById(dbArticle) <= 0) {
+        if (articleService.updateKeepStatus(patch, currentOperator()) <= 0) {
             throw new BusinessException("文章更新失败");
         }
         return BaseResponse.success("更新成功", null);
@@ -190,6 +285,24 @@ public class ArticleApiController {
     }
 
     // ---------------- helpers ----------------
+
+    /**
+     * 取当前 BMS 登录用户的 username，写入状态流转日志的 operator 字段。
+     *
+     * <p>未登录场景（极少数定时任务 / 单测）返回 null，DB 列允许 NULL。</p>
+     */
+    private String currentOperator() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                return null;
+            }
+            String name = auth.getName();
+            return "anonymousUser".equals(name) ? null : name;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     private void validateImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {

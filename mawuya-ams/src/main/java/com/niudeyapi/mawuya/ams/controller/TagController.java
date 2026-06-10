@@ -42,7 +42,9 @@ public class TagController extends BaseController {
 
     @GetMapping("tags")
     public String tagCloud(Model model) {
-        List<TagDO> tags = tagService.listTagCloud();
+        // 标签云走 published-only：草稿/已撤回文章不计入对外 art_size，
+        // 与右侧栏其它统计保持一致；空 art_size 的标签照常展示但排序靠后。
+        List<TagDO> tags = tagService.listPublishedTagCloud();
         model.addAttribute("tags", tags);
 
         SeoModel seo = SeoModel.of("标签云",
@@ -70,8 +72,10 @@ public class TagController extends BaseController {
             return ret404Page();
         }
 
-        List<Integer> articleSns = tagService.listArticleSnByTag(sn);
-        List<ArticleDO> articles = articleService.listBySnList(articleSns);
+        // 仅取该标签下「已发布」的文章 sn，避免点击标签后看到已撤回稿；
+        // 与 listPublishedBySnList 双保险（即便 published sn 也会再校验一次 status=1）。
+        List<Integer> articleSns = tagService.listPublishedArticleSnByTag(sn);
+        List<ArticleDO> articles = articleService.listPublishedBySnList(articleSns);
         model.addAttribute("tag", tag)
                 .addAttribute("articles", articles);
 

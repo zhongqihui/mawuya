@@ -42,12 +42,30 @@ CREATE TABLE `article_info` (
     `article_title`   VARCHAR(120)   NOT NULL                COMMENT '标题',
     `article_content` MEDIUMTEXT     DEFAULT NULL            COMMENT '正文（HTML）',
     `article_summary` VARCHAR(300)   DEFAULT NULL            COMMENT '摘要',
+    `status`          TINYINT(4)     NOT NULL DEFAULT 1      COMMENT '文章状态：0=草稿 / 1=已发布 / 2=已撤回（可编辑、对外不可见）',
     `insert_time`     DATETIME       DEFAULT NULL            COMMENT '发布时间',
     `update_time`     DATETIME       DEFAULT NULL            COMMENT '最近修改时间',
     PRIMARY KEY (`sn`),
     KEY `idx_article_category_sn` (`category_sn`),
+    KEY `idx_article_status` (`status`),
     KEY `idx_article_insert_time` (`insert_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章信息表';
+
+-- 文章状态流转日志（草稿 / 发布 / 撤回 / 重新发布 全过程留痕）
+DROP TABLE IF EXISTS `article_status_log`;
+CREATE TABLE `article_status_log` (
+    `sn`           BIGINT(20)   NOT NULL AUTO_INCREMENT             COMMENT '主键',
+    `article_sn`   INT(11)      NOT NULL                            COMMENT '关联 article_info.sn',
+    `from_status`  TINYINT(4)   DEFAULT NULL                        COMMENT '变更前状态（首次创建为 NULL）',
+    `to_status`    TINYINT(4)   NOT NULL                            COMMENT '变更后状态',
+    `action`       VARCHAR(20)  NOT NULL                            COMMENT '动作：CREATE_DRAFT/PUBLISH/UPDATE_DRAFT/WITHDRAW/REPUBLISH',
+    `operator`     VARCHAR(40)  DEFAULT NULL                        COMMENT '操作人（取 BMS 当前登录用户名）',
+    `remark`       VARCHAR(200) DEFAULT NULL                        COMMENT '备注',
+    `change_time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '发生时间',
+    PRIMARY KEY (`sn`),
+    KEY `idx_asl_article_sn` (`article_sn`),
+    KEY `idx_asl_change_time` (`change_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章状态流转日志';
 
 -- 评论信息表
 DROP TABLE IF EXISTS `review_info`;
@@ -141,6 +159,7 @@ CREATE TABLE `log_info` (
     `req_method`      VARCHAR(10)   DEFAULT NULL            COMMENT '请求方法（GET/POST/...）',
     `params`          VARCHAR(500)  DEFAULT NULL            COMMENT '请求参数',
     `browser`         VARCHAR(500)  DEFAULT NULL            COMMENT 'User-Agent 解析后的"OS,Browser"（含未识别 UA 截断）',
+    `req_headers`     TEXT          DEFAULT NULL            COMMENT '完整请求头（多行 Name: value，敏感字段已掩码）',
     `resp_status`     VARCHAR(1)    DEFAULT NULL            COMMENT '响应状态：0=成功 / 1=失败',
     `except_message`  VARCHAR(1000) DEFAULT NULL            COMMENT '异常信息（如有）',
     PRIMARY KEY (`sn`),

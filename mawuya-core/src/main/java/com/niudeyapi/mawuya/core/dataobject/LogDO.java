@@ -44,6 +44,11 @@ public class LogDO implements Serializable {
     private String reqMethod;
     /** 浏览器/UA 概要 */
     private String browser;
+    /**
+     * 完整请求头（多行 {@code Name: value}），敏感字段（Authorization / Cookie /
+     * Proxy-Authorization）已掩码。BMS 详情弹窗展示，列表不展示。
+     */
+    private String reqHeaders;
     /** 响应状态：0 成功；1 失败 */
     private String respStatus;
     /** 异常信息（失败时填充） */
@@ -193,6 +198,15 @@ public class LogDO implements Serializable {
 
     public LogDO setBrowser(String browser) {
         this.browser = browser;
+        return this;
+    }
+
+    public String getReqHeaders() {
+        return reqHeaders;
+    }
+
+    public LogDO setReqHeaders(String reqHeaders) {
+        this.reqHeaders = reqHeaders;
         return this;
     }
 

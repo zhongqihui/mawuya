@@ -15,8 +15,20 @@
         INSERT INTO review_info
             (article_sn, psn, csn, praise_num, tease_num, review_name, review_content, review_date, review_status)
         VALUES
-            (#{articleSn}, #{psn}, #{csn}, #{praiseNum}, #{teaseNum},
-             #{reviewName}, #{reviewContent}, NOW(),
+            (#{articleSn}, #{psn}, #{csn},
+             <choose><when test="praiseNum != null">#{praiseNum}</when><otherwise>0</otherwise></choose>,
+             <choose><when test="teaseNum  != null">#{teaseNum}</when><otherwise>0</otherwise></choose>,
+             #{reviewName}, #{reviewContent},
+             <!--
+               评论时间显式由 Java 端 DateUtil（强制 Asia/Shanghai）传入，
+               而不是依赖 MySQL NOW()。原因：
+                 1) NOW() 取值依赖 JDBC session 时区（serverTimezone=Asia/Shanghai 钉死 +08）；
+                 2) 日志 req_time 由 Java SimpleDateFormat 写入，依赖 JVM 默认时区；
+                 两条路径一旦时区不一致（Docker UTC 容器 + 默认 yml 配置就会触发），
+                 会出现"评论时间是 +08，日志时间却是 UTC"的灵异 bug。
+               统一改成 Java 端 DateUtil 写入，让评论和日志走同一个时区源，绝对一致。
+             -->
+             #{reviewDate},
              <choose>
                  <when test="reviewStatus != null">#{reviewStatus}</when>
                  <otherwise>0</otherwise>
@@ -62,13 +74,18 @@
         ORDER BY review_date DESC, sn DESC
     </select>
 
-    <!-- AMS 前台：侧边栏「最新评论」，仅显示已审核通过的 -->
+    <!--
+      AMS 前台：侧边栏「最新评论」，仅显示已审核通过的；
+      同时 INNER JOIN article_info 并限定 a.status = 1，撤回 / 草稿文章的评论不再露出
+      （草稿文章本身没评论入口，撤回场景必须显式过滤）。
+    -->
     <select id="selectLatestWithTitle" resultType="com.niudeyapi.mawuya.core.dataobject.ReviewDO">
         SELECT r.sn, r.article_sn, r.review_name, r.review_content, r.review_date, r.review_status,
                a.article_title
         FROM review_info r
         INNER JOIN article_info a ON a.sn = r.article_sn
         WHERE r.review_status = 1
+          AND a.status = 1
         ORDER BY r.review_date DESC, r.sn DESC
         LIMIT #{limit}
     </select>

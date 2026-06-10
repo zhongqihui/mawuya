@@ -4,6 +4,7 @@
  */
 package com.niudeyapi.mawuya.core.service;
 
+import com.niudeyapi.mawuya.common.utils.DateUtil;
 import com.niudeyapi.mawuya.core.dataobject.ReviewDO;
 import com.niudeyapi.mawuya.core.mapper.ReviewInfoMapper;
 import org.apache.commons.lang3.StringUtils;
@@ -91,8 +92,17 @@ public class ReviewService extends BaseService<ReviewDO, Integer> {
         ReviewDO r = new ReviewDO()
                 .setArticleSn(articleSn)
                 .setPsn(0)
+                // praise_num / tease_num 在 DB 是 NOT NULL DEFAULT 0；mapper.xml 的
+                // INSERT 用 #{praiseNum}/#{teaseNum}，若不显式置 0 会发送 NULL，
+                // 触发 "Column 'praise_num' cannot be null" → 用户评论 500。
+                .setPraiseNum(0)
+                .setTeaseNum(0)
                 .setReviewName(name.trim())
                 .setReviewContent(content.trim())
+                // 评论时间显式由 Java 端 DateUtil 写入（强制 Asia/Shanghai +08）。
+                // 不再用 MySQL NOW()，让评论时间与访客日志 reqTime 走同一时区源，
+                // 保证 BMS 后台展示的时间永远等于墙上时间，与部署机时区无关。
+                .setReviewDate(DateUtil.getNowStr())
                 .setReviewStatus(STATUS_PENDING);
         if (reviewInfoMapper.insert(r) <= 0) {
             return "评论保存失败";

@@ -80,7 +80,7 @@ public class IndexController extends BaseController {
      */
     @RequestMapping(value = {"/", "index.html", "index", "index.jsp"})
     public String toHomePage(Model model, HttpServletRequest request) {
-        Page<ArticleDO> page = articleService.listByPageFromRequest(request);
+        Page<ArticleDO> page = articleService.listPublishedByPageFromRequest(request);
         page.setUrl("index");
 
         List<CategoryDO> categoryList = categoryService.list(new HashMap<>(4));
@@ -121,7 +121,8 @@ public class IndexController extends BaseController {
 
         MySessionContext.getInstance().addArticleSn2Session(request.getSession(), aid);
 
-        ArticleDO info = articleService.getById(sn);
+        // 仅已发布文章对外可见：草稿 / 已撤回 一律 404
+        ArticleDO info = articleService.getPublishedById(sn);
         if (info == null) {
             return ret404Page();
         }
@@ -150,8 +151,8 @@ public class IndexController extends BaseController {
      */
     @GetMapping("archive")
     public String toArchive(Model model) {
-        Map<String, List<ArticleDO>> map = articleService.listGroupByYear();
-        int count = articleService.count(new HashMap<>(4));
+        Map<String, List<ArticleDO>> map = articleService.listPublishedGroupByYear();
+        int count = articleService.countPublished();
         model.addAttribute("map", map).addAttribute("count", count);
 
         SeoModel seo = SeoModel.of("文章归档",
@@ -241,7 +242,7 @@ public class IndexController extends BaseController {
             for (TagDO t : tags) {
                 if (picked.size() >= RELATED_LIMIT) break;
                 List<Integer> sns = tagService.listArticleSnByTag(t.getSn());
-                List<ArticleDO> list = articleService.listBySnList(sns);
+                List<ArticleDO> list = articleService.listPublishedBySnList(sns);
                 if (list == null) continue;
                 for (ArticleDO a : list) {
                     if (picked.size() >= RELATED_LIMIT) break;

@@ -51,7 +51,7 @@ public class SearchController extends BaseController {
             page.setLists(java.util.Collections.emptyList())
                     .setCurr(1).setSize(10).setPageSize(0);
         } else {
-            page = articleService.searchByKeyword(keyword.trim(), request);
+            page = articleService.searchPublishedByKeyword(keyword.trim(), request);
         }
         page.setUrl("search");
         model.addAttribute("page", page)

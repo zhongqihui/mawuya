@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div class="col-md-12">
+    <form class="form-horizontal">
+        <div class="content">
+            <div class="form-group">
+                <label class="col-sm-3 control-label">标签名称:</label>
+                <div class="col-sm-8">
+                    <input class="form-control" name="tagName" type="text" maxlength="30"
+                           th:value="${tag != null} ? ${tag.tagName} : ''"
+                           placeholder="例如：Java"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">展示颜色:</label>
+                <div class="col-sm-8">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input class="form-control" name="tagColor" type="text" maxlength="7"
+                               th:value="${tag != null and tag.tagColor != null} ? ${tag.tagColor} : '#2494f2'"
+                               style="flex:1;" placeholder="#2494f2"/>
+                        <!--
+                          原生 color picker（type=color）便于直接调色；
+                          input 通过 oninput 联动手写的 HEX 文本框，反之亦然。
+                          仅支持 #rgb / #rrggbb，与后端 @Pattern 校验严格一致。
+                        -->
+                        <input type="color" class="form-control"
+                               th:value="${tag != null and tag.tagColor != null} ? ${tag.tagColor} : '#2494f2'"
+                               style="width:48px;padding:2px;height:32px;cursor:pointer;"
+                               oninput="document.querySelector('input[name=tagColor]').value=this.value;"
+                               onchange="document.querySelector('input[name=tagColor]').value=this.value;"/>
+                    </div>
+                    <small style="color:#8a98a8;">支持 #rgb / #rrggbb，留空则使用默认色</small>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+</html>

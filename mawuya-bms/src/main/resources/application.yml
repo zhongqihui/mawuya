@@ -9,6 +9,12 @@ server:
 spring:
   application:
     name: mawuya-bms
+  # Jackson 全局序列化时区，与 JDBC URL serverTimezone / 启动类 TimeZone.setDefault
+  # 三处保持一致；这样 @ResponseBody 返回 Date 时也按 +08 序列化，不会再出现
+  # "接口返回 UTC 时间字符串、页面 JS 显示比真实时间慢 8h"的链路。
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
   thymeleaf:
     cache: false
     prefix: classpath:/templates/

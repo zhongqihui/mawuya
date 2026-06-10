@@ -11,11 +11,54 @@
 </head>
 
 <body>
+<style>
+    /* 文章当前状态徽章（编辑页顶部） */
+    .article-status-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        margin-left: 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 500;
+        vertical-align: middle;
+    }
+    .article-status-badge.status-0 { color:#8c7900; background:#fff8d6; border:1px solid #ffe66e; }
+    .article-status-badge.status-1 { color:#1d8b3a; background:#e6f7ea; border:1px solid #a3deb1; }
+    .article-status-badge.status-2 { color:#a13d3d; background:#fbeaea; border:1px solid #e9b4b4; }
+
+    /* 状态流转时间线 */
+    .status-timeline { list-style:none; padding:0; margin:8px 0 0; }
+    .status-timeline li {
+        position: relative;
+        padding: 6px 0 6px 22px;
+        font-size: 13px;
+        color: #5a6c80;
+        border-left: 2px solid #e5e9ef;
+        margin-left: 6px;
+    }
+    .status-timeline li:before {
+        content: "";
+        position: absolute;
+        left: -7px;
+        top: 11px;
+        width: 12px;
+        height: 12px;
+        background: #2494f2;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px #2494f2;
+    }
+    .status-timeline .meta { color: #8a98a8; margin-left: 8px; font-size: 12px; }
+</style>
 <div class="page-head">
     <ol class="breadcrumb">
         <li>博客管理</li>
         <li>博客列表</li>
         <li class="active">博客修改</li>
+        <!-- 当前状态徽章 -->
+        <span th:if="${article.status == 0}"   class="article-status-badge status-0">草稿</span>
+        <span th:if="${article.status == 1 or article.status == null}" class="article-status-badge status-1">已发布</span>
+        <span th:if="${article.status == 2}"   class="article-status-badge status-2">已撤回</span>
         <span style="float: right;"><a href="javascript:void(0)" style="cursor:pointer;" onclick="retArticleList()">&lt;返回</a></span>
     </ol>
 </div>
@@ -45,6 +88,35 @@
                             </select>
                         </div>
                     </div>
+                    <!--
+                        标签控件（兼容 select2 3.4.5）：
+                          上方  : multiple select2，从 tag_info 下拉选择已有标签，
+                                  当前文章已关联的 sn 通过 th:selected 回填
+                          下方  : 「新标签」输入框 + 添加按钮 + 已新增名称气泡
+                        提交时 collectTagInputs() 合并出 {existing, created} 调 /tag/bindArticle。
+                    -->
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">标签</label>
+                        <div class="col-sm-8">
+                            <select class="tag-existing-select" name="existingTagSns"
+                                    multiple="multiple" style="width:100%;">
+                                <option th:each="t : ${tagList}"
+                                        th:value="${t.sn}"
+                                        th:text="${t.tagName}"
+                                        th:selected="${selectedTagSnSet != null and selectedTagSnSet.contains(t.sn)}"></option>
+                            </select>
+                            <div style="margin-top:8px; display:flex; gap:6px; align-items:center;">
+                                <input type="text" class="form-control tag-new-input"
+                                       placeholder="新标签名，按回车或点添加"
+                                       style="width:240px; display:inline-block;"/>
+                                <button type="button" class="btn btn-sm btn-default tag-new-add-btn">
+                                    <i class="fa fa-plus"></i> 添加
+                                </button>
+                                <span class="tag-new-list" style="display:inline-block;"></span>
+                            </div>
+                            <small style="color:#8a98a8;">从下拉选已有标签；要新增的标签在下方输入后回车</small>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label class="col-sm-1 control-label">概要</label>
                         <div class="col-sm-8">
@@ -63,8 +135,65 @@
 
                 <div class="form-group">
                     <label class="col-sm-1 control-label"></label>
-                    <button type="button" class="btn btn-primary" id="mod_blog_btn">立即修改</button>
-                    <button type="reset" class="btn btn-default" onclick="resetBlog()">重置</button>
+                    <!--
+                        按钮可见性与文章当前状态绑定：
+                          已发布(1) : [立即修改]（保持已发布） + [撤回]
+                          草稿(0)   : [保存草稿] + [发布]
+                          已撤回(2) : [保存修改]（保持已撤回） + [重新发布]
+                    -->
+                    <button type="button" class="btn btn-primary" id="mod_blog_btn"
+                            th:if="${article.status == 1 or article.status == null}">立即修改</button>
+                    <button type="button" class="btn btn-default" id="withdraw_blog_btn"
+                            th:if="${article.status == 1 or article.status == null}"
+                            style="margin-left:6px; color:#a13d3d;">
+                        <i class="fa fa-undo"></i> 撤回
+                    </button>
+
+                    <button type="button" class="btn btn-warning" id="save_draft_btn"
+                            th:if="${article.status == 0}">
+                        <i class="fa fa-save"></i> 保存草稿
+                    </button>
+                    <button type="button" class="btn btn-success" id="publish_draft_btn"
+                            th:if="${article.status == 0}" style="margin-left:6px;">
+                        <i class="fa fa-paper-plane"></i> 发布
+                    </button>
+
+                    <button type="button" class="btn btn-default" id="save_withdrawn_btn"
+                            th:if="${article.status == 2}">
+                        <i class="fa fa-save"></i> 保存修改
+                    </button>
+                    <button type="button" class="btn btn-success" id="republish_btn"
+                            th:if="${article.status == 2}" style="margin-left:6px;">
+                        <i class="fa fa-share-square-o"></i> 重新发布
+                    </button>
+
+                    <button type="reset" class="btn btn-default" onclick="resetBlog()" style="margin-left:6px;">重置</button>
+                </div>
+
+                <!-- 状态流转时间线 -->
+                <div class="form-group" th:if="${statusLogs != null and !statusLogs.isEmpty()}">
+                    <label class="col-sm-1 control-label">状态记录</label>
+                    <div class="col-sm-11">
+                        <ul class="status-timeline">
+                            <li th:each="log : ${statusLogs}">
+                                <span th:switch="${log.action}">
+                                    <span th:case="'CREATE_DRAFT'">创建草稿</span>
+                                    <span th:case="'CREATE_PUBLISHED'">创建并发布</span>
+                                    <span th:case="'UPDATE_DRAFT'">更新内容</span>
+                                    <span th:case="'UPDATE_PUBLISHED'">更新内容</span>
+                                    <span th:case="'PUBLISH'">发布</span>
+                                    <span th:case="'WITHDRAW'">撤回</span>
+                                    <span th:case="'REPUBLISH'">重新发布</span>
+                                    <span th:case="*" th:text="${log.action}">变更</span>
+                                </span>
+                                <span class="meta" th:text="${log.changeTime}"></span>
+                                <span class="meta" th:if="${log.operator != null}"
+                                      th:text="'by ' + ${log.operator}"></span>
+                                <span class="meta" th:if="${log.remark != null and !#strings.isEmpty(log.remark)}"
+                                      th:text="'· ' + ${log.remark}"></span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -88,8 +217,21 @@
         $("#mod-article-form").validationEngine("attach", {scroll: false});
         // 注意：不要在此处再次调用 App.init()，否则 .cl-vnavigation .parent>a
         // 的 delegate 事件会被重复绑定，造成"展开后立即收回"。这里只做局部初始化。
-        if ($.fn.select2) { $('#mod-article-form .select2').select2({width: '100%'}); }
+        if ($.fn.select2) {
+            $('#mod-article-form .select2').select2({width: '100%'});
+            // 已有标签下拉：select2 3.4.5 multiple；新增标签走旁边输入框，避免 4.x tags API
+            $('#mod-article-form select[name="existingTagSns"]').select2({
+                width: '100%',
+                placeholder: '点击选择已有标签（可多选）',
+                allowClear: true
+            });
+        }
+        bindNewTagAdder('#mod-article-form');
 
+        // editor 就绪标志：在 editormd onload 完成前，按钮点击直接提示"加载中"，
+        // 避免出现 contentEditor.getMarkdown 抛 "x is not a function" → click handler
+        // 静默吞异常 → "按钮点了完全没反应"的体验。
+        var editorReady = false;
         var contentEditor = editormd("mod-article-editormd", {
             width: false,
             height: 640,
@@ -108,54 +250,381 @@
             flowChart: true,
             sequenceDiagram: true,
             onload: function () {
+                editorReady = true;
                 bindImageLibraryPicker(this);
             }
         });
 
+        /** 安全读取正文：editor 未 ready 时返回 null（提示后中断后续逻辑） */
+        function safeGetMarkdown() {
+            if (!editorReady || !contentEditor || typeof contentEditor.getMarkdown !== 'function') {
+                layer.msg('编辑器还在加载，请稍候再操作…', {icon: 7});
+                return null;
+            }
+            try {
+                return contentEditor.getMarkdown();
+            } catch (e) {
+                layer.alert('读取编辑器内容失败：' + (e && e.message ? e.message : e),
+                            {skin: 'layui-layer-lan', icon: 2});
+                return null;
+            }
+        }
+
         $("#mod_blog_btn").click(function () {
-            var flag = $("#mod-article-form").validationEngine("validate");
-            if (flag === false) return;
-            var content = contentEditor.getMarkdown();
+            if (!validateForm()) return;
+            var md = safeGetMarkdown(); if (md === null) return;
+            submitUpdate(md, function (sn) { afterModifySuccess(sn); });
+        });
+
+        // 草稿场景：保存草稿（保持 status=DRAFT）
+        $("#save_draft_btn").click(function () {
             var sn = $('#mod-article-form').find('input[name="sn"]').val();
             var title = $('#mod-article-form').find('input[name="articleTitle"]').val();
+            if (!title || !title.trim()) {
+                layer.msg('标题不能为空', {icon: 7});
+                return;
+            }
+            var content = safeGetMarkdown(); if (content === null) return;
             var categorySn = $('#mod-article-form').find('select[name="categorySn"]').val();
-            var summary = $('#mod-article-form').find('textarea[name="articleSummary"]').val();
+            var summary = $('#mod-article-form').find('textarea[name="articleSummary"]').val() || '';
 
+            var load = layer.load(0, {shade: [0.1, '#fff']});
             $.ajax({
-                type: "post",
-                url: _u("/bms/api/article/update"),
+                type: 'post',
+                url: _u('/bms/api/article/saveDraft'),
                 data: {
-                    "sn": sn,
-                    "articleTitle": title,
-                    "categorySn": categorySn,
-                    "articleSummary": summary,
-                    "articleContent": content
+                    sn: sn,
+                    articleTitle: title,
+                    categorySn: categorySn,
+                    articleSummary: summary,
+                    articleContent: content
                 },
                 cache: false,
                 dataType: 'json',
                 success: function (res) {
+                    layer.close(load);
                     if (Api.isOk(res)) {
-                        layer.confirm('修改成功！赶快去看看吧', {
-                            btn: ['去看看', '懒，不去'],
-                            skin: 'layui-layer-lan',
-                            anim: 4,
-                            icon: 1
-                        }, function (index) {
-                            layer.close(index);
-                            retArticleList();
-                            window.open(__amsSiteUrl + '/' + sn);
-                        }, function (index) {
-                            layer.close(index);
-                            retArticleList();
-                        });
+                        layer.msg(Api.msg(res, '草稿已保存'), {icon: 1, time: 1000});
                     } else {
-                        layer.alert(Api.msg(res, '修改失败'),
-                                    {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                        layer.alert(Api.msg(res, '草稿保存失败'),
+                                    {skin: 'layui-layer-lan', icon: 2});
                     }
+                },
+                error: function (xhr) {
+                    layer.close(load);
+                    layer.alert('请求失败：' + (xhr && xhr.status ? xhr.status : '网络异常'),
+                                {skin: 'layui-layer-lan', icon: 2});
                 }
             });
         });
+
+        // 草稿 → 发布：先保存最新内容，再发布
+        $("#publish_draft_btn").click(function () {
+            if (!validateForm()) return;
+            var md = safeGetMarkdown(); if (md === null) return;
+            submitUpdateAsDraft(md, function (sn) {
+                doStatusTransfer('/bms/api/article/publish', sn, '已发布', function () {
+                    afterModifySuccess(sn);
+                });
+            });
+        });
+
+        // 已发布 → 撤回：弹窗收集 remark（不读编辑器内容，跟 editor ready 无关）
+        $("#withdraw_blog_btn").click(function () {
+            var sn = $('#mod-article-form').find('input[name="sn"]').val();
+            layer.prompt({
+                formType: 2,
+                title: '撤回原因（可选，便于事后回溯）',
+                skin: 'layui-layer-lan',
+                maxlength: 200,
+                value: ''
+            }, function (remark, index) {
+                var load = layer.load(0, {shade: [0.1, '#fff']});
+                $.ajax({
+                    type: 'post',
+                    url: _u('/bms/api/article/withdraw'),
+                    data: {sn: sn, remark: remark || ''},
+                    cache: false,
+                    dataType: 'json',
+                    success: function (res) {
+                        layer.close(load);
+                        layer.close(index);
+                        if (Api.isOk(res)) {
+                            layer.msg(Api.msg(res, '已撤回'), {icon: 1, time: 1000});
+                            // 撤回成功后直接回博客列表，便于在「已撤回」tab 看见状态变化
+                            setTimeout(function () { retArticleList(); }, 600);
+                        } else {
+                            layer.alert(Api.msg(res, '撤回失败'),
+                                        {skin: 'layui-layer-lan', icon: 2});
+                        }
+                    },
+                    error: function (xhr) {
+                        layer.close(load);
+                        layer.alert('请求失败：' + (xhr && xhr.status ? xhr.status : '网络异常'),
+                                    {skin: 'layui-layer-lan', icon: 2});
+                    }
+                });
+            });
+        });
+
+        // 已撤回 → 保存修改（保持 status=WITHDRAWN）
+        $("#save_withdrawn_btn").click(function () {
+            if (!validateForm()) return;
+            var md = safeGetMarkdown(); if (md === null) return;
+            // 已撤回的"保存修改"走 /update（保持当前状态）
+            submitUpdate(md, function () {
+                layer.msg('已保存修改（仍处于已撤回状态）', {icon: 1, time: 1200});
+            });
+        });
+
+        // 已撤回 → 重新发布：先 update 最新内容，再 republish
+        $("#republish_btn").click(function () {
+            if (!validateForm()) return;
+            var md = safeGetMarkdown(); if (md === null) return;
+            submitUpdate(md, function (sn) {
+                doStatusTransfer('/bms/api/article/republish', sn, '已重新发布', function () {
+                    afterModifySuccess(sn);
+                });
+            });
+        });
     });
+
+    /**
+     * 表单校验封装：调一次 validationEngine 并兜底处理。
+     *
+     * <p>避免在多个 handler / submitUpdate 内部重复 validate（重复校验在 jQuery
+     * validationEngine 1.4.x 上有低概率把第二次结果错误地置 false，
+     * 表现就是"按钮点了完全没反应"——本次 bug 的根因即此。</p>
+     */
+    function validateForm() {
+        var flag = $("#mod-article-form").validationEngine("validate");
+        return flag !== false;
+    }
+
+    /**
+     * 读取当前表单的标签提交数据：
+     *   existing: 多选 select2 中选中的已有 tag sn 数组（number[]）
+     *   created : 「新标签」输入框中累计加入的新名数组（string[]）
+     */
+    function collectTagInputs() {
+        var $form = $('#mod-article-form');
+        var rawExisting = $form.find('select[name="existingTagSns"]').val() || [];
+        var existing = [];
+        for (var i = 0; i < rawExisting.length; i++) {
+            var n = parseInt(rawExisting[i], 10);
+            if (!isNaN(n)) existing.push(n);
+        }
+        var created = ($form.data('newTagNames') || []).slice();
+        return {existing: existing, created: created};
+    }
+
+    /** 与 write_article.html 同款实现：新标签输入框 + 添加按钮 + 气泡列表 */
+    function bindNewTagAdder(formSelector) {
+        var $form = $(formSelector);
+        $form.data('newTagNames', []);
+        var $input = $form.find('.tag-new-input');
+        var $btn = $form.find('.tag-new-add-btn');
+        var $list = $form.find('.tag-new-list');
+
+        function render() {
+            var arr = $form.data('newTagNames') || [];
+            $list.empty();
+            for (var i = 0; i < arr.length; i++) {
+                var name = arr[i];
+                var $chip = $('<span class="tag-new-chip" style="display:inline-block;' +
+                              'padding:2px 8px;margin:0 4px 4px 0;background:#eef5ff;' +
+                              'border:1px solid #b6d4fe;border-radius:10px;font-size:12px;' +
+                              'color:#1d4ed8;"></span>');
+                $chip.text(name).attr('data-name', name);
+                var $x = $('<a href="javascript:void(0)" style="margin-left:6px;color:#999;">×</a>');
+                $x.on('click', (function (n) {
+                    return function () {
+                        var a = $form.data('newTagNames') || [];
+                        $form.data('newTagNames', a.filter(function (x) { return x !== n; }));
+                        render();
+                    };
+                })(name));
+                $chip.append($x);
+                $list.append($chip);
+            }
+        }
+
+        function add() {
+            var v = ($input.val() || '').trim();
+            if (!v) return;
+            var arr = $form.data('newTagNames') || [];
+            if (arr.indexOf(v) >= 0) { $input.val(''); return; }
+            var existingTexts = ($form.find('select[name="existingTagSns"]').select2('data') || [])
+                .map(function (x) { return x.text; });
+            if (existingTexts.indexOf(v) >= 0) {
+                layer.msg('该标签已在已有下拉中选中', {icon: 7, time: 1200});
+                $input.val('');
+                return;
+            }
+            arr.push(v);
+            $form.data('newTagNames', arr);
+            $input.val('');
+            render();
+        }
+
+        $btn.on('click', add);
+        $input.on('keydown', function (e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                add();
+            }
+        });
+    }
+
+    /** 文章修改成功后同步标签关联（失败不阻断主流程） */
+    function syncArticleTags(sn, onDone) {
+        var tags = collectTagInputs();
+        $.ajax({
+            type: 'post',
+            url: _u('/bms/api/tag/bindArticle'),
+            traditional: true,
+            data: {
+                articleSn: sn,
+                existingTagSns: tags.existing,
+                newTagNames: tags.created
+            },
+            dataType: 'json',
+            success: function (res) {
+                if (!Api.isOk(res)) {
+                    layer.msg(Api.msg(res, '标签更新失败（正文已保存）'), {icon: 2, time: 1500});
+                }
+                if (typeof onDone === 'function') onDone();
+            },
+            error: function () {
+                layer.msg('标签更新失败（正文已保存）', {icon: 2, time: 1500});
+                if (typeof onDone === 'function') onDone();
+            }
+        });
+    }
+
+    /** 提交「保持当前状态」的更新（已发布/已撤回都走这个）。content 由调用方预读，避免在内部再访问 editor。 */
+    function submitUpdate(content, onSuccess) {
+        var sn = $('#mod-article-form').find('input[name="sn"]').val();
+        var title = $('#mod-article-form').find('input[name="articleTitle"]').val();
+        var categorySn = $('#mod-article-form').find('select[name="categorySn"]').val();
+        var summary = $('#mod-article-form').find('textarea[name="articleSummary"]').val();
+
+        var load = layer.load(0, {shade: [0.1, '#fff']});
+        $.ajax({
+            type: "post",
+            url: _u("/bms/api/article/update"),
+            data: {
+                "sn": sn,
+                "articleTitle": title,
+                "categorySn": categorySn,
+                "articleSummary": summary,
+                "articleContent": content
+            },
+            cache: false,
+            dataType: 'json',
+            success: function (res) {
+                if (Api.isOk(res)) {
+                    syncArticleTags(sn, function () {
+                        layer.close(load);
+                        if (typeof onSuccess === 'function') onSuccess(sn);
+                    });
+                } else {
+                    layer.close(load);
+                    layer.alert(Api.msg(res, '修改失败'),
+                                {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                }
+            },
+            error: function (xhr) {
+                layer.close(load);
+                layer.alert('请求失败：' + (xhr && xhr.status ? xhr.status : '网络异常'),
+                            {skin: 'layui-layer-lan', icon: 2});
+            }
+        });
+    }
+
+    /** 草稿专用：使用 saveDraft 端点更新（status 保持 DRAFT）。content 由调用方预读。 */
+    function submitUpdateAsDraft(content, onSuccess) {
+        var sn = $('#mod-article-form').find('input[name="sn"]').val();
+        var title = $('#mod-article-form').find('input[name="articleTitle"]').val();
+        var categorySn = $('#mod-article-form').find('select[name="categorySn"]').val();
+        var summary = $('#mod-article-form').find('textarea[name="articleSummary"]').val();
+
+        var load = layer.load(0, {shade: [0.1, '#fff']});
+        $.ajax({
+            type: "post",
+            url: _u("/bms/api/article/saveDraft"),
+            data: {
+                "sn": sn,
+                "articleTitle": title,
+                "categorySn": categorySn,
+                "articleSummary": summary,
+                "articleContent": content
+            },
+            cache: false,
+            dataType: 'json',
+            success: function (res) {
+                if (Api.isOk(res)) {
+                    syncArticleTags(sn, function () {
+                        layer.close(load);
+                        if (typeof onSuccess === 'function') onSuccess(sn);
+                    });
+                } else {
+                    layer.close(load);
+                    layer.alert(Api.msg(res, '保存失败'),
+                                {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                }
+            },
+            error: function (xhr) {
+                layer.close(load);
+                layer.alert('请求失败：' + (xhr && xhr.status ? xhr.status : '网络异常'),
+                            {skin: 'layui-layer-lan', icon: 2});
+            }
+        });
+    }
+
+    /** 状态切换 POST：publish / republish（withdraw 走专用 prompt 路径） */
+    function doStatusTransfer(path, sn, okMsg, onOk) {
+        var load = layer.load(0, {shade: [0.1, '#fff']});
+        $.ajax({
+            type: 'post',
+            url: _u(path),
+            data: {sn: sn},
+            cache: false,
+            dataType: 'json',
+            success: function (res) {
+                layer.close(load);
+                if (Api.isOk(res)) {
+                    layer.msg(Api.msg(res, okMsg), {icon: 1, time: 800});
+                    if (typeof onOk === 'function') onOk();
+                } else {
+                    layer.alert(Api.msg(res, '操作失败'),
+                                {skin: 'layui-layer-lan', icon: 2});
+                }
+            },
+            error: function (xhr) {
+                layer.close(load);
+                layer.alert('请求失败：' + (xhr && xhr.status ? xhr.status : '网络异常'),
+                            {skin: 'layui-layer-lan', icon: 2});
+            }
+        });
+    }
+
+    /** 修改成功后的统一交互：回到列表 + 弹"去看看"提示 */
+    function afterModifySuccess(sn) {
+        layer.confirm('操作成功！赶快去看看吧', {
+            btn: ['去看看', '懒，不去'],
+            skin: 'layui-layer-lan',
+            anim: 4,
+            icon: 1
+        }, function (index) {
+            layer.close(index);
+            retArticleList();
+            window.open(__amsSiteUrl + '/' + sn);
+        }, function (index) {
+            layer.close(index);
+            retArticleList();
+        });
+    }
 
     function resetBlog() { /* no-op */ }
 

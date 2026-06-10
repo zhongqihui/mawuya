@@ -51,6 +51,8 @@ class LogInfoMapperE2ETest {
                 .setReqMethod("GET")
                 .setParams("")
                 .setBrowser("Mozilla/5.0")
+                // 覆盖 2026-06-10 新增的 req_headers 列；测试中放精简串即可
+                .setReqHeaders("User-Agent: Mozilla/5.0\nHost: localhost\n")
                 .setRespStatus("0")
                 .setExceptMessage(null);
     }

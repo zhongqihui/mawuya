@@ -52,10 +52,12 @@ public class BlogStatsService {
         this.reviewInfoMapper = reviewInfoMapper;
     }
 
-    /** 文章总数。 */
+    /** 文章总数（仅对外可见，即已发布 status=1）。 */
     public int countArticles() {
         try {
-            return articleInfoMapper.selectCount(new HashMap<>(EMPTY_CONDITION_CAPACITY));
+            java.util.Map<String, Object> cond = new HashMap<>(EMPTY_CONDITION_CAPACITY);
+            cond.put("status", ArticleService.STATUS_PUBLISHED);
+            return articleInfoMapper.selectCount(cond);
         } catch (Exception e) {
             log.warn("[stats] countArticles failed: {}", e.getMessage());
             return 0;
@@ -92,10 +94,10 @@ public class BlogStatsService {
         }
     }
 
-    /** 列出热门文章。 */
+    /** 列出热门文章（仅取已发布的，避免侧边栏出现草稿/撤回稿）。 */
     public List<ArticleDO> listHotArticles(int limit) {
         try {
-            return articleInfoMapper.selectHotTopN(limit);
+            return articleInfoMapper.selectHotTopN(limit, ArticleService.STATUS_PUBLISHED);
         } catch (Exception e) {
             log.warn("[stats] listHotArticles failed: {}", e.getMessage());
             return Collections.emptyList();
@@ -112,10 +114,10 @@ public class BlogStatsService {
         }
     }
 
-    /** 列出标签云（带文章计数）。 */
+    /** 列出标签云（带文章计数）。仅统计已发布文章，与右侧栏 published-only 一致。 */
     public List<TagDO> listTagCloud() {
         try {
-            return tagMapper.selectAllWithArtSize();
+            return tagMapper.selectAllWithPublishedArtSize();
         } catch (Exception e) {
             log.warn("[stats] listTagCloud failed: {}", e.getMessage());
             return Collections.emptyList();

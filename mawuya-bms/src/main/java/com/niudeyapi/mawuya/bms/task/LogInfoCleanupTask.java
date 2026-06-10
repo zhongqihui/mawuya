@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -52,6 +53,15 @@ public class LogInfoCleanupTask {
     /** req_time 格式与 {@code LogInterceptor} 写入保持一致 */
     private static final DateTimeFormatter REQ_TIME_FMT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    /**
+     * 业务统一时区：Asia/Shanghai。
+     * <p>{@code LocalDateTime.now()} 不带参数时会用 JVM 默认时区；尽管启动类已经
+     * 显式 {@code TimeZone.setDefault(Asia/Shanghai)}，这里再传入 ZoneId 作为
+     * 防御性写法，避免任何第三方代码修改 default timezone 后导致清理 cutoff
+     * 偏移 8 小时——一旦偏移会误删 8 小时内的真实日志或漏删该清理的旧日志。</p>
+     */
+    private static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Shanghai");
 
     /** 配置上下界，避免误配置打挂 DB */
     private static final int MIN_RETAIN_DAYS = 1;
@@ -117,7 +127,9 @@ public class LogInfoCleanupTask {
         long backoffMs = clampLong(props.getRetryBackoffMs(), MIN_BACKOFF_MS, MAX_BACKOFF_MS);
 
         // 2. 计算截止时间，按字符串比较（与 req_time 同格式）
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(retainDays);
+        //    显式传 Asia/Shanghai ZoneId，与 LogInterceptor 落库的 +08 时间字符串严格对齐，
+        //    防止任何环境下 JVM 默认时区被修改导致 cutoff 偏移 8 小时。
+        LocalDateTime cutoff = LocalDateTime.now(DEFAULT_ZONE).minusDays(retainDays);
         String reqTimeBefore = cutoff.format(REQ_TIME_FMT);
 
         long startNanos = System.nanoTime();

@@ -50,7 +50,10 @@ class ArticleInfoMapperE2ETest {
                 .setPictureUrl("/upload/test.png")
                 .setArticleTitle(title)
                 .setArticleSummary("summary-" + title)
-                .setArticleContent("content-" + title);
+                .setArticleContent("content-" + title)
+                // mapper.xml 的 INSERT 使用 #{status}，不设的话会写入 NULL；
+                // selectPrev/Next 限定 status=1，所以默认按已发布插入
+                .setStatus(1);
     }
 
     /** 通过标题反查最新插入的文章主键。insert 语句没有 useGeneratedKeys，故只能这样回查。 */

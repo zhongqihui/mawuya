@@ -42,6 +42,34 @@
                             </select>
                         </div>
                     </div>
+                    <!--
+                        标签控件（兼容 select2 3.4.5）：
+                          上方  : multiple select2，选择已有标签（option value 为 tag sn）
+                          下方  : 「新建标签」文本框 + 添加按钮 + 已新增名称气泡列表
+                        提交时由 JS 合并为 {existingTagSns:[...], newTagNames:[...]}，
+                        与「标签管理」页落到同一张 tag_info + article_tag，AMS 标签云强一致。
+                    -->
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">标签</label>
+                        <div class="col-sm-8">
+                            <select class="tag-existing-select" name="existingTagSns"
+                                    multiple="multiple" style="width:100%;">
+                                <option th:each="t : ${tagList}"
+                                        th:value="${t.sn}"
+                                        th:text="${t.tagName}"></option>
+                            </select>
+                            <div style="margin-top:8px; display:flex; gap:6px; align-items:center;">
+                                <input type="text" class="form-control tag-new-input"
+                                       placeholder="新标签名，按回车或点添加"
+                                       style="width:240px; display:inline-block;"/>
+                                <button type="button" class="btn btn-sm btn-default tag-new-add-btn">
+                                    <i class="fa fa-plus"></i> 添加
+                                </button>
+                                <span class="tag-new-list" style="display:inline-block;"></span>
+                            </div>
+                            <small style="color:#8a98a8;">从下拉选已有标签；要新增的标签在下方输入后回车</small>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label class="col-sm-1 control-label">概要</label>
                         <div class="col-sm-8">
@@ -59,7 +87,13 @@
                 <div class="form-group">
                     <label class="col-sm-1 control-label"></label>
                     <button type="button" class="btn btn-primary" id="publish_blog">立即发布</button>
-                    <button type="reset" class="btn btn-default" onclick="resetBlog()">重置</button>
+                    <button type="button" class="btn btn-warning" id="save_draft_btn"
+                            style="margin-left:6px;" title="只保存不发布，可在博客列表→草稿 tab 找回继续编辑">
+                        <i class="fa fa-save"></i> 保存草稿
+                    </button>
+                    <button type="reset" class="btn btn-default" onclick="resetBlog()" style="margin-left:6px;">重置</button>
+                    <!-- 草稿状态回显：保存后变成"草稿已保存（xx:xx）" -->
+                    <span id="draft-status-hint" style="margin-left:12px; color:#8c7900; font-size:13px;"></span>
                 </div>
             </div>
         </div>
@@ -83,7 +117,17 @@
         $("#add-article-form").validationEngine("attach", {scroll: false});
         // 注意：不要在此处再次调用 App.init()，否则 .cl-vnavigation .parent>a
         // 的 delegate 事件会被重复绑定，造成"展开后立即收回"。这里只做局部初始化。
-        if ($.fn.select2) { $('#add-article-form .select2').select2({width: '100%'}); }
+        if ($.fn.select2) {
+            $('#add-article-form .select2').select2({width: '100%'});
+            // select2 版本是 3.4.5（2013），不支持 4.x 的 tags+createTag 语法。
+            // 这里只做"已有标签多选下拉"。新增标签走旁边的输入框，避免 3.x/4.x API 混用。
+            $('#add-article-form select[name="existingTagSns"]').select2({
+                width: '100%',
+                placeholder: '点击选择已有标签（可多选）',
+                allowClear: true
+            });
+        }
+        bindNewTagAdder('#add-article-form');
 
         var contentEditor = editormd("add-article-editormd", {
             width: false,
@@ -116,40 +160,286 @@
             var categorySn = $('#add-article-form').find('select[name="categorySn"]').val();
             var summary = $('#add-article-form').find('textarea[name="articleSummary"]').val();
 
+            // 如果当前是从已有草稿继续编辑（已 saveDraft 一次得到 sn），
+            // 直接走 update → publish 两步保证 sn 一致；
+            // 否则走原有"一步 create（立即发布）"路径，避免新增 DB 行。
+            if (__currentDraftSn) {
+                publishExistingDraft(__currentDraftSn, title, categorySn, summary, content);
+            } else {
+                createAndPublish(title, categorySn, summary, content);
+            }
+        });
+
+        // 保存草稿：第一次提交会拿到 sn，后续保存复用同一 sn
+        $("#save_draft_btn").click(function () {
+            // 草稿仅要求标题不空，正文可以为空（先存草壳子）
+            var title = $('#add-article-form').find('input[name="articleTitle"]').val();
+            if (!title || !title.trim()) {
+                layer.msg('请先填写标题再保存草稿', {icon: 7});
+                return;
+            }
+            var content = contentEditor.getMarkdown();
+            var categorySn = $('#add-article-form').find('select[name="categorySn"]').val();
+            var summary = $('#add-article-form').find('textarea[name="articleSummary"]').val() || '';
+            var tags = collectTagInputs('#add-article-form');
+
+            var data = {
+                articleTitle: title,
+                categorySn: categorySn,
+                articleSummary: summary,
+                articleContent: content
+            };
+            if (__currentDraftSn) data.sn = __currentDraftSn;
+
+            var load = layer.load(0, {shade: [0.1, '#fff']});
             $.ajax({
                 type: "post",
-                url: _u("/bms/api/article/create"),
-                data: {
-                    "articleTitle": title,
-                    "categorySn": categorySn,
-                    "articleSummary": summary,
-                    "articleContent": content
-                },
+                url: _u("/bms/api/article/saveDraft"),
+                data: data,
                 cache: false,
                 dataType: 'json',
                 success: function (res) {
                     if (Api.isOk(res)) {
-                        layer.confirm('发布成功！赶快去看看吧', {
-                            btn: ['去看看', '懒，不去'],
-                            skin: 'layui-layer-lan',
-                            anim: 4,
-                            icon: 1
-                        }, function (index) {
-                            retArticleList();
-                            layer.close(index);
-                            window.open(__amsSiteUrl + '/index');
-                        }, function (index) {
-                            retArticleList();
-                            layer.close(index);
+                        if (res && res.data && res.data.sn) {
+                            __currentDraftSn = res.data.sn;
+                        }
+                        // 拿到 sn 后立刻绑定标签，与正文写入保持同一次保存的语义
+                        bindArticleTags(__currentDraftSn, tags, function () {
+                            layer.close(load);
+                            var now = new Date();
+                            var hh = ('0' + now.getHours()).slice(-2);
+                            var mm = ('0' + now.getMinutes()).slice(-2);
+                            $('#draft-status-hint').text('草稿已保存（' + hh + ':' + mm + '）');
+                            layer.msg(Api.msg(res, '草稿已保存'), {icon: 1, time: 1000});
                         });
                     } else {
-                        layer.alert(Api.msg(res, '发布失败'),
-                                    {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                        layer.close(load);
+                        layer.alert(Api.msg(res, '草稿保存失败'),
+                                    {skin: 'layui-layer-lan', icon: 2});
                     }
+                },
+                error: function () {
+                    layer.close(load);
+                    layer.alert('网络异常，草稿保存失败', {icon: 2});
                 }
             });
         });
     });
+
+    // 当前页面下若用户先点了「保存草稿」会拿到一个 sn，发布时改走 update + publish 复用此 sn
+    var __currentDraftSn = null;
+
+    /**
+     * 读取当前表单的标签提交数据：
+     *   existing: 用户在多选 select2 中选中的已有 tag sn 数组（number[]）
+     *   created : 用户在「新标签」输入框中累计加入的新名数组（string[]）
+     */
+    function collectTagInputs(formSelector) {
+        var $form = $(formSelector);
+        var rawExisting = $form.find('select[name="existingTagSns"]').val() || [];
+        var existing = [];
+        for (var i = 0; i < rawExisting.length; i++) {
+            var n = parseInt(rawExisting[i], 10);
+            if (!isNaN(n)) existing.push(n);
+        }
+        var created = ($form.data('newTagNames') || []).slice();
+        return {existing: existing, created: created};
+    }
+
+    /**
+     * 给「新标签」输入框 + 添加按钮绑事件：
+     *   - 回车 / 点按钮 → 把当前输入加进 form 内的内存数组 + 渲染气泡 + 可点 × 移除
+     *   - 数据存放：JQuery .data('newTagNames', [...]) 挂在 form 上，提交时统一读出
+     * 这种做法避开了 select2 3.4.5 的 tags 模式（4.x 才有），不引入新依赖。
+     */
+    function bindNewTagAdder(formSelector) {
+        var $form = $(formSelector);
+        $form.data('newTagNames', []);
+        var $input = $form.find('.tag-new-input');
+        var $btn = $form.find('.tag-new-add-btn');
+        var $list = $form.find('.tag-new-list');
+
+        function render() {
+            var arr = $form.data('newTagNames') || [];
+            $list.empty();
+            for (var i = 0; i < arr.length; i++) {
+                var name = arr[i];
+                var $chip = $('<span class="tag-new-chip" style="display:inline-block;' +
+                              'padding:2px 8px;margin:0 4px 4px 0;background:#eef5ff;' +
+                              'border:1px solid #b6d4fe;border-radius:10px;font-size:12px;' +
+                              'color:#1d4ed8;"></span>');
+                $chip.text(name).attr('data-name', name);
+                var $x = $('<a href="javascript:void(0)" style="margin-left:6px;color:#999;">×</a>');
+                $x.on('click', (function (n) {
+                    return function () {
+                        var a = $form.data('newTagNames') || [];
+                        $form.data('newTagNames', a.filter(function (x) { return x !== n; }));
+                        render();
+                    };
+                })(name));
+                $chip.append($x);
+                $list.append($chip);
+            }
+        }
+
+        function add() {
+            var v = ($input.val() || '').trim();
+            if (!v) return;
+            // 同名去重：已经在已有下拉中选择的名字也不再当成新建
+            var arr = $form.data('newTagNames') || [];
+            if (arr.indexOf(v) >= 0) { $input.val(''); return; }
+            var existingTexts = ($form.find('select[name="existingTagSns"]').select2('data') || [])
+                .map(function (x) { return x.text; });
+            if (existingTexts.indexOf(v) >= 0) {
+                layer.msg('该标签已在已有下拉中选中', {icon: 7, time: 1200});
+                $input.val('');
+                return;
+            }
+            arr.push(v);
+            $form.data('newTagNames', arr);
+            $input.val('');
+            render();
+        }
+
+        $btn.on('click', add);
+        $input.on('keydown', function (e) {
+            if (e.which === 13) { // Enter
+                e.preventDefault();
+                add();
+            }
+        });
+    }
+
+    /**
+     * 文章保存成功后绑定标签。
+     * <p>失败不阻断主流程：标签绑定异常仅给 toast 提示，文章本身已经成功。</p>
+     */
+    function bindArticleTags(articleSn, tags, onDone) {
+        if (!articleSn || !tags || (tags.existing.length === 0 && tags.created.length === 0)) {
+            if (typeof onDone === 'function') onDone();
+            return;
+        }
+        $.ajax({
+            type: 'post',
+            url: _u('/bms/api/tag/bindArticle'),
+            traditional: true,                   // 让 jQuery 把数组按 existingTagSns=1&existingTagSns=2 序列化
+            data: {
+                articleSn: articleSn,
+                existingTagSns: tags.existing,
+                newTagNames: tags.created
+            },
+            dataType: 'json',
+            success: function (res) {
+                if (!Api.isOk(res)) {
+                    layer.msg(Api.msg(res, '标签更新失败（文章已保存）'), {icon: 2, time: 1500});
+                }
+                if (typeof onDone === 'function') onDone();
+            },
+            error: function () {
+                layer.msg('标签更新失败（文章已保存）', {icon: 2, time: 1500});
+                if (typeof onDone === 'function') onDone();
+            }
+        });
+    }
+
+    /** 直接新建并发布（无中间草稿） */
+    function createAndPublish(title, categorySn, summary, content) {
+        var tags = collectTagInputs('#add-article-form');
+        $.ajax({
+            type: "post",
+            url: _u("/bms/api/article/create"),
+            data: {
+                "articleTitle": title,
+                "categorySn": categorySn,
+                "articleSummary": summary,
+                "articleContent": content
+            },
+            cache: false,
+            dataType: 'json',
+            success: function (res) {
+                if (Api.isOk(res)) {
+                    // create 当前接口不返回新文章 sn；通过 listAllNoContent 的 ORDER BY sn DESC 找回不够稳妥，
+                    // 故没有 sn 时跳过标签绑定（草稿先存→再发布的路径会拿到 sn 走 bindArticleTags）。
+                    // 用户场景：点了"立即发布"→ 文章已发布；标签仅在编辑页二次绑定。
+                    var newSn = res && res.data && res.data.sn ? res.data.sn : null;
+                    if (newSn) {
+                        bindArticleTags(newSn, tags, function () { afterPublishSuccess(newSn); });
+                    } else {
+                        afterPublishSuccess(null);
+                    }
+                } else {
+                    layer.alert(Api.msg(res, '发布失败'),
+                                {skin: 'layui-layer-lan', closeBtn: 0, icon: 2});
+                }
+            }
+        });
+    }
+
+    /** 已有草稿 → 先 update 写最新内容 → 再 publish 切状态 → 最后绑定标签 */
+    function publishExistingDraft(sn, title, categorySn, summary, content) {
+        var tags = collectTagInputs('#add-article-form');
+        var load = layer.load(0, {shade: [0.1, '#fff']});
+        // 先 update（保持 status=DRAFT），更新最新内容
+        $.ajax({
+            type: 'post',
+            url: _u('/bms/api/article/saveDraft'),
+            data: {
+                sn: sn,
+                articleTitle: title,
+                categorySn: categorySn,
+                articleSummary: summary,
+                articleContent: content
+            },
+            cache: false,
+            dataType: 'json',
+            success: function (r1) {
+                if (!Api.isOk(r1)) {
+                    layer.close(load);
+                    layer.alert(Api.msg(r1, '更新失败'),
+                                {skin: 'layui-layer-lan', icon: 2});
+                    return;
+                }
+                // 再 publish
+                $.ajax({
+                    type: 'post',
+                    url: _u('/bms/api/article/publish'),
+                    data: {sn: sn},
+                    cache: false,
+                    dataType: 'json',
+                    success: function (r2) {
+                        if (!Api.isOk(r2)) {
+                            layer.close(load);
+                            layer.alert(Api.msg(r2, '发布失败'),
+                                        {skin: 'layui-layer-lan', icon: 2});
+                            return;
+                        }
+                        // 最后绑定标签
+                        bindArticleTags(sn, tags, function () {
+                            layer.close(load);
+                            afterPublishSuccess(sn);
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    /** 发布成功后的统一提示 + 跳转：传 sn 时跳到详情，否则只跳首页 */
+    function afterPublishSuccess(sn) {
+        layer.confirm('发布成功！赶快去看看吧', {
+            btn: ['去看看', '懒，不去'],
+            skin: 'layui-layer-lan',
+            anim: 4,
+            icon: 1
+        }, function (index) {
+            retArticleList();
+            layer.close(index);
+            window.open(__amsSiteUrl + (sn ? ('/' + sn) : '/index'));
+        }, function (index) {
+            retArticleList();
+            layer.close(index);
+        });
+    }
 
     function resetBlog() {
         $('.fa-eraser').trigger('click');

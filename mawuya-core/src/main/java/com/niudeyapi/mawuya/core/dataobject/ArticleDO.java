@@ -43,6 +43,15 @@ public class ArticleDO implements Serializable {
     private String articleSummary;
     /** 文章内容 */
     private String articleContent;
+    /**
+     * 文章状态：0=草稿（仅作者可见，BMS 列表可查） /
+     *              1=已发布（AMS 对外可见） /
+     *              2=已撤回（可二次编辑后重新发布，对外不可见）。
+     *
+     * <p>所有 AMS 端只读路径（首页 / 详情 / 归档 / 搜索 / 分类页 / 标签页 /
+     * 上下篇 / 热门文章 / sitemap）必须只查 {@code status = 1}。</p>
+     */
+    private Integer status;
     /** 文章插入时间（yyyy-MM-dd HH:mm:ss） */
     private String insertTime;
     /** 文章修改时间（yyyy-MM-dd HH:mm:ss） */
@@ -141,6 +150,15 @@ public class ArticleDO implements Serializable {
         return this;
     }
 
+    public Integer getStatus() {
+        return status;
+    }
+
+    public ArticleDO setStatus(Integer status) {
+        this.status = status;
+        return this;
+    }
+
     public String getInsertTime() {
         return insertTime;
     }
@@ -171,6 +189,7 @@ public class ArticleDO implements Serializable {
                 ", pictureUrl='" + pictureUrl + '\'' +
                 ", articleTitle='" + articleTitle + '\'' +
                 ", articleSummary='" + articleSummary + '\'' +
+                ", status=" + status +
                 ", insertTime='" + insertTime + '\'' +
                 ", updateTime='" + updateTime + '\'' +
                 '}';

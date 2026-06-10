@@ -84,12 +84,16 @@ public class LogToAPIThread implements Runnable {
     }
 
     /**
-     * 入口：先查主源，主源失败时由 callback 自动 fallback；都失败则回退入队/入库。
+     * 入口：先查主源，主源失败时由 callback 自动 fallback；都失败则放弃 geo 字段，不重复入库。
+     *
+     * <p>注意：自 2026-06-09 起，PV/UV 写入由 {@link com.niudeyapi.mawuya.core.interceptor.LogInterceptor}
+     * 直接负责（同步入 DB 队列），本线程仅负责「按 IP 异步补全 geo 字段」。
+     * 因此回调成功时<strong>直接修改共享对象的 country/province/city/isp 字段</strong>即可（同对象引用），
+     * 不再调用 enqueueDb，避免重复入库。</p>
      */
     private void queryGeo(LogDO info) {
         if (StringUtils.isEmpty(info.getIpAddr())) {
-            // 没拿到访客 IP 直接入库，不浪费一次外呼
-            enqueueDb(info);
+            // 没拿到访客 IP 直接放弃 geo（DB 入库由 LogInterceptor 已经完成）
             return;
         }
         callPrimary(info);
@@ -119,7 +123,13 @@ public class LogToAPIThread implements Runnable {
         OkHttpUtil.enqueue(request, new GeoCallback(info, /*isFallback*/ true));
     }
 
-    /** 把 logInfo 推入 DB 入库队列；中断异常正确传播。 */
+    /**
+     * 把 logInfo 推入 DB 入库队列。
+     *
+     * <p>历史路径用于「geo 查询成功后才入 DB」；自 2026-06-09 起 PV/UV 由 LogInterceptor
+     * 直接入 DB 队列，本方法不再被调用。保留私有方法以便未来扩展（如失败重试入兜底队列）。</p>
+     */
+    @SuppressWarnings("unused")
     private static void enqueueDb(LogDO info) {
         try {
             DataCenter.getLogInfoToDBQueue().put(info);
@@ -178,12 +188,20 @@ public class LogToAPIThread implements Runnable {
                 JsonNode root = MAPPER.readTree(text);
                 boolean ok = isFallback ? parseIpapiCo(root, logInfo) : parseIpApiCom(root, logInfo);
                 if (ok) {
-                    enqueueDb(logInfo);
+                    // 解析成功：geo 字段已直接写入 logInfo（同一引用）。
+                    // 注意：若 LogToDBThread 此前已经把对象 insert 到 DB，则 geo 字段不会回填到 DB；
+                    //       当前业务并未严格依赖 geo（dashboard 用 ip_addr 自己算 UV），
+                    //       后续若需要持久化 geo，可在此处补一次 UPDATE。
+                    if (log.isDebugEnabled()) {
+                        log.debug("geo lookup ok via {}: ip={}, country={}",
+                                isFallback ? "ipapi.co" : "ip-api.com",
+                                logInfo.getIpAddr(), logInfo.getCountry());
+                    }
                 } else if (!isFallback) {
                     // 主源响应可解析但 status!=success（比如保留地址/限流）→ 转兜底
                     callFallback(logInfo);
                 } else {
-                    // 兜底也无可用数据 → 重试或入库
+                    // 兜底也无可用数据 → 重试
                     handleAllFailed("both api returned no usable data");
                 }
             } catch (Exception parseEx) {
@@ -199,7 +217,7 @@ public class LogToAPIThread implements Runnable {
             }
         }
 
-        /** 双源都失败时的统一处理：未到重试上限就重新入主源队列；否则入库。 */
+        /** 双源都失败时的统一处理：未到重试上限就重新入主源队列；否则放弃 geo。 */
         private void handleAllFailed(String reason) {
             // 关键：tryTimes 是包装类型 Integer（与 DB 列对齐，允许 NULL）。
             // LogInterceptor 创建 LogDO 时虽然已设 0，但仍按"防御式编程"做 null-safe，
@@ -210,19 +228,19 @@ public class LogToAPIThread implements Runnable {
                     log.warn("geo lookup gave up after {} tries, ip={}, lastReason={}",
                             currTry, logInfo.getIpAddr(), reason);
                 }
-                enqueueDb(logInfo);
+                // 自 2026-06-09 起：DB 入库由 LogInterceptor 直接负责，此处只放弃 geo，不再二次入库。
                 return;
             }
             int nextTry = currTry + 1;
             logInfo.setTryTimes(nextTry);
-            try {
-                DataCenter.getLogInfoToAPIQueue().put(logInfo);
+            // 用 offer 非阻塞，避免重试压垮 API 队列；满了就放弃 geo（PV/UV 不受影响）。
+            if (!DataCenter.getLogInfoToAPIQueue().offer(logInfo)) {
                 if (log.isDebugEnabled()) {
-                    log.debug("geo lookup retry, ip={}, retry={}, reason={}",
-                            logInfo.getIpAddr(), nextTry, reason);
+                    log.debug("geo retry skipped (queue full), ip={}, retry={}", logInfo.getIpAddr(), nextTry);
                 }
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
+            } else if (log.isDebugEnabled()) {
+                log.debug("geo lookup retry, ip={}, retry={}, reason={}",
+                        logInfo.getIpAddr(), nextTry, reason);
             }
         }
     }

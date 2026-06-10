@@ -3,11 +3,35 @@
 <mapper namespace="com.niudeyapi.mawuya.core.mapper.ArticleInfoMapper">
 
     <sql id="_columns">
-        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,article_content,insert_time,update_time
+        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,article_content,status,insert_time,update_time
     </sql>
 
     <sql id="_columns_no_content">
-        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,insert_time,update_time
+        sn,category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,status,insert_time,update_time
+    </sql>
+
+    <!--
+        通用 WHERE 片段：
+          1) categorySn：可选过滤
+          2) status：可选过滤（单个 Integer，AMS 端固定传 1=已发布；BMS 列表按 tab 传值）
+          3) statuses：可选过滤（Collection<Integer>，BMS"全部"tab 不传，BMS 默认希望「非草稿+非撤回」时可以传 [1]）
+        所有 OGNL 类型判断都用 Java 原生（避免依赖 commons-lang3 ognl 解析）以减小坑。
+    -->
+    <sql id="_where_filter">
+        <where>
+            <if test="categorySn != null and categorySn != ''">
+                AND category_sn = #{categorySn}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="statuses != null">
+                AND status IN
+                <foreach collection="statuses" item="st" open="(" separator="," close=")">
+                    #{st}
+                </foreach>
+            </if>
+        </where>
     </sql>
 
     <select id="selectById" parameterType="int" resultType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
@@ -16,30 +40,18 @@
 
     <select id="selectList" parameterType="map" resultType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns"/> FROM article_info
-        <where>
-            <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
-                AND category_sn = #{categorySn}
-            </if>
-        </where>
+        <include refid="_where_filter"/>
         ORDER BY sn DESC
     </select>
 
     <select id="selectCount" parameterType="map" resultType="int">
         SELECT count(sn) FROM article_info
-        <where>
-            <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
-                AND category_sn = #{categorySn}
-            </if>
-        </where>
+        <include refid="_where_filter"/>
     </select>
 
     <select id="selectByPage" parameterType="java.util.Map" resultType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns"/> FROM article_info
-        <where>
-            <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
-                AND category_sn = #{categorySn}
-            </if>
-        </where>
+        <include refid="_where_filter"/>
         ORDER BY sn DESC
         <if test="@com.niudeyapi.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
             LIMIT #{start},#{limit}
@@ -48,25 +60,41 @@
 
     <select id="selectAllNoContent" parameterType="map" resultType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/> FROM article_info
-        <where>
-            <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(categorySn)">
-                AND category_sn = #{categorySn}
-            </if>
-        </where>
+        <include refid="_where_filter"/>
         ORDER BY sn DESC
     </select>
 
+    <!--
+        上一篇 / 下一篇：AMS 详情页限定只在 status=1（已发布）中跳转，
+        避免点 prev/next 跳到草稿或已撤回文章。
+    -->
     <select id="selectNextById" parameterType="int" resultType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
-        SELECT <include refid="_columns_no_content"/> FROM article_info WHERE <![CDATA[ sn > #{value} ]]> ORDER BY sn ASC LIMIT 1
+        SELECT <include refid="_columns_no_content"/> FROM article_info
+        WHERE <![CDATA[ sn > #{value} ]]> AND status = 1
+        ORDER BY sn ASC LIMIT 1
     </select>
 
     <select id="selectPrevById" parameterType="int" resultType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
-        SELECT <include refid="_columns_no_content"/> FROM article_info WHERE <![CDATA[ sn < #{value} ]]> ORDER BY sn DESC LIMIT 1
+        SELECT <include refid="_columns_no_content"/> FROM article_info
+        WHERE <![CDATA[ sn < #{value} ]]> AND status = 1
+        ORDER BY sn DESC LIMIT 1
     </select>
 
-    <insert id="insert" parameterType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
-        INSERT IGNORE INTO article_info (category_sn,read_num,review_num,praise_num,tease_num,picture_url,article_title,article_summary,article_content,insert_time,update_time)
-        VALUES (#{categorySn},#{readNum},#{reviewNum},#{praiseNum},#{teaseNum},#{pictureUrl},#{articleTitle},#{articleSummary},#{articleContent},NOW(),NOW())
+    <insert id="insert" parameterType="com.niudeyapi.mawuya.core.dataobject.ArticleDO"
+            useGeneratedKeys="true" keyProperty="sn">
+        INSERT INTO article_info
+            (category_sn, read_num, review_num, praise_num, tease_num,
+             picture_url, article_title, article_summary, article_content,
+             status, insert_time, update_time)
+        VALUES
+            (#{categorySn}, #{readNum}, #{reviewNum}, #{praiseNum}, #{teaseNum},
+             #{pictureUrl}, #{articleTitle}, #{articleSummary}, #{articleContent},
+             #{status},
+             <choose>
+                 <when test="status != null and status == 0">NULL</when>
+                 <otherwise>NOW()</otherwise>
+             </choose>,
+             NOW())
     </insert>
 
     <delete id="deleteById" parameterType="int">
@@ -84,6 +112,9 @@
             article_title   = #{articleTitle},
             article_summary = #{articleSummary},
             article_content = #{articleContent},
+            <if test="status != null">
+                status      = #{status},
+            </if>
             insert_time     = #{insertTime},
             update_time     = NOW()
         WHERE sn = #{sn}
@@ -101,13 +132,34 @@
         UPDATE article_info a SET a.picture_url = #{pictureUrl} WHERE a.sn = #{sn}
     </update>
 
-    <!-- 全文搜索（标题/摘要/正文 LIKE） -->
+    <!--
+        单纯切换状态：仅更新 status 与 update_time，不动其他业务字段。
+        如果原 insert_time 为 NULL（草稿场景），重新发布时一并把首发时间补上，
+        让 AMS 端归档/SEO 都能拿到合理的 datePublished。
+    -->
+    <update id="updateStatus">
+        UPDATE article_info
+        SET status = #{status},
+            update_time = NOW()
+            <if test="fillInsertTimeIfNull == true">
+                , insert_time = COALESCE(insert_time, NOW())
+            </if>
+        WHERE sn = #{sn}
+    </update>
+
+    <!--
+        全文搜索（标题/摘要/正文 LIKE）：AMS 端调用一律带 status=1，
+        避免草稿/撤回文章被搜出来。keyword 已在 Service 层做了通配符转义。
+    -->
     <select id="searchByKeyword" resultType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/>
         FROM article_info
-        WHERE article_title LIKE CONCAT('%', #{keyword}, '%')
+        WHERE (article_title LIKE CONCAT('%', #{keyword}, '%')
            OR article_summary LIKE CONCAT('%', #{keyword}, '%')
-           OR article_content LIKE CONCAT('%', #{keyword}, '%')
+           OR article_content LIKE CONCAT('%', #{keyword}, '%'))
+        <if test="status != null">
+            AND status = #{status}
+        </if>
         ORDER BY sn DESC
         <if test="@com.niudeyapi.mawuya.common.utils.StrUtil@isAllNoEmpty(start,limit)">
             LIMIT #{start},#{limit}
@@ -116,12 +168,18 @@
 
     <select id="countByKeyword" resultType="int">
         SELECT count(sn) FROM article_info
-        WHERE article_title LIKE CONCAT('%', #{keyword}, '%')
+        WHERE (article_title LIKE CONCAT('%', #{keyword}, '%')
            OR article_summary LIKE CONCAT('%', #{keyword}, '%')
-           OR article_content LIKE CONCAT('%', #{keyword}, '%')
+           OR article_content LIKE CONCAT('%', #{keyword}, '%'))
+        <if test="status != null">
+            AND status = #{status}
+        </if>
     </select>
 
-    <!-- 按 sn 列表批量查（标签详情页用） -->
+    <!--
+        按 sn 列表批量查（标签详情页用）：默认带 status 过滤，
+        让标签详情页只展示已发布的文章。
+    -->
     <select id="selectListBySnList" resultType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/>
         FROM article_info
@@ -129,13 +187,21 @@
         <foreach collection="sns" item="item" open="(" separator="," close=")">
             #{item}
         </foreach>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
         ORDER BY sn DESC
     </select>
 
-    <!-- 热门文章 Top N -->
+    <!-- 热门文章 Top N：默认仅在 status=1 范围内取 -->
     <select id="selectHotTopN" resultType="com.niudeyapi.mawuya.core.dataobject.ArticleDO">
         SELECT <include refid="_columns_no_content"/>
         FROM article_info
+        <where>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
         ORDER BY read_num DESC, sn DESC
         LIMIT #{limit}
     </select>

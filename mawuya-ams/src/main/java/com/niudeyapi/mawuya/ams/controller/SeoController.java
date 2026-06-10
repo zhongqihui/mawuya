@@ -82,8 +82,8 @@ public class SeoController {
         int max = Math.max(seo.getSitemapMaxUrls(), 100);
         int count = 5;
 
-        // 3) 所有文章
-        List<ArticleDO> articles = articleService.listAllNoContent(new HashMap<>(4));
+        // 3) 所有文章（仅已发布：草稿 / 已撤回 不输出到 sitemap）
+        List<ArticleDO> articles = articleService.listPublishedAllNoContent();
         if (articles != null) {
             for (ArticleDO a : articles) {
                 if (count++ >= max) break;
@@ -101,8 +101,8 @@ public class SeoController {
             }
         }
 
-        // 5) 标签详情
-        List<TagDO> tags = tagService.listTagCloud();
+        // 5) 标签详情：仅暴露「至少有一篇已发布文章」的标签，避免 sitemap 指到空页
+        List<TagDO> tags = tagService.listPublishedTagCloud();
         if (tags != null) {
             for (TagDO t : tags) {
                 if (count++ >= max) break;
@@ -162,7 +162,7 @@ public class SeoController {
         sb.append("<language>zh-cn</language>\n");
         sb.append("<atom:link href=\"").append(base).append("/rss.xml\" rel=\"self\" type=\"application/rss+xml\"/>\n");
 
-        List<ArticleDO> articles = articleService.listAllNoContent(new HashMap<>(4));
+        List<ArticleDO> articles = articleService.listPublishedAllNoContent();
         if (articles != null) {
             int n = 0;
             for (ArticleDO a : articles) {

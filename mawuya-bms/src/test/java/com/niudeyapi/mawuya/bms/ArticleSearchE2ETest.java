@@ -37,7 +37,9 @@ class ArticleSearchE2ETest {
                 .setCategorySn(0).setReadNum(0).setReviewNum(0)
                 .setPraiseNum(0).setTeaseNum(0)
                 .setArticleTitle(title).setArticleSummary(title + " summary")
-                .setArticleContent(content);
+                .setArticleContent(content)
+                // 默认按已发布插入，便于后续走 AMS 端的 status=1 过滤
+                .setStatus(1);
     }
 
     @Test
@@ -49,12 +51,18 @@ class ArticleSearchE2ETest {
         articleMapper.insert(build("ut-search-3 normal",                      "summary " + tag + " here"));
         articleMapper.insert(build("ut-search-4 noise",                       "无关正文"));
 
-        List<ArticleDO> hits = articleMapper.searchByKeyword(tag, 0, 10);
+        // 不限定 status：BMS 模式
+        List<ArticleDO> hits = articleMapper.searchByKeyword(tag, null, 0, 10);
         // 4 条中有 3 条命中（任一字段含 tag）
         assertThat(hits).hasSize(3);
 
-        Integer count = articleMapper.countByKeyword(tag);
+        Integer count = articleMapper.countByKeyword(tag, null);
         assertThat(count).isEqualTo(3);
+
+        // 限定 status=1：AMS 模式，已发布的 3 条仍可见
+        List<ArticleDO> publishedHits = articleMapper.searchByKeyword(tag, 1, 0, 10);
+        assertThat(publishedHits).hasSize(3);
+        assertThat(articleMapper.countByKeyword(tag, 1)).isEqualTo(3);
     }
 
     @Test
@@ -69,7 +77,7 @@ class ArticleSearchE2ETest {
         assertThat(two).hasSizeGreaterThanOrEqualTo(2);
 
         List<Integer> sns = Arrays.asList(two.get(0).getSn(), two.get(1).getSn());
-        List<ArticleDO> picked = articleMapper.selectListBySnList(sns);
+        List<ArticleDO> picked = articleMapper.selectListBySnList(sns, null);
         assertThat(picked).extracting(ArticleDO::getSn).containsAll(sns);
         // _columns_no_content 不包含 articleContent
         assertThat(picked).allSatisfy(a -> assertThat(a.getArticleContent()).isNull());
@@ -82,7 +90,7 @@ class ArticleSearchE2ETest {
         articleMapper.insert(build("ut-hot-mid " + UUID.randomUUID(),  "x").setReadNum(99));
         articleMapper.insert(build("ut-hot-high " + UUID.randomUUID(), "x").setReadNum(9999));
 
-        List<ArticleDO> top = articleMapper.selectHotTopN(3);
+        List<ArticleDO> top = articleMapper.selectHotTopN(3, null);
         assertThat(top).hasSize(3);
         // 严格递减
         assertThat(top.get(0).getReadNum()).isGreaterThanOrEqualTo(top.get(1).getReadNum());

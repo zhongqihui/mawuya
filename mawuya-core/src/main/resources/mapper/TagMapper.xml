@@ -4,7 +4,8 @@
 
     <sql id="_columns">sn,tag_name,tag_color</sql>
 
-    <insert id="insert" parameterType="com.niudeyapi.mawuya.core.dataobject.TagDO">
+    <insert id="insert" parameterType="com.niudeyapi.mawuya.core.dataobject.TagDO"
+            useGeneratedKeys="true" keyProperty="sn">
         INSERT INTO tag_info (tag_name, tag_color) VALUES (#{tagName}, #{tagColor})
         ON DUPLICATE KEY UPDATE tag_color = VALUES(tag_color)
     </insert>
@@ -36,10 +37,33 @@
         SELECT count(sn) FROM tag_info
     </select>
 
+    <!-- 按 tagName 精确查询；用 Map 入参以避免与 selectById/selectList 签名冲突 -->
+    <select id="selectByName" parameterType="map" resultType="com.niudeyapi.mawuya.core.dataobject.TagDO">
+        SELECT <include refid="_columns"/> FROM tag_info
+        WHERE tag_name = #{tagName}
+        LIMIT 1
+    </select>
+
     <select id="selectAllWithArtSize" resultType="com.niudeyapi.mawuya.core.dataobject.TagDO">
         SELECT t.sn, t.tag_name, t.tag_color, COUNT(at.article_sn) AS art_size
         FROM tag_info t
         LEFT JOIN article_tag at ON at.tag_sn = t.sn
+        GROUP BY t.sn, t.tag_name, t.tag_color
+        ORDER BY art_size DESC, t.sn ASC
+    </select>
+
+    <!--
+        AMS 标签云专用：art_size 只算 article_info.status = 1。
+        这里用 LEFT JOIN article_info 时务必把 status 条件放在 ON 子句里，
+        否则 WHERE a.status=1 会把"没有任何已发布关联的标签"整条过滤掉，
+        变成 INNER JOIN 效果（这正是 AMS 标签云突然漏标签的常见坑点）。
+    -->
+    <select id="selectAllWithPublishedArtSize" resultType="com.niudeyapi.mawuya.core.dataobject.TagDO">
+        SELECT t.sn, t.tag_name, t.tag_color,
+               COUNT(a.sn) AS art_size
+        FROM tag_info t
+        LEFT JOIN article_tag at ON at.tag_sn = t.sn
+        LEFT JOIN article_info a ON a.sn = at.article_sn AND a.status = 1
         GROUP BY t.sn, t.tag_name, t.tag_color
         ORDER BY art_size DESC, t.sn ASC
     </select>
@@ -56,12 +80,28 @@
         DELETE FROM article_tag WHERE article_sn = #{articleSn}
     </delete>
 
+    <!-- 删除标签前先清理该标签的所有 article_tag 关联，保持外键关系一致 -->
+    <delete id="unbindByTagSn">
+        DELETE FROM article_tag WHERE tag_sn = #{tagSn}
+    </delete>
+
     <insert id="bindArticleTag">
         INSERT IGNORE INTO article_tag (article_sn, tag_sn) VALUES (#{articleSn}, #{tagSn})
     </insert>
 
     <select id="selectArticleSnByTag" resultType="int">
         SELECT article_sn FROM article_tag WHERE tag_sn = #{tagSn}
+    </select>
+
+    <!--
+        AMS /tags/{sn} 详情页专用：仅返回已发布文章 sn，避免详情页出现 404 链接
+        （已撤回文章被前台 ArticleService.getPublishedArticle 拦截会 404）。
+    -->
+    <select id="selectPublishedArticleSnByTag" resultType="int">
+        SELECT at.article_sn
+        FROM article_tag at
+        INNER JOIN article_info a ON a.sn = at.article_sn
+        WHERE at.tag_sn = #{tagSn} AND a.status = 1
     </select>
 
 </mapper>

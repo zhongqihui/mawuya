@@ -35,6 +35,10 @@
                                 <li>
                                     <a th:attr="link-url=@{/bms/article/list.do}" class="link-li" id="4">&nbsp;&nbsp;博客列表</a>
                                 </li>
+                                <li>
+                                    <!-- 标签管理：与 AMS 右侧栏「标签云」共用 tag_info 表，BMS 改动后 AMS 自动联动 -->
+                                    <a th:attr="link-url=@{/bms/tag/list.do}" class="link-li" id="9">&nbsp;&nbsp;标签管理</a>
+                                </li>
                             </ul>
                         </li>
                         <li><a href="#"><i class="fa fa-image"></i><span>资源管理</span></a>

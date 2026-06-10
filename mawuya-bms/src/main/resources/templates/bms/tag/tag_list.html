@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<style>
+    /* 标签徽章：与 AMS 右侧栏「标签云」视觉对齐（圆角胶囊 + 用户自定义颜色描边） */
+    .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 12px;
+        border-radius: 14px;
+        font-size: 13px;
+        line-height: 1.4;
+        border: 1px solid currentColor;
+        background: rgba(255, 255, 255, .6);
+        white-space: nowrap;
+        margin-right: 4px;
+        font-weight: 500;
+    }
+    .tag-pill .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        display: inline-block;
+    }
+    .tag-pill .count {
+        font-size: 11px;
+        color: #8a98a8;
+        font-weight: normal;
+    }
+    .btn-tag-create {
+        background: linear-gradient(135deg, #4facfe 0%, #00b8d4 100%);
+        border: none; color: #fff;
+        padding: 6px 16px;
+        font-weight: 500;
+        box-shadow: 0 2px 6px rgba(0,184,212,.25);
+    }
+    .btn-tag-create:hover, .btn-tag-create:focus { color: #fff; filter: brightness(1.06); }
+</style>
+
+<div class="page-head">
+    <ol class="breadcrumb">
+        <li>博客管理</li>
+        <li class="active">标签管理</li>
+        <span style="float:right;">
+            <button type="button" title="新增标签" onclick="addTag()"
+                    class="btn btn-primary btn-sm btn-tag-create">
+                <i class="fa fa-plus"></i> 新建标签
+            </button>
+            <button type="button" title="刷新列表" onclick="refreshTagList()"
+                    class="btn btn-default btn-sm" style="margin-left:6px;">
+                <i class="fa fa-refresh"></i> 刷新
+            </button>
+        </span>
+    </ol>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="block-flat">
+            <div class="content">
+                <p style="color:#8a98a8;font-size:12px;margin:0 0 14px;">
+                    <i class="fa fa-info-circle"></i>
+                    本页维护的标签会实时同步到博客前台右侧栏「标签云」与文章详情页的标签徽章；
+                    删除标签会自动解除该标签与所有文章的关联。
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="datatable-tag">
+                        <thead>
+                        <tr>
+                            <th style="width:60px;">序号</th>
+                            <th>标签</th>
+                            <th style="width:120px;">颜色</th>
+                            <th style="width:120px;">关联文章数</th>
+                            <th style="width:120px;">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr class="odd gradeX" th:each="item, status : ${tagList}">
+                            <td th:text="${status.count}"></td>
+                            <td>
+                                <span class="tag-pill"
+                                      th:style="|color:${item.tagColor != null ? item.tagColor : '#2494f2'};|">
+                                    <span class="dot" aria-hidden="true"></span>
+                                    <span th:text="${item.tagName}">tag</span>
+                                </span>
+                            </td>
+                            <td>
+                                <code th:text="${item.tagColor != null ? item.tagColor : '#2494f2'}">#2494f2</code>
+                            </td>
+                            <td th:text="${item.artSize ?: 0} + ' 篇'">0 篇</td>
+                            <td class="center">
+                                <i class="fa fa-pencil" title="编辑"
+                                   th:attr="onclick=|modTag('${item.sn}')|"
+                                   style="cursor:pointer;color:#2494f2;"></i>&nbsp;&nbsp;
+                                <i class="fa fa-trash-o" title="删除"
+                                   th:attr="onclick=|delTag('${item.sn}', '${item.tagName}', ${item.artSize ?: 0})|"
+                                   style="cursor:pointer;color:#a13d3d;"></i>
+                            </td>
+                        </tr>
+                        <tr th:if="${tagList == null or tagList.isEmpty()}">
+                            <td colspan="5" style="text-align:center;color:#bbb;padding:32px 0;">
+                                暂无标签，点击右上角「新建标签」开始
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var __ctx = /*[[@{/}]]*/ '/';
+    function _u(p) { return __ctx.replace(/\/$/, '') + p; }
+    /*]]>*/
+
+    /** 当前 tab 容器查找：与 article_list.html 同款的解耦方案，避免菜单 id 漂移导致 silent 失败 */
+    function findCurrentTab() {
+        var $tab = $('#datatable-tag').closest('.tab-pane');
+        return $tab.length ? $tab : null;
+    }
+    function reloadCurrentTab(url) {
+        var $tab = findCurrentTab();
+        if ($tab) {
+            $tab.load(url);
+        } else {
+            window.location.reload();
+        }
+    }
+    function refreshTagList() {
+        reloadCurrentTab(_u('/bms/tag/list.do'));
+    }
+
+    $(function () {
+        $('#datatable-tag').dataTable();
+    });
+
+    /** 新建标签：弹出 mod_tag 表单 */
+    function addTag() {
+        $.get(_u('/bms/tag/toAdd.do'), function (data) {
+            layer.open({
+                type: 1,
+                skin: 'layui-layer-lan',
+                title: '新建标签',
+                content: data,
+                area: ['420px', '230px'],
+                btn: ['确定', '取消'],
+                yes: function (index, layero) {
+                    var name = layero.find('input[name="tagName"]').val();
+                    var color = layero.find('input[name="tagColor"]').val();
+                    if (!name || !name.trim()) {
+                        layer.msg('请输入标签名称', {icon: 7});
+                        return;
+                    }
+                    var load = layer.load(0, {shade: [0.1, '#fff']});
+                    $.ajax({
+                        type: 'post',
+                        url: _u('/bms/api/tag/create'),
+                        dataType: 'json',
+                        data: {tagName: name.trim(), tagColor: color || ''},
+                        success: function (res) {
+                            layer.close(load);
+                            if (Api.isOk(res)) {
+                                layer.close(index);
+                                layer.msg(Api.msg(res, '已创建'), {icon: 1, time: 1000});
+                                refreshTagList();
+                            } else {
+                                layer.alert(Api.msg(res, '创建失败'),
+                                    {skin: 'layui-layer-lan', icon: 2});
+                            }
+                        },
+                        error: function (xhr) {
+                            layer.close(load);
+                            layer.alert('请求失败：' + (xhr && xhr.status ? xhr.status : '网络异常'),
+                                {skin: 'layui-layer-lan', icon: 2});
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    /** 编辑标签 */
+    function modTag(sn) {
+        $.get(_u('/bms/tag/toUpdate.do?sn=') + sn, function (data) {
+            layer.open({
+                type: 1,
+                skin: 'layui-layer-lan',
+                title: '编辑标签',
+                content: data,
+                area: ['420px', '230px'],
+                btn: ['确定', '取消'],
+                yes: function (index, layero) {
+                    var name = layero.find('input[name="tagName"]').val();
+                    var color = layero.find('input[name="tagColor"]').val();
+                    if (!name || !name.trim()) {
+                        layer.msg('请输入标签名称', {icon: 7});
+                        return;
+                    }
+                    var load = layer.load(0, {shade: [0.1, '#fff']});
+                    $.ajax({
+                        type: 'post',
+                        url: _u('/bms/api/tag/update'),
+                        dataType: 'json',
+                        data: {sn: sn, tagName: name.trim(), tagColor: color || ''},
+                        success: function (res) {
+                            layer.close(load);
+                            if (Api.isOk(res)) {
+                                layer.close(index);
+                                layer.msg(Api.msg(res, '已更新'), {icon: 1, time: 1000});
+                                refreshTagList();
+                            } else {
+                                layer.alert(Api.msg(res, '更新失败'),
+                                    {skin: 'layui-layer-lan', icon: 2});
+                            }
+                        },
+                        error: function (xhr) {
+                            layer.close(load);
+                            layer.alert('请求失败：' + (xhr && xhr.status ? xhr.status : '网络异常'),
+                                {skin: 'layui-layer-lan', icon: 2});
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    /** 删除标签：带文章数确认提示 */
+    function delTag(sn, name, artSize) {
+        var artHint = artSize > 0
+            ? ('该标签当前关联了 <b style="color:#a13d3d;">' + artSize + '</b> 篇文章，删除后这些文章将自动解除该标签关联（文章本身不受影响）。')
+            : '该标签暂未关联任何文章，可以放心删除。';
+        layer.confirm(
+            '确认删除标签「<b>' + name + '</b>」？<br/><br/><span style="color:#8a98a8;font-size:13px;">' + artHint + '</span>',
+            {btn: ['确定删除', '我再想想'], skin: 'layui-layer-lan'},
+            function () {
+                var load = layer.load(0, {shade: [0.1, '#fff']});
+                $.ajax({
+                    type: 'post',
+                    url: _u('/bms/api/tag/delete'),
+                    dataType: 'json',
+                    data: {sn: sn},
+                    success: function (res) {
+                        layer.close(load);
+                        if (Api.isOk(res)) {
+                            layer.msg(Api.msg(res, '已删除'), {icon: 1, time: 1000});
+                            refreshTagList();
+                        } else {
+                            layer.alert(Api.msg(res, '删除失败'),
+                                {skin: 'layui-layer-lan', icon: 2});
+                        }
+                    },
+                    error: function (xhr) {
+                        layer.close(load);
+                        layer.alert('请求失败：' + (xhr && xhr.status ? xhr.status : '网络异常'),
+                            {skin: 'layui-layer-lan', icon: 2});
+                    }
+                });
+            }
+        );
+    }
+</script>
+</body>
+</html>
